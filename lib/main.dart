@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mechanix_clock/core/utils/system_alarm_service.dart';
 import 'package:mechanix_clock/features/alarm/bloc/alarm_event.dart';
 import 'package:mechanix_clock/features/alarm/data/repository/alarm_repository.dart';
 import 'package:mechanix_clock/l10n/app_localizations.dart';
+import 'package:show_fps/show_fps.dart';
 
 import 'core/theme/app_theme.dart';
 import 'features/alarm/bloc/alarm_bloc.dart';
@@ -34,6 +37,8 @@ class MechanixClockApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final showFps = Platform.environment['SHOW_FPS'] == 'true';
+
     return MultiBlocProvider(
       providers: [
         BlocProvider(
@@ -52,6 +57,15 @@ class MechanixClockApp extends StatelessWidget {
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: const MainNavigationContainer(),
+        builder: showFps
+            ? (context, child) {
+                return ShowFPS(
+                  visible: showFps,
+                  showChart: false,
+                  child: child!,
+                );
+              }
+            : null,
       ),
     );
   }
