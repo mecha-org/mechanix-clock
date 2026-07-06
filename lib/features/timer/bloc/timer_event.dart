@@ -22,11 +22,12 @@ class AddTimerPreset extends TimerEvent {
 class UpdateTimerPreset extends TimerEvent {
   final String id;
   final String name;
+  final Duration? duration;
 
-  const UpdateTimerPreset({required this.id, required this.name});
+  const UpdateTimerPreset({required this.id, required this.name, this.duration});
 
   @override
-  List<Object?> get props => [id, name];
+  List<Object?> get props => [id, name, duration];
 }
 
 class DeleteTimerPreset extends TimerEvent {

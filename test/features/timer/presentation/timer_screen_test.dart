@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mechanix_clock/core/utils/constants.dart';
 import 'package:mechanix_clock/features/timer/bloc/timer_bloc.dart';
 import 'package:mechanix_clock/features/timer/bloc/timer_event.dart';
 import 'package:mechanix_clock/features/timer/bloc/timer_state.dart';
@@ -22,7 +23,9 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(const AddTimerPreset(Duration.zero));
-    registerFallbackValue(const UpdateTimerPreset(id: '', name: ''));
+    registerFallbackValue(
+      const UpdateTimerPreset(id: '', name: '', duration: Duration.zero),
+    );
     registerFallbackValue(const ReorderTimerPresets(0, 0));
     registerFallbackValue(const DeleteTimerPreset(''));
     registerFallbackValue(CancelTimer());
@@ -136,9 +139,7 @@ void main() {
     verifyNever(() => mockTimerBloc.add(any()));
   });
 
-  testWidgets('adds preset when valid', (
-    tester,
-  ) async {
+  testWidgets('adds preset when valid', (tester) async {
     when(
       () => mockTimerBloc.state,
     ).thenReturn(const TimerState(status: TimerStatus.idle, presets: []));
@@ -191,7 +192,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify rename dialog opened
-      expect(find.text('Edit Preset (10:00 mins)'), findsOneWidget);
+      expect(find.text('Edit Preset'), findsOneWidget);
       expect(
         find.text('Old Name'),
         findsNWidgets(2),
@@ -208,7 +209,11 @@ void main() {
       // Verify UpdateTimerPreset is dispatched
       verify(
         () => mockTimerBloc.add(
-          const UpdateTimerPreset(id: 'preset_123', name: 'New Name'),
+          const UpdateTimerPreset(
+            id: 'preset_123',
+            name: 'New Name',
+            duration: Duration(minutes: 10),
+          ),
         ),
       ).called(1);
     },
@@ -337,20 +342,20 @@ void main() {
     (tester) async {
       final states = Stream<TimerState>.fromIterable([
         const TimerState(status: TimerStatus.idle),
-        const TimerState(
+        TimerState(
           status: TimerStatus.finished,
-          duration: Duration(minutes: 5),
+          duration: const Duration(minutes: 5),
           activePresetId: 'preset_123',
-          sound: 'Dancing Flames',
+          sound: sounds[0],
         ),
       ]);
 
       when(() => mockTimerBloc.state).thenReturn(
-        const TimerState(
+        TimerState(
           status: TimerStatus.finished,
-          duration: Duration(minutes: 5),
+          duration: const Duration(minutes: 5),
           activePresetId: 'preset_123',
-          sound: 'Dancing Flames',
+          sound: sounds[0],
         ),
       );
       when(() => mockTimerBloc.stream).thenAnswer((_) => states);
@@ -360,7 +365,7 @@ void main() {
 
       // Verify dialog elements
       expect(find.text('Timer Finished'), findsOneWidget);
-      expect(find.text('Dancing Flames'), findsOneWidget);
+      expect(find.text(sounds[0]), findsOneWidget);
       expect(find.text('05:00 mins'), findsOneWidget);
       expect(find.text('Dismiss'), findsOneWidget);
       expect(find.text('Restart'), findsOneWidget);

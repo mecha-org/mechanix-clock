@@ -11,6 +11,7 @@ class AppColors {
   static const Color textDim = Color(0xFF717171);
   static const Color textOffWhite = Color(0xFFEEEEEE);
   static const Color border = Color(0xFF2D2D2D);
+  static const Color buttonBorder = Color(0xFF474747);
   static const Color accent = Color(0xFFDDDDDD);
 }
 

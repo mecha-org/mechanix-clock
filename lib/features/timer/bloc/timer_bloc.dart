@@ -88,7 +88,10 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
   ) async {
     final updatedPresets = state.presets.map((p) {
       if (p.id == event.id) {
-        return p.copyWith(name: event.name);
+        return p.copyWith(
+          name: event.name,
+          duration: event.duration ?? p.duration,
+        );
       }
       return p;
     }).toList();

@@ -18,7 +18,7 @@ class TimerState extends Equatable {
     this.status = TimerStatus.initial,
     this.duration = Duration.zero,
     this.remaining = Duration.zero,
-    this.sound = 'Dancing Flames (Urban Pulse)',
+    this.sound = '',
     this.presets = const [],
     this.isEditingPresets = false,
     this.activePresetId = '',

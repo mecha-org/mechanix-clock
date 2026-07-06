@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mechanix_clock/core/theme/app_theme.dart';
 
 class TimerButton extends StatelessWidget {
   final String label;
@@ -20,11 +21,11 @@ class TimerButton extends StatelessWidget {
         width: 180,
         height: 48,
         decoration: BoxDecoration(
-          color: const Color(0xFF151515),
+          color: AppColors.surface,
           border: Border.all(
             color: enabled
-                ? const Color(0xFF474747)
-                : const Color(0xFF474747).withValues(alpha: 0.5),
+                ? AppColors.buttonBorder
+                : AppColors.buttonBorder.withValues(alpha: 0.5),
             width: 1,
           ),
         ),
@@ -34,8 +35,8 @@ class TimerButton extends StatelessWidget {
           style: Theme.of(context).textTheme.labelLarge!.copyWith(
             height: 1.2,
             color: enabled
-                ? const Color(0xFFADADAD)
-                : const Color(0xFFADADAD).withValues(alpha: 0.5),
+                ? AppColors.textSecondary
+                : AppColors.textSecondary.withValues(alpha: 0.5),
           ),
         ),
       ),

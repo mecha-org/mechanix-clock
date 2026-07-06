@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:mechanix_clock/core/utils/app_logger.dart';
+import 'package:mechanix_clock/core/utils/constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/timer_preset.dart';
@@ -56,9 +57,9 @@ class TimerRepository {
       final SharedPreferences preferences =
           await SharedPreferences.getInstance();
       await preferences.reload();
-      return preferences.getString(_soundKey) ?? 'Dancing Flames (Urban Pulse)';
+      return preferences.getString(_soundKey) ?? sounds[0];
     } catch (e) {
-      return 'Dancing Flames (Urban Pulse)';
+      return sounds[0];
     }
   }
 
