@@ -140,5 +140,74 @@
   "world_clock_coming_soon": "World Clock - Coming Soon",
   "@world_clock_coming_soon": {
     "description": "Placeholder message indicating the world clock feature is not yet available"
+  },
+  "timers": "Timers",
+  "@timers": {
+    "description": "Title for the timers screen"
+  },
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Button text to cancel the timer"
+  },
+  "pause": "Pause",
+  "@pause": {
+    "description": "Button text to pause the timer"
+  },
+  "resume": "Resume",
+  "@resume": {
+    "description": "Button text to resume the timer"
+  },
+  "dismiss": "Dismiss",
+  "@dismiss": {
+    "description": "Button text to dismiss the finished timer alert"
+  },
+  "timer_finished": "Timer Finished",
+  "@timer_finished": {
+    "description": "Title for the finished timer alert"
+  },
+  "timer_preset_exists": "Preset already exists",
+  "@timer_preset_exists": {
+    "description": "SnackBar message when the selected timer duration is already saved as a preset"
+  },
+  "timer_preset_invalid_duration": "Please select a duration greater than 0",
+  "@timer_preset_invalid_duration": {
+    "description": "SnackBar message when trying to save a 0 duration preset"
+  },
+  "delete": "Delete",
+  "@delete": {
+    "description": "Button text to delete/cancel the running timer"
+  },
+  "timer_preset_name": "Preset Name",
+  "@timer_preset_name": {
+    "description": "Label for naming a timer preset"
+  },
+  "timer_preset_name_hint": "e.g. Tea, Workout, Study",
+  "@timer_preset_name_hint": {
+    "description": "Hint text for timer preset name field"
+  },
+  "save": "Save",
+  "@save": {
+    "description": "Generic save button text"
+  },
+  "edit_preset": "Edit Preset",
+  "@edit_preset": {
+    "description": "Title for editing a preset"
+  },
+  "add_preset": "Add Preset",
+  "@add_preset": {
+    "description": "Title for adding a preset"
+  },
+  "hours_abbr": " hrs",
+  "@hours_abbr": {
+    "description": "Abbreviated label for hours with a leading space"
+  },
+  "minutes_abbr": " mins",
+  "@minutes_abbr": {
+    "description": "Abbreviated label for minutes with a leading space"
+  },
+  "restart": "Restart",
+  "@restart": {
+    "description": "Button text to restart the timer"
   }
 }
+

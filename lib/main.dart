@@ -12,14 +12,19 @@ import 'core/theme/app_theme.dart';
 import 'features/alarm/bloc/alarm_bloc.dart';
 import 'features/navigation/presentation/screens/main_navigation_container.dart';
 import 'features/stopwatch/bloc/stopwatch_bloc.dart';
+import 'features/timer/bloc/timer_bloc.dart';
+import 'features/timer/bloc/timer_event.dart';
+import 'features/timer/data/repository/timer_repository.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   final alarmRepository = AlarmRepository();
+  final timerRepository = TimerRepository();
   final systemAlarmService = SystemAlarmService();
   runApp(
     MechanixClockApp(
       repository: alarmRepository,
+      timerRepository: timerRepository,
       systemAlarmService: systemAlarmService,
     ),
   );
@@ -27,11 +32,13 @@ void main() {
 
 class MechanixClockApp extends StatelessWidget {
   final AlarmRepository repository;
+  final TimerRepository timerRepository;
   final SystemAlarmService systemAlarmService;
 
   const MechanixClockApp({
     super.key,
     required this.repository,
+    required this.timerRepository,
     required this.systemAlarmService,
   });
 
@@ -48,6 +55,12 @@ class MechanixClockApp extends StatelessWidget {
           )..add(LoadAlarms()),
         ),
         BlocProvider(create: (context) => StopwatchBloc()),
+        BlocProvider(
+          create: (context) => TimerBloc(
+            repository: timerRepository,
+            systemAlarmService: systemAlarmService,
+          )..add(LoadTimerPresets()),
+        ),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

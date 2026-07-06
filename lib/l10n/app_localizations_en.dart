@@ -111,4 +111,56 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get world_clock_coming_soon => 'World Clock - Coming Soon';
+
+  @override
+  String get timers => 'Timers';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get pause => 'Pause';
+
+  @override
+  String get resume => 'Resume';
+
+  @override
+  String get dismiss => 'Dismiss';
+
+  @override
+  String get timer_finished => 'Timer Finished';
+
+  @override
+  String get timer_preset_exists => 'Preset already exists';
+
+  @override
+  String get timer_preset_invalid_duration =>
+      'Please select a duration greater than 0';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get timer_preset_name => 'Preset Name';
+
+  @override
+  String get timer_preset_name_hint => 'e.g. Tea, Workout, Study';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get edit_preset => 'Edit Preset';
+
+  @override
+  String get add_preset => 'Add Preset';
+
+  @override
+  String get hours_abbr => ' hrs';
+
+  @override
+  String get minutes_abbr => ' mins';
+
+  @override
+  String get restart => 'Restart';
 }

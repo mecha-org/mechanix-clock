@@ -297,6 +297,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'World Clock - Coming Soon'**
   String get world_clock_coming_soon;
+
+  /// Title for the timers screen
+  ///
+  /// In en, this message translates to:
+  /// **'Timers'**
+  String get timers;
+
+  /// Button text to cancel the timer
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// Button text to pause the timer
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get pause;
+
+  /// Button text to resume the timer
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get resume;
+
+  /// Button text to dismiss the finished timer alert
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get dismiss;
+
+  /// Title for the finished timer alert
+  ///
+  /// In en, this message translates to:
+  /// **'Timer Finished'**
+  String get timer_finished;
+
+  /// SnackBar message when the selected timer duration is already saved as a preset
+  ///
+  /// In en, this message translates to:
+  /// **'Preset already exists'**
+  String get timer_preset_exists;
+
+  /// SnackBar message when trying to save a 0 duration preset
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a duration greater than 0'**
+  String get timer_preset_invalid_duration;
+
+  /// Button text to delete/cancel the running timer
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// Label for naming a timer preset
+  ///
+  /// In en, this message translates to:
+  /// **'Preset Name'**
+  String get timer_preset_name;
+
+  /// Hint text for timer preset name field
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Tea, Workout, Study'**
+  String get timer_preset_name_hint;
+
+  /// Generic save button text
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// Title for editing a preset
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Preset'**
+  String get edit_preset;
+
+  /// Title for adding a preset
+  ///
+  /// In en, this message translates to:
+  /// **'Add Preset'**
+  String get add_preset;
+
+  /// Abbreviated label for hours with a leading space
+  ///
+  /// In en, this message translates to:
+  /// **' hrs'**
+  String get hours_abbr;
+
+  /// Abbreviated label for minutes with a leading space
+  ///
+  /// In en, this message translates to:
+  /// **' mins'**
+  String get minutes_abbr;
+
+  /// Button text to restart the timer
+  ///
+  /// In en, this message translates to:
+  /// **'Restart'**
+  String get restart;
 }
 
 class _AppLocalizationsDelegate

@@ -32,4 +32,34 @@ class SystemAlarmService {
       AppLogger.e('Failed to cancel alarm: $e');
     }
   }
+
+  Future<void> setTimer(String id, Duration duration) async {
+    try {
+      await _channel.invokeMethod('setTimer', {
+        'id': id,
+        'durationSec': duration.inSeconds,
+      });
+      AppLogger.i('SystemAlarmService: System timer set for $duration (ID: $id)');
+    } on PlatformException catch (e) {
+      AppLogger.e('Failed to set system timer: $e');
+    }
+  }
+
+  Future<void> cancelTimer(String id) async {
+    try {
+      await _channel.invokeMethod('cancelTimer', {'id': id});
+      AppLogger.i('SystemAlarmService: System timer cancelled (ID: $id)');
+    } on PlatformException catch (e) {
+      AppLogger.e('Failed to cancel system timer: $e');
+    }
+  }
+
+  Future<void> playCompletionSound() async {
+    try {
+      await _channel.invokeMethod('playCompletionSound');
+      AppLogger.i('SystemAlarmService: Play completion sound');
+    } on PlatformException catch (e) {
+      AppLogger.e('Failed to play completion sound: $e');
+    }
+  }
 }

@@ -143,9 +143,61 @@ void FlutterWindow::SetupAlarmChannel(flutter::BinaryMessenger *messenger)
       std::cout << "Executing: " << command << std::endl;
       system(command.c_str());
       result->Success();
+    } else if (call.method_name() == "setTimer") {
+      const auto *arguments = std::get_if<flutter::EncodableMap>(call.arguments());
+      if (!arguments) {
+        result->Error("bad_args", "Expected map");
+        return;
+      }
+      auto id_it = arguments->find(flutter::EncodableValue("id"));
+      auto dur_it = arguments->find(flutter::EncodableValue("durationSec"));
+      if (id_it == arguments->end() || dur_it == arguments->end()) {
+        result->Error("missing_args", "Missing required arguments");
+        return;
+      }
+      std::string id = std::get<std::string>(id_it->second);
+      int64_t dur_val = 0;
+      if (const auto *val_int32 = std::get_if<int32_t>(&dur_it->second)) {
+        dur_val = *val_int32;
+      } else if (const auto *val_int64 = std::get_if<int64_t>(&dur_it->second)) {
+        dur_val = *val_int64;
+      }
+
+      std::string timer_command =
+          "systemd-run --user --unit=timer-" + id + " --on-active=" + std::to_string(dur_val) +
+          " /bin/bash -c \"/usr/bin/notify-send 'Timer' 'Timer finished!' --icon=alarm-clock && /usr/bin/aplay /usr/share/sounds/alsa/Front_Center.wav\"";
+
+      std::cout << "Executing: " << timer_command << std::endl;
+      int status = system(timer_command.c_str());
+      if (status == 0) {
+        result->Success();
+      } else {
+        result->Error("failed_to_set", "Failed to execute systemd-run");
+      }
+    } else if (call.method_name() == "cancelTimer") {
+      const auto *arguments = std::get_if<flutter::EncodableMap>(call.arguments());
+      if (!arguments) {
+        result->Error("bad_args", "Expected map");
+        return;
+      }
+      auto id_it = arguments->find(flutter::EncodableValue("id"));
+      if (id_it == arguments->end()) {
+        result->Error("missing_args", "Missing required arguments");
+        return;
+      }
+      std::string id = std::get<std::string>(id_it->second);
+      std::string command = "systemctl --user stop timer-" + id + ".timer || true";
+      std::cout << "Executing: " << command << std::endl;
+      system(command.c_str());
+      result->Success();
+    } else if (call.method_name() == "playCompletionSound") {
+      std::string command = "/usr/bin/aplay /usr/share/sounds/alsa/Front_Center.wav &";
+      system(command.c_str());
+      result->Success();
     } else {
       result->NotImplemented();
-    } });
+    } 
+  });
 }
 
 void FlutterWindow::OnDestroy()
