@@ -41,7 +41,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   show_fps: ^1.1.0
-
+  timezone: ^0.11.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

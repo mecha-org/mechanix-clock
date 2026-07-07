@@ -163,4 +163,56 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get restart => 'Restart';
+
+  @override
+  String get timezone_id => 'Timezone';
+
+  @override
+  String get time_difference => 'Time Difference';
+
+  @override
+  String get day_night_status => 'Day/Night Status';
+
+  @override
+  String get daytime => 'Daytime';
+
+  @override
+  String get nighttime => 'Nighttime';
+
+  @override
+  String get same_as_local => 'Same time as local';
+
+  @override
+  String hours_ahead(String hours) {
+    return '$hours hours ahead of local';
+  }
+
+  @override
+  String hours_behind(String hours) {
+    return '$hours hours behind local';
+  }
+
+  @override
+  String get world_clock => 'World Clock';
+
+  @override
+  String get no_world_clocks => 'No world clocks added yet';
+
+  @override
+  String get tap_to_add_cities => 'Tap + to add cities around the world.';
+
+  @override
+  String get today => 'Today';
+
+  @override
+  String get tomorrow => 'Tomorrow';
+
+  @override
+  String get yesterday => 'Yesterday';
+
+  @override
+  String get no_cities_found => 'No cities found';
+
+  @override
+  String get search_country_region => 'Search country/ region';
 }

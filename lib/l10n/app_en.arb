@@ -208,6 +208,80 @@
   "restart": "Restart",
   "@restart": {
     "description": "Button text to restart the timer"
+  },
+  "timezone_id": "Timezone",
+  "@timezone_id": {
+    "description": "Label for the Timezone ID row in details screen"
+  },
+  "time_difference": "Time Difference",
+  "@time_difference": {
+    "description": "Label for the Time Difference row in details screen"
+  },
+  "day_night_status": "Day/Night Status",
+  "@day_night_status": {
+    "description": "Label for the Day/Night Status row in details screen"
+  },
+  "daytime": "Daytime",
+  "@daytime": {
+    "description": "Status indicating it is daytime"
+  },
+  "nighttime": "Nighttime",
+  "@nighttime": {
+    "description": "Status indicating it is nighttime"
+  },
+  "same_as_local": "Same time as local",
+  "@same_as_local": {
+    "description": "Indicates target timezone is same as local time"
+  },
+  "hours_ahead": "{hours} hours ahead of local",
+  "@hours_ahead": {
+    "description": "Indicates target timezone is ahead of local time",
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "hours_behind": "{hours} hours behind local",
+  "@hours_behind": {
+    "description": "Indicates target timezone is behind of local time",
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "world_clock": "World Clock",
+  "@world_clock": {
+    "description": "Title for the world clock screen"
+  },
+  "no_world_clocks": "No world clocks added yet",
+  "@no_world_clocks": {
+    "description": "Message displayed when there are no world clocks added"
+  },
+  "tap_to_add_cities": "Tap + to add cities around the world.",
+  "@tap_to_add_cities": {
+    "description": "Hint on how to add world clocks"
+  },
+  "today": "Today",
+  "@today": {
+    "description": "Label indicating today"
+  },
+  "tomorrow": "Tomorrow",
+  "@tomorrow": {
+    "description": "Label indicating tomorrow"
+  },
+  "yesterday": "Yesterday",
+  "@yesterday": {
+    "description": "Label indicating yesterday"
+  },
+  "no_cities_found": "No cities found",
+  "@no_cities_found": {
+    "description": "Message displayed when no cities match the search query"
+  },
+  "search_country_region": "Search country/ region",
+  "@search_country_region": {
+    "description": "Hint text for the search city field"
   }
 }
 
