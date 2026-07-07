@@ -319,7 +319,7 @@ void main() {
     expect(timerButton.enabled, isFalse);
   });
 
-  testWidgets('custom picker is disabled when in editing mode', (tester) async {
+  testWidgets('custom picker is absent when in editing mode', (tester) async {
     when(() => mockTimerBloc.state).thenReturn(
       const TimerState(
         status: TimerStatus.idle,
@@ -331,10 +331,7 @@ void main() {
     await tester.pumpWidget(createWidgetUnderTest());
 
     final pickerFinder = find.byType(TimerCustomPicker);
-    expect(pickerFinder, findsOneWidget);
-
-    final picker = tester.widget<TimerCustomPicker>(pickerFinder);
-    expect(picker.enabled, isFalse);
+    expect(pickerFinder, findsNothing);
   });
 
   testWidgets(
