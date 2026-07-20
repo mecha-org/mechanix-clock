@@ -15,3 +15,35 @@ extension LocalizedDays on BuildContext {
     ];
   }
 }
+
+String formatEndTime(DateTime dateTime, AppLocalizations l10n) {
+  final hour = dateTime.hour;
+  final minute = dateTime.minute.toString().padLeft(2, '0');
+  final isPm = hour >= 12;
+  final displayHour = hour % 12 == 0 ? 12 : hour % 12;
+  final period = isPm ? l10n.pm : l10n.am;
+  return '$displayHour:$minute $period';
+}
+
+String formatDuration(Duration duration, {bool includeHundredths = false}) {
+  String twoDigits(int n) => n.toString().padLeft(2, '0');
+  final hours = duration.inHours;
+  final minutes = twoDigits(duration.inMinutes.remainder(60));
+  final seconds = twoDigits(duration.inSeconds.remainder(60));
+
+  final base = hours > 0
+      ? '${twoDigits(hours)}:$minutes:$seconds'
+      : '$minutes:$seconds';
+
+  if (includeHundredths) {
+    final hundredths = twoDigits(
+      (duration.inMilliseconds.remainder(1000) / 10).truncate(),
+    );
+    return '$base.$hundredths';
+  }
+  return base;
+}
+
+
+
+

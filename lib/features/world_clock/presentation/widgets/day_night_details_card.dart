@@ -45,7 +45,7 @@ class DayNightDetailsCard extends StatelessWidget {
                   children: [
                     Text(
                       cityName,
-                      style: const TextStyle(
+                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textPrimary,
@@ -54,8 +54,7 @@ class DayNightDetailsCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       country,
-                      style: const TextStyle(
-                        fontSize: 18,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: AppColors.textSecondary,
                       ),
                     ),
@@ -82,19 +81,17 @@ class DayNightDetailsCard extends StatelessWidget {
                   children: [
                     Text(
                       timeStr,
-                      style: const TextStyle(
+                      style: Theme.of(context).textTheme.displayLarge?.copyWith(
                         fontSize: 56,
                         fontWeight: FontWeight.w300,
                         color: AppColors.textPrimary,
-                        fontFeatures: [FontFeature.tabularFigures()],
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
                     const SizedBox(width: 8),
                     Text(
                       amPmStr,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w400,
+                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
                         color: AppColors.textSecondary,
                       ),
                     ),
@@ -104,11 +101,9 @@ class DayNightDetailsCard extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 dateStr,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w400,
-                  color: AppColors.textGrey,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: AppColors.textGrey),
               ),
             ],
           ),

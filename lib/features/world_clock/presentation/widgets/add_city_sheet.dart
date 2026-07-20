@@ -80,14 +80,9 @@ class _AddCitySheetState extends State<AddCitySheet> {
                   ? Center(
                       child: Text(
                         l10n.no_cities_found,
-                        style:
-                            Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppColors.textGrey,
-                            ) ??
-                            const TextStyle(
-                              color: AppColors.textGrey,
-                              fontSize: 16,
-                            ),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textGrey,
+                        ),
                       ),
                     )
                   : ListView.separated(
@@ -120,14 +115,8 @@ class _AddCitySheetState extends State<AddCitySheet> {
                             padding: const EdgeInsets.only(top: 4),
                             child: Text(
                               '$offsetStr • ${city.timezoneId.replaceAll('_', ' ')}',
-                              style:
-                                  Theme.of(
-                                    context,
-                                  ).textTheme.bodyMedium?.copyWith(
-                                    fontSize: 14,
-                                    color: AppColors.textGrey,
-                                  ) ??
-                                  const TextStyle(
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
                                     fontSize: 14,
                                     color: AppColors.textGrey,
                                   ),
@@ -149,7 +138,7 @@ class _AddCitySheetState extends State<AddCitySheet> {
             ),
             // Sticky Bottom Search Bar
             Container(
-              color: const Color(0xFF151515),
+              color: AppColors.surface,
               padding: EdgeInsets.only(
                 left: 16,
                 right: 16,
@@ -194,11 +183,9 @@ class _AddCitySheetState extends State<AddCitySheet> {
                           )
                         : null,
                     hintText: l10n.search_country_region,
-                    hintStyle:
-                        Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textDim,
-                        ) ??
-                        const TextStyle(color: AppColors.textDim),
+                    hintStyle: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: AppColors.textDim),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(vertical: 12),
                   ),

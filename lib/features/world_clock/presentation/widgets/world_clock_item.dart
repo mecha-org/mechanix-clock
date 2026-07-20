@@ -76,15 +76,10 @@ class WorldClockItem extends StatelessWidget {
                       const SizedBox(height: 6),
                       Text(
                         relativeInfo,
-                        style:
-                            Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontSize: 14,
-                              color: AppColors.textGrey,
-                            ) ??
-                            const TextStyle(
-                              fontSize: 14,
-                              color: AppColors.textGrey,
-                            ),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontSize: 14,
+                          color: AppColors.textGrey,
+                        ),
                       ),
                     ],
                   ),
@@ -95,31 +90,20 @@ class WorldClockItem extends StatelessWidget {
                   children: [
                     Text(
                       timeStr,
-                      style:
-                          Theme.of(context).textTheme.displayMedium?.copyWith(
+                      style: Theme.of(context).textTheme.displayMedium
+                          ?.copyWith(
                             fontSize: 32,
                             fontFeatures: const [FontFeature.tabularFigures()],
-                          ) ??
-                          const TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.w400,
-                            color: AppColors.textPrimary,
-                            fontFeatures: [FontFeature.tabularFigures()],
                           ),
                     ),
                     if (amPmStr.isNotEmpty) ...[
                       const SizedBox(width: 4),
                       Text(
                         amPmStr,
-                        style:
-                            Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontSize: 14,
-                              color: AppColors.textGrey,
-                            ) ??
-                            const TextStyle(
-                              fontSize: 14,
-                              color: AppColors.textGrey,
-                            ),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontSize: 14,
+                          color: AppColors.textGrey,
+                        ),
                       ),
                     ],
                   ],

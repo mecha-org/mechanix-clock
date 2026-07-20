@@ -18,24 +18,14 @@ class TimerRepository {
       final String? presetsJson = preferences.getString(_storageKey);
 
       if (presetsJson == null || presetsJson.isEmpty) {
-        return const [
-          TimerPreset(id: '1', duration: Duration(minutes: 1)),
-          TimerPreset(id: '2', duration: Duration(minutes: 3)),
-          TimerPreset(id: '3', duration: Duration(minutes: 5)),
-          TimerPreset(id: '4', duration: Duration(minutes: 10)),
-        ];
+        return defaultTimerPresets;
       }
 
       final List<dynamic> decoded = jsonDecode(presetsJson);
       return decoded.map((item) => TimerPreset.fromJson(item)).toList();
     } catch (e) {
       AppLogger.e('Failed to load timer presets: $e');
-      return const [
-        TimerPreset(id: '1', duration: Duration(minutes: 1)),
-        TimerPreset(id: '2', duration: Duration(minutes: 3)),
-        TimerPreset(id: '3', duration: Duration(minutes: 5)),
-        TimerPreset(id: '4', duration: Duration(minutes: 10)),
-      ];
+      return defaultTimerPresets;
     }
   }
 

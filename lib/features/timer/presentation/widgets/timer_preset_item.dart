@@ -56,10 +56,7 @@ class TimerPresetItem extends StatelessWidget {
                   if (preset.name != null && preset.name!.isNotEmpty) ...[
                     Text(
                       preset.name!,
-                      style: const TextStyle(
-                        fontFamily: 'Sora',
-                        fontSize: 24,
-                        fontWeight: FontWeight.w400,
+                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
                         color: AppColors.textPrimary,
                       ),
                       overflow: TextOverflow.ellipsis,
@@ -71,21 +68,16 @@ class TimerPresetItem extends StatelessWidget {
                         children: [
                           TextSpan(
                             text: formattedTime,
-                            style: const TextStyle(
-                              fontFamily: 'Sora',
-                              fontSize: 20,
-                              fontWeight: FontWeight.w300,
-                              color: AppColors.textGrey,
-                            ),
+                            style: Theme.of(context).textTheme.bodyLarge
+                                ?.copyWith(color: AppColors.textGrey),
                           ),
                           TextSpan(
                             text: ' $unitLabel',
-                            style: const TextStyle(
-                              fontFamily: 'Sora',
-                              fontSize: 18,
-                              fontWeight: FontWeight.w300,
-                              color: AppColors.textGrey,
-                            ),
+                            style: Theme.of(context).textTheme.bodyLarge
+                                ?.copyWith(
+                                  fontSize: 18,
+                                  color: AppColors.textGrey,
+                                ),
                           ),
                         ],
                       ),
@@ -96,22 +88,13 @@ class TimerPresetItem extends StatelessWidget {
                         children: [
                           TextSpan(
                             text: numericPart,
-                            style: const TextStyle(
-                              fontFamily: 'Sora',
-                              fontSize: 40,
-                              fontWeight: FontWeight.w400,
-                              color: AppColors.textPrimary,
-                            ),
+                            style: Theme.of(context).textTheme.displayMedium,
                           ),
                           const WidgetSpan(child: SizedBox(width: 6)),
                           TextSpan(
                             text: unitLabel,
-                            style: const TextStyle(
-                              fontFamily: 'Sora',
-                              fontSize: 20,
-                              fontWeight: FontWeight.w300,
-                              color: AppColors.textGrey,
-                            ),
+                            style: Theme.of(context).textTheme.bodyLarge
+                                ?.copyWith(color: AppColors.textGrey),
                           ),
                         ],
                       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mechanix_clock/core/utils/helper.dart';
 import 'package:mechanix_clock/features/stopwatch/bloc/stopwatch_bloc.dart';
 import 'package:mechanix_clock/features/stopwatch/bloc/stopwatch_event.dart';
 import 'package:mechanix_clock/features/stopwatch/bloc/stopwatch_state.dart';
@@ -7,16 +8,6 @@ import 'package:mechanix_clock/l10n/app_localizations.dart';
 
 class StopwatchScreen extends StatelessWidget {
   const StopwatchScreen({super.key});
-
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final minutes = twoDigits(duration.inMinutes.remainder(60));
-    final seconds = twoDigits(duration.inSeconds.remainder(60));
-    final hundredths = twoDigits(
-      (duration.inMilliseconds.remainder(1000) / 10).truncate(),
-    );
-    return '$minutes:$seconds.$hundredths';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +24,7 @@ class StopwatchScreen extends StatelessWidget {
       ),
       body: BlocBuilder<StopwatchBloc, StopwatchState>(
         builder: (context, state) {
-          final timeStr = _formatDuration(state.elapsed);
+          final timeStr = formatDuration(state.elapsed, includeHundredths: true);
           // timeStr = "MM:SS.hh"
           final colonIdx = timeStr.indexOf(':');
           final dotIdx = timeStr.indexOf('.');
@@ -95,7 +86,7 @@ class StopwatchScreen extends StatelessWidget {
                             ),
                             const Spacer(),
                             Text(
-                              _formatDuration(lap.duration),
+                              formatDuration(lap.duration, includeHundredths: true),
                               style: const TextStyle(
                                 fontSize: 20,
                                 color: Color(0xFFADADAD),

@@ -21,11 +21,10 @@ class WorldClockEmptyState extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             l10n.tap_to_add_cities,
-            style:
-                Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: AppColors.textGrey) ??
-                const TextStyle(fontSize: 14, color: AppColors.textGrey),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontSize: 14,
+              color: AppColors.textGrey,
+            ),
           ),
         ],
       ),

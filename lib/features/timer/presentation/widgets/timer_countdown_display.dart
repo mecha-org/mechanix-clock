@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mechanix_clock/core/theme/app_theme.dart';
+import 'package:mechanix_clock/core/utils/helper.dart';
 import 'package:mechanix_clock/features/timer/presentation/widgets/segmented_circular_progress.dart';
 import 'package:mechanix_clock/l10n/app_localizations.dart';
 
@@ -18,27 +19,6 @@ class TimerCountdownDisplay extends StatelessWidget {
     this.timerName,
     this.endTime,
   });
-
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final hours = duration.inHours;
-    final minutes = twoDigits(duration.inMinutes.remainder(60));
-    final seconds = twoDigits(duration.inSeconds.remainder(60));
-    if (hours > 0) {
-      return '${twoDigits(hours)}:$minutes:$seconds';
-    } else {
-      return '$minutes:$seconds';
-    }
-  }
-
-  String _formatEndTime(DateTime endTime, AppLocalizations l10n) {
-    final hour = endTime.hour;
-    final minute = endTime.minute.toString().padLeft(2, '0');
-    final isPm = hour >= 12;
-    final displayHour = hour % 12 == 0 ? 12 : hour % 12;
-    final period = isPm ? l10n.pm : l10n.am;
-    return '$displayHour:$minute $period';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +50,7 @@ class TimerCountdownDisplay extends StatelessWidget {
                   value: value,
                   totalSegments: 60,
                   activeColor: AppColors.accent,
-                  inactiveColor: const Color(0xFF262626),
+                  inactiveColor: AppColors.cardBackground,
                   glowColor: AppColors.accent,
                   strokeWidth: 2.0,
                   tickLength: 12.0,
@@ -87,7 +67,7 @@ class TimerCountdownDisplay extends StatelessWidget {
                 if (timerName != null && timerName!.isNotEmpty) ...[
                   Text(
                     timerName!.toUpperCase(),
-                    style: const TextStyle(
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 1.5,
@@ -97,8 +77,8 @@ class TimerCountdownDisplay extends StatelessWidget {
                   const SizedBox(height: 8),
                 ],
                 Text(
-                  _formatDuration(remaining),
-                  style: const TextStyle(
+                  formatDuration(remaining),
+                  style: Theme.of(context).textTheme.displayMedium?.copyWith(
                     fontSize: 36,
                     fontWeight: FontWeight.w300,
                     color: AppColors.textPrimary,
@@ -118,12 +98,12 @@ class TimerCountdownDisplay extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          _formatEndTime(showEndTime, l10n),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                            color: AppColors.textOffWhite,
-                          ),
+                          formatEndTime(showEndTime, l10n),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                fontSize: 14,
+                                color: AppColors.textOffWhite,
+                              ),
                         ),
                       ],
                     ),
