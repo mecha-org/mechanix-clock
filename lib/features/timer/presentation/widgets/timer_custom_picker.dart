@@ -35,14 +35,17 @@ class TimerCustomPicker extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          PickerColumn(
-            itemCount: 24,
-            initialValue: selectedHours,
-            isHour: false,
-            showBorder: false,
-            width: 70,
-            onChanged: onHoursChanged,
-            enabled: enabled,
+          SizedBox(
+            width: 90,
+            child: PickerColumn(
+              itemCount: 24,
+              initialValue: selectedHours,
+              isHour: false,
+              showBorder: false,
+              width: 70,
+              onChanged: onHoursChanged,
+              enabled: enabled,
+            ),
           ),
           Text(
             ':',
@@ -52,14 +55,17 @@ class TimerCustomPicker extends StatelessWidget {
               ),
             ),
           ),
-          PickerColumn(
-            itemCount: 60,
-            initialValue: selectedMinutes,
-            isHour: false,
-            showBorder: false,
-            width: 70,
-            onChanged: onMinutesChanged,
-            enabled: enabled,
+          SizedBox(
+            width: 90,
+            child: PickerColumn(
+              itemCount: 60,
+              initialValue: selectedMinutes,
+              isHour: false,
+              showBorder: false,
+              width: 70,
+              onChanged: onMinutesChanged,
+              enabled: enabled,
+            ),
           ),
           Text(
             ':',
@@ -69,14 +75,17 @@ class TimerCustomPicker extends StatelessWidget {
               ),
             ),
           ),
-          PickerColumn(
-            itemCount: 60,
-            initialValue: selectedSeconds,
-            isHour: false,
-            showBorder: false,
-            width: 70,
-            onChanged: onSecondsChanged,
-            enabled: enabled,
+          SizedBox(
+            width: 90,
+            child: PickerColumn(
+              itemCount: 60,
+              initialValue: selectedSeconds,
+              isHour: false,
+              showBorder: false,
+              width: 70,
+              onChanged: onSecondsChanged,
+              enabled: enabled,
+            ),
           ),
         ],
       ),

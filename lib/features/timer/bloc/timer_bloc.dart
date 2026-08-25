@@ -302,7 +302,11 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
           ),
         );
       } else {
-        emit(state.copyWith(remaining: newRemaining));
+        final ceiledSeconds = (newRemaining.inMilliseconds + 999) ~/ 1000;
+        final ceiledRemaining = Duration(seconds: ceiledSeconds);
+        if (ceiledRemaining != state.remaining) {
+          emit(state.copyWith(remaining: ceiledRemaining));
+        }
       }
     }
   }

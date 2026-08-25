@@ -312,7 +312,7 @@ void main() {
           status: TimerStatus.running,
           duration: const Duration(seconds: 10),
           remaining: const Duration(seconds: 10),
-          endTime: now.add(const Duration(seconds: 10)),
+          endTime: now.add(const Duration(seconds: 9)),
         );
       },
       act: (bloc) => bloc.add(const TimerTick()),
