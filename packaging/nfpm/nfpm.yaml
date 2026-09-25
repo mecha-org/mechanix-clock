@@ -13,10 +13,10 @@ license: BSD
 overrides:
   rpm:
     depends:
-      - mechanix-flutter-engine = 3.47.0
+      - mechanix-flutter-engine = 3.47.1
   deb:
     depends:
-      - "mechanix-flutter-engine (= 3.47.0)"
+      - "mechanix-flutter-engine (= 3.47.1)"
 
 contents:
   - src: ./stage/bundle/mechanix_clock
@@ -33,8 +33,8 @@ contents:
       mode: 0755
   - src: ./org.mechanix.clock.desktop
     dst: /usr/share/applications/org.mechanix.clock.desktop
-  - src: ./assets/mechanix_clock.png
-    dst: /usr/share/icons/hicolor/48x48/apps/mechanix_clock.png
+  - src: ./assets/desktop_icon.png
+    dst: /usr/share/icons/hicolor/48x48/apps/org.mechanix.clock.png
 
 scripts:
   postinstall: ./packaging/nfpm/scripts/postinstall.sh
