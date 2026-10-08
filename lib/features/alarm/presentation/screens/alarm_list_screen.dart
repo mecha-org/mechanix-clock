@@ -1,14 +1,16 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mechanix_clock/core/theme/app_theme.dart';
-import 'package:mechanix_clock/core/utils/helper.dart';
 import 'package:mechanix_clock/features/alarm/bloc/alarm_bloc.dart';
 import 'package:mechanix_clock/features/alarm/bloc/alarm_event.dart';
 import 'package:mechanix_clock/features/alarm/bloc/alarm_state.dart';
 import 'package:mechanix_clock/features/alarm/data/models/alarm_model.dart';
+import 'package:mechanix_clock/features/alarm/presentation/widgets/day_bubble.dart';
+import 'package:mechanix_clock/features/alarm/presentation/widgets/delete_alarm_confirmation_sheet.dart';
 import 'package:mechanix_clock/l10n/app_localizations.dart';
+import 'package:widgets/widgets.dart';
 
-import '../widgets/custom_switch.dart';
 import 'edit_alarm_screen.dart';
 
 class AlarmListScreen extends StatefulWidget {
@@ -19,8 +21,6 @@ class AlarmListScreen extends StatefulWidget {
 }
 
 class _AlarmListScreenState extends State<AlarmListScreen> {
-  bool _isEditing = false;
-
   @override
   void initState() {
     super.initState();
@@ -30,69 +30,78 @@ class _AlarmListScreenState extends State<AlarmListScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+      backgroundColor: theme.colorScheme.surfaceContainerLowest,
+      appBar: MechanixAppBar.small(
+        primary: false,
         title: Text(
-          _isEditing ? l10n.edit_alarms : l10n.alarms,
-          style: Theme.of(context).textTheme.headlineMedium,
+          l10n.alarms.toUpperCase(),
+          style: theme.textTheme.headlineMedium!.copyWith(
+            color: theme.colorScheme.onSecondaryContainer,
+            letterSpacing: 1.0,
+          ),
         ),
-        actions: [
-          IconButton(
-            key: const Key('edit_mode_button'),
-            padding: const EdgeInsets.all(10),
-            icon: Icon(
-              _isEditing ? Icons.check : Icons.edit_outlined,
-              color: AppColors.textPrimary,
-            ),
-            onPressed: () {
-              setState(() {
-                _isEditing = !_isEditing;
-              });
-            },
-          ),
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            child: IconButton(
-              padding: const EdgeInsets.all(10),
-              key: const Key('add_alarm_button'),
-              icon: const Icon(
-                Icons.add_box_outlined,
-                color: AppColors.textPrimary,
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const EditAlarmScreen(),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
+        backgroundColor: Colors.transparent,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: MechanixDivider(color: theme.colorScheme.outline, space: 1),
+        ),
       ),
       body: BlocBuilder<AlarmBloc, AlarmState>(
         builder: (context, state) {
           if (state is AlarmLoading) {
             return const Center(child: CircularProgressIndicator());
           } else if (state is AlarmLoaded) {
-            return ListView.separated(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              itemCount: state.alarms.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 40),
-              itemBuilder: (context, index) {
-                return _AlarmItem(
-                  alarm: state.alarms[index],
-                  isEditing: _isEditing,
-                );
-              },
+            if (state.alarms.isEmpty) {
+              return Center(
+                child: Text(
+                  l10n.no_alarms,
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    color: theme.colorScheme.onSecondaryContainer,
+                  ),
+                ),
+              );
+            }
+            return ScrollConfiguration(
+              behavior: ScrollConfiguration.of(context).copyWith(
+                dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
+              ),
+              child: MechanixSwipableList(
+                child: ListView.separated(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  itemCount: state.alarms.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 24),
+                  itemBuilder: (context, index) {
+                    final alarm = state.alarms[index];
+                    return _AlarmItem(key: ValueKey(alarm.id), alarm: alarm);
+                  },
+                ),
+              ),
             );
           } else {
-            return Center(child: Text(l10n.no_alarms));
+            return Center(
+              child: Text(
+                l10n.alarms,
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  color: theme.colorScheme.onSecondaryContainer,
+                ),
+              ),
+            );
           }
         },
+      ),
+      floatingActionButton: MechanixFloatingActionButton(
+        key: const Key('add_alarm_button'),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const EditAlarmScreen()),
+          );
+        },
+        icon: const Icon(Icons.add),
       ),
     );
   }
@@ -100,135 +109,109 @@ class _AlarmListScreenState extends State<AlarmListScreen> {
 
 class _AlarmItem extends StatelessWidget {
   final Alarm alarm;
-  final bool isEditing;
 
-  const _AlarmItem({required this.alarm, required this.isEditing});
+  const _AlarmItem({super.key, required this.alarm});
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final Color textColor = alarm.isActive
-        ? AppColors.textPrimary
-        : AppColors.textGrey;
+        ? colorScheme.onSurface
+        : colorScheme.onSurfaceVariant;
 
-    final dayAbbrs = context.dayAbbrs;
-    return InkWell(
+    final days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+    return MechanixSwipableListTile(
+      minHeight: 88.0,
+      extentRatio: 0.28,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       onTap: () {
-        context.read<AlarmBloc>().add(DeleteAlarm(alarm.id));
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EditAlarmScreen(alarm: alarm),
+          ),
+        );
       },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        child: Row(
-          children: [
-            if (isEditing) ...[
-              GestureDetector(
-                onTap: () {
-                  context.read<AlarmBloc>().add(DeleteAlarm(alarm.id));
-                },
-                child: const Icon(
-                  Icons.remove_circle_outline,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(width: 16),
-            ],
-            Expanded(
-              child: GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                key: const Key('alarm_item_tap'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => EditAlarmScreen(alarm: alarm),
-                    ),
-                  );
-                },
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          '${alarm.hour}:${alarm.minute.toString().padLeft(2, '0')}',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.displayMedium?.copyWith(color: textColor),
-                        ),
-                        const SizedBox(width: 4),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
-                          child: Text(
-                            alarm.isAm ? l10n.am : l10n.pm,
-                            style: Theme.of(
-                              context,
-                            ).textTheme.bodyLarge?.copyWith(color: textColor),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    if (alarm.repeatDays.isEmpty)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                          vertical: 2,
-                        ),
-                        color: AppColors.cardBackground,
-                        child: Text(
-                          l10n.once,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodyMedium?.copyWith(color: textColor),
-                        ),
-                      )
-                    else
-                      Row(
-                        key: const Key('alarm_repeat_days'),
-                        children: List.generate(7, (index) {
-                          final bool isSelected = alarm.repeatDays.contains(
-                            index,
-                          );
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: Container(
-                              width: 20,
-                              height: 20,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? AppColors.cardBackground
-                                    : Colors.transparent,
-                              ),
-                              child: Text(
-                                dayAbbrs[index],
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(
-                                      color: isSelected
-                                          ? AppColors.textOffWhite
-                                          : AppColors.textDim,
-                                      fontSize: 14,
-                                    ),
-                              ),
-                            ),
-                          );
-                        }),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            if (!isEditing)
-              CustomSwitch(
-                value: alarm.isActive,
-                onChanged: (value) {
-                  context.read<AlarmBloc>().add(ToggleAlarm(alarm.id));
-                },
-              ),
-          ],
+      actions: [
+        MechanixIconButton.filled(
+          key: Key('alarm_list_delete_button_${alarm.id}'),
+          onPressed: () async {
+            final confirmed = await showDeleteAlarmConfirmationSheet(context);
+            if (confirmed == true && context.mounted) {
+              context.read<AlarmBloc>().add(DeleteAlarm(alarm.id));
+            }
+          },
+          icon: ImageIcon(
+            const AssetImage('assets/icons/delete.png'),
+            color: theme.colorScheme.onPrimary,
+          ),
+          size: IconButtonSize.xLarge,
+          type: ButtonType.rounded,
+          backgroundColor: theme.colorScheme.errorContainer,
         ),
+      ],
+      label: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                '${alarm.hour}:${alarm.minute.toString().padLeft(2, '0')} '
+                '${alarm.isAm ? l10n.am : l10n.pm}',
+                style: theme.textTheme.displayMedium!.copyWith(
+                  fontFamily: MechanixFontFamily.geistMono,
+                  fontWeight: FontWeight.w500,
+                  color: textColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (alarm.repeatDays.isEmpty)
+            Text(
+              l10n.once,
+              style: theme.textTheme.labelLarge!.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            )
+          else if (alarm.repeatDays.length == 7)
+            Text(
+              l10n.daily,
+              style: theme.textTheme.labelLarge!.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            )
+          else
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(7, (index) {
+                final isSelected = alarm.repeatDays.contains(index);
+                return Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: DayBubble(
+                    size: 22,
+                    label: days[index],
+                    isSelected: isSelected,
+                  ),
+                );
+              }),
+            ),
+        ],
       ),
+      trailingWidgets: [
+        MechanixSwitch(
+          value: alarm.isActive,
+          onChanged: (value) {
+            context.read<AlarmBloc>().add(ToggleAlarm(alarm.id));
+          },
+        ),
+      ],
     );
   }
 }

@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get alarms => 'Alarms';
+  String get alarms => 'ALARMS';
 
   @override
   String get stopwatch => 'Stopwatch';
@@ -27,10 +27,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get edit_alarms => 'Edit Alarms';
 
   @override
-  String get no_alarms => 'No Alarms';
+  String get no_alarms => 'NO ALARMS';
 
   @override
   String get once => 'Once';
+
+  @override
+  String get daily => 'Daily';
+
+  @override
+  String get custom => 'Custom';
+
+  @override
+  String get default_label => 'Default';
+
+  @override
+  String get alarm_time => 'Alarm time';
 
   @override
   String get am => 'AM';
@@ -101,6 +113,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String lap_padded(String number) {
+    return 'LAP $number';
+  }
+
+  @override
   String get stop => 'Stop';
 
   @override
@@ -113,7 +130,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get world_clock_coming_soon => 'World Clock - Coming Soon';
 
   @override
-  String get timers => 'Timers';
+  String get timers => 'Timer';
 
   @override
   String get cancel => 'Cancel';
@@ -215,4 +232,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get search_country_region => 'Search country/ region';
+
+  @override
+  String get delete_alarm_question => 'Delete alarm?';
+
+  @override
+  String get cancel_uppercase => 'CANCEL';
+
+  @override
+  String get trash_uppercase => 'TRASH';
 }

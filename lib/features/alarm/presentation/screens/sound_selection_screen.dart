@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mechanix_clock/core/theme/app_theme.dart';
 import 'package:mechanix_clock/core/utils/constants.dart';
-import 'package:mechanix_clock/l10n/app_localizations.dart';
+import 'package:widgets/widgets.dart';
 
 class SoundSelectionScreen extends StatefulWidget {
   final String initialSound;
@@ -12,76 +11,67 @@ class SoundSelectionScreen extends StatefulWidget {
 }
 
 class _SoundSelectionScreenState extends State<SoundSelectionScreen> {
-  late final ValueNotifier<String> _selectedSound;
+  late String _selectedSound;
 
   @override
   void initState() {
     super.initState();
-    _selectedSound = ValueNotifier(widget.initialSound);
-  }
-
-  @override
-  void dispose() {
-    _selectedSound.dispose();
-    super.dispose();
+    _selectedSound = widget.initialSound;
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.sound),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
+      backgroundColor: theme.colorScheme.surfaceContainerLowest,
+      appBar: MechanixAppBar.small(
+        primary: false,
+        backgroundColor: Colors.transparent,
+        leading: MechanixIconButton.standard(
+          icon: const Icon(Icons.arrow_back_ios_new),
           onPressed: () => Navigator.pop(context),
         ),
-      ),
-      body: ListView.builder(
-        itemCount: sounds.length,
-        itemBuilder: (context, index) => _SoundTile(
-          key: Key('sound_${sounds[index]}'),
-          sound: sounds[index],
-          selectedNotifier: _selectedSound,
-        ),
-      ),
-      bottomNavigationBar: Container(
-        height: 60,
-        color: AppColors.surface,
-        child: Center(
-          child: IconButton(
+        actions: [
+          MechanixIconButton.standard(
             key: const Key('sound_done_button'),
             icon: const Icon(Icons.check),
-            onPressed: () => Navigator.pop(context, _selectedSound.value),
+            onPressed: () => Navigator.pop(context, _selectedSound),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: ListView.separated(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        itemCount: sounds.length,
+        separatorBuilder: (context, index) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: MechanixDivider(
+            color: theme.colorScheme.outline.withValues(alpha: 0.38),
           ),
         ),
+        itemBuilder: (context, index) {
+          final sound = sounds[index];
+
+          return MechanixListTile(
+            key: Key('sound_$sound'),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            leading: MechanixRadio<String>(
+              value: sound,
+              groupValue: _selectedSound,
+              onChanged: (val) {
+                if (val != null) {
+                  setState(() => _selectedSound = val);
+                }
+              },
+            ),
+            labelText: sound,
+            onTap: () {
+              setState(() => _selectedSound = sound);
+            },
+          );
+        },
       ),
-    );
-  }
-}
-
-class _SoundTile extends StatelessWidget {
-  final String sound;
-  final ValueNotifier<String> selectedNotifier;
-
-  const _SoundTile({
-    super.key,
-    required this.sound,
-    required this.selectedNotifier,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(sound),
-      leading: ValueListenableBuilder<String>(
-        valueListenable: selectedNotifier,
-        builder: (_, selected, _) => Icon(
-          selected == sound ? Icons.check_circle : Icons.radio_button_unchecked,
-          color: AppColors.textPrimary,
-        ),
-      ),
-      onTap: () => selectedNotifier.value = sound,
     );
   }
 }

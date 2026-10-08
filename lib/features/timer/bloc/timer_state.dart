@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../data/models/active_timer_data.dart';
 import '../data/models/timer_preset.dart';
 
 enum TimerStatus { initial, idle, running, paused, finished }
@@ -13,6 +14,7 @@ class TimerState extends Equatable {
   final bool isEditingPresets;
   final String activePresetId;
   final DateTime? endTime;
+  final Map<String, ActiveTimerData> activeTimers;
 
   const TimerState({
     this.status = TimerStatus.initial,
@@ -23,6 +25,7 @@ class TimerState extends Equatable {
     this.isEditingPresets = false,
     this.activePresetId = '',
     this.endTime,
+    this.activeTimers = const {},
   });
 
   TimerState copyWith({
@@ -35,6 +38,7 @@ class TimerState extends Equatable {
     String? activePresetId,
     DateTime? endTime,
     bool clearEndTime = false,
+    Map<String, ActiveTimerData>? activeTimers,
   }) {
     return TimerState(
       status: status ?? this.status,
@@ -45,6 +49,7 @@ class TimerState extends Equatable {
       isEditingPresets: isEditingPresets ?? this.isEditingPresets,
       activePresetId: activePresetId ?? this.activePresetId,
       endTime: clearEndTime ? null : (endTime ?? this.endTime),
+      activeTimers: activeTimers ?? this.activeTimers,
     );
   }
 
@@ -58,5 +63,6 @@ class TimerState extends Equatable {
     isEditingPresets,
     activePresetId,
     endTime,
+    activeTimers,
   ];
 }

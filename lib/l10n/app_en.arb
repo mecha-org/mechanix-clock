@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "alarms": "Alarms",
+  "alarms": "ALARMS",
   "@alarms": {
     "description": "Title for the alarms screen"
   },
@@ -24,13 +24,29 @@
   "@edit_alarms": {
     "description": "Title for editing alarms"
   },
-  "no_alarms": "No Alarms",
+  "no_alarms": "NO ALARMS",
   "@no_alarms": {
     "description": "Message displayed when there are no alarms"
   },
   "once": "Once",
   "@once": {
     "description": "Label indicating an alarm repeats only once"
+  },
+  "daily": "Daily",
+  "@daily": {
+    "description": "Label indicating an alarm repeats daily"
+  },
+  "custom": "Custom",
+  "@custom": {
+    "description": "Label indicating an alarm has custom repeat days"
+  },
+  "default_label": "Default",
+  "@default_label": {
+    "description": "Label indicating the default setting"
+  },
+  "alarm_time": "Alarm time",
+  "@alarm_time": {
+    "description": "Label for the alarm time row"
   },
   "am": "AM",
   "@am": {
@@ -125,6 +141,15 @@
       }
     }
   },
+  "lap_padded": "LAP {number}",
+  "@lap_padded": {
+    "description": "Uppercase label for a stopwatch lap with padded number",
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
   "stop": "Stop",
   "@stop": {
     "description": "Button text to stop the stopwatch"
@@ -141,7 +166,7 @@
   "@world_clock_coming_soon": {
     "description": "Placeholder message indicating the world clock feature is not yet available"
   },
-  "timers": "Timers",
+  "timers": "Timer",
   "@timers": {
     "description": "Title for the timers screen"
   },
@@ -282,6 +307,17 @@
   "search_country_region": "Search country/ region",
   "@search_country_region": {
     "description": "Hint text for the search city field"
+  },
+  "delete_alarm_question": "Delete alarm?",
+  "@delete_alarm_question": {
+    "description": "Confirmation title when deleting an alarm"
+  },
+  "cancel_uppercase": "CANCEL",
+  "@cancel_uppercase": {
+    "description": "Uppercase cancel button text"
+  },
+  "trash_uppercase": "TRASH",
+  "@trash_uppercase": {
+    "description": "Uppercase trash button text"
   }
 }
-

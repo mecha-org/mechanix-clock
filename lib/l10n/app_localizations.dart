@@ -97,7 +97,7 @@ abstract class AppLocalizations {
   /// Title for the alarms screen
   ///
   /// In en, this message translates to:
-  /// **'Alarms'**
+  /// **'ALARMS'**
   String get alarms;
 
   /// Title for the stopwatch screen
@@ -133,7 +133,7 @@ abstract class AppLocalizations {
   /// Message displayed when there are no alarms
   ///
   /// In en, this message translates to:
-  /// **'No Alarms'**
+  /// **'NO ALARMS'**
   String get no_alarms;
 
   /// Label indicating an alarm repeats only once
@@ -141,6 +141,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Once'**
   String get once;
+
+  /// Label indicating an alarm repeats daily
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get daily;
+
+  /// Label indicating an alarm has custom repeat days
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get custom;
+
+  /// Label indicating the default setting
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get default_label;
+
+  /// Label for the alarm time row
+  ///
+  /// In en, this message translates to:
+  /// **'Alarm time'**
+  String get alarm_time;
 
   /// Ante meridiem time indicator
   ///
@@ -274,6 +298,12 @@ abstract class AppLocalizations {
   /// **'Lap {number}'**
   String lap_number(int number);
 
+  /// Uppercase label for a stopwatch lap with padded number
+  ///
+  /// In en, this message translates to:
+  /// **'LAP {number}'**
+  String lap_padded(String number);
+
   /// Button text to stop the stopwatch
   ///
   /// In en, this message translates to:
@@ -301,7 +331,7 @@ abstract class AppLocalizations {
   /// Title for the timers screen
   ///
   /// In en, this message translates to:
-  /// **'Timers'**
+  /// **'Timer'**
   String get timers;
 
   /// Button text to cancel the timer
@@ -495,6 +525,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search country/ region'**
   String get search_country_region;
+
+  /// Confirmation title when deleting an alarm
+  ///
+  /// In en, this message translates to:
+  /// **'Delete alarm?'**
+  String get delete_alarm_question;
+
+  /// Uppercase cancel button text
+  ///
+  /// In en, this message translates to:
+  /// **'CANCEL'**
+  String get cancel_uppercase;
+
+  /// Uppercase trash button text
+  ///
+  /// In en, this message translates to:
+  /// **'TRASH'**
+  String get trash_uppercase;
 }
 
 class _AppLocalizationsDelegate

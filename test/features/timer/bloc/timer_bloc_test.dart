@@ -4,6 +4,7 @@ import 'package:mechanix_clock/core/utils/system_alarm_service.dart';
 import 'package:mechanix_clock/features/timer/bloc/timer_bloc.dart';
 import 'package:mechanix_clock/features/timer/bloc/timer_event.dart';
 import 'package:mechanix_clock/features/timer/bloc/timer_state.dart';
+import 'package:mechanix_clock/features/timer/data/models/active_timer_data.dart';
 import 'package:mechanix_clock/features/timer/data/models/timer_preset.dart';
 import 'package:mechanix_clock/features/timer/data/repository/timer_repository.dart';
 import 'package:mocktail/mocktail.dart';
@@ -196,8 +197,9 @@ void main() {
     );
 
     blocTest<TimerBloc, TimerState>(
-      'starts timer countdown and does not add duration to presets',
+      'starts timer countdown and auto-saves new preset if not already present',
       build: () {
+        when(() => repository.savePresets(any())).thenAnswer((_) async => {});
         return timerBloc;
       },
       act: (bloc) => bloc.add(const StartTimer(Duration(seconds: 10))),
@@ -214,13 +216,158 @@ void main() {
               'timer remaining',
               const Duration(seconds: 10),
             )
-            .having((s) => s.presets.length, 'presets count', 0),
+            .having((s) => s.presets.length, 'presets count', 1)
+            .having(
+              (s) => s.presets.first.duration,
+              'preset duration',
+              const Duration(seconds: 10),
+            ),
       ],
       verify: (_) {
         verify(
           () => systemAlarmService.setTimer(any(), const Duration(seconds: 10)),
         ).called(1);
+        verify(() => repository.savePresets(any())).called(1);
+      },
+    );
+
+    blocTest<TimerBloc, TimerState>(
+      'starts timer with existing duration without duplicating preset',
+      build: () {
+        return timerBloc;
+      },
+      seed: () => const TimerState(
+        presets: [
+          TimerPreset(id: 'existing_1', duration: Duration(minutes: 5)),
+        ],
+      ),
+      act: (bloc) => bloc.add(const StartTimer(Duration(minutes: 5))),
+      expect: () => [
+        isA<TimerState>()
+            .having((s) => s.status, 'timer status', TimerStatus.running)
+            .having(
+              (s) => s.duration,
+              'timer duration',
+              const Duration(minutes: 5),
+            )
+            .having((s) => s.presets.length, 'presets count', 1)
+            .having((s) => s.activePresetId, 'active preset id', 'existing_1')
+            .having(
+              (s) => s.activeTimers['existing_1']?.status,
+              'timer status in activeTimers',
+              TimerStatus.running,
+            ),
+      ],
+      verify: (_) {
+        verify(
+          () => systemAlarmService.setTimer(
+            'existing_1',
+            const Duration(minutes: 5),
+          ),
+        ).called(1);
         verifyNever(() => repository.savePresets(any()));
+      },
+    );
+
+    blocTest<TimerBloc, TimerState>(
+      'starting second timer pauses first running timer and maintains both in activeTimers',
+      build: () {
+        return timerBloc;
+      },
+      seed: () => const TimerState(
+        status: TimerStatus.running,
+        duration: Duration(seconds: 10),
+        remaining: Duration(seconds: 8),
+        activePresetId: 't1',
+        presets: [
+          TimerPreset(id: 't1', duration: Duration(seconds: 10)),
+          TimerPreset(id: 't2', duration: Duration(minutes: 5)),
+        ],
+        activeTimers: {
+          't1': ActiveTimerData(
+            id: 't1',
+            duration: Duration(seconds: 10),
+            remaining: Duration(seconds: 8),
+            status: TimerStatus.running,
+          ),
+        },
+      ),
+      act: (bloc) =>
+          bloc.add(const StartTimer(Duration(minutes: 5), presetId: 't2')),
+      expect: () => [
+        isA<TimerState>()
+            .having((s) => s.status, 'status', TimerStatus.running)
+            .having((s) => s.activePresetId, 'activePresetId', 't2')
+            .having(
+              (s) => s.activeTimers['t1']?.status,
+              't1 status in activeTimers',
+              TimerStatus.paused,
+            )
+            .having(
+              (s) => s.activeTimers['t2']?.status,
+              't2 status in activeTimers',
+              TimerStatus.running,
+            ),
+      ],
+      verify: (_) {
+        verify(() => systemAlarmService.cancelTimer('t1')).called(1);
+        verify(
+          () => systemAlarmService.setTimer('t2', const Duration(minutes: 5)),
+        ).called(1);
+      },
+    );
+
+    blocTest<TimerBloc, TimerState>(
+      'starting timer with resetOldActiveTimers: true clears existing active timers',
+      build: () {
+        return timerBloc;
+      },
+      seed: () => const TimerState(
+        status: TimerStatus.paused,
+        duration: Duration(seconds: 10),
+        remaining: Duration(seconds: 8),
+        activePresetId: 't1',
+        presets: [
+          TimerPreset(id: 't1', duration: Duration(seconds: 10)),
+          TimerPreset(id: 't2', duration: Duration(minutes: 5)),
+        ],
+        activeTimers: {
+          't1': ActiveTimerData(
+            id: 't1',
+            duration: Duration(seconds: 10),
+            remaining: Duration(seconds: 8),
+            status: TimerStatus.paused,
+          ),
+        },
+      ),
+      act: (bloc) => bloc.add(
+        const StartTimer(
+          Duration(minutes: 5),
+          presetId: 't2',
+          resetOldActiveTimers: true,
+        ),
+      ),
+      expect: () => [
+        isA<TimerState>()
+            .having((s) => s.status, 'status', TimerStatus.running)
+            .having((s) => s.activePresetId, 'activePresetId', 't2')
+            .having((s) => s.activeTimers.length, 'activeTimers length', 1)
+            .having(
+              (s) => s.activeTimers.containsKey('t1'),
+              'contains t1',
+              false,
+            )
+            .having(
+              (s) => s.activeTimers['t2']?.status,
+              't2 status in activeTimers',
+              TimerStatus.running,
+            ),
+      ],
+      verify: (_) {
+        verify(() => systemAlarmService.cancelTimer('t1')).called(1);
+        verify(
+          () => systemAlarmService.setTimer('t2', const Duration(minutes: 5)),
+        ).called(1);
       },
     );
 

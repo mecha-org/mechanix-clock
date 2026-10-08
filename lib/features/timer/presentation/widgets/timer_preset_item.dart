@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mechanix_clock/core/theme/app_theme.dart';
+import 'package:mechanix_clock/core/utils/icons.dart';
 import 'package:mechanix_clock/features/timer/data/models/timer_preset.dart';
 import 'package:mechanix_clock/l10n/app_localizations.dart';
+import 'package:widgets/widgets.dart';
 
 class TimerPresetItem extends StatelessWidget {
   final TimerPreset preset;
@@ -23,93 +24,90 @@ class TimerPresetItem extends StatelessWidget {
     required this.formatPresetDuration,
   });
 
+  String _getPresetSubtitle(BuildContext context, AppLocalizations l10n) {
+    if (preset.name != null && preset.name!.isNotEmpty) {
+      return preset.name!;
+    }
+    final hours = preset.duration.inHours;
+    final minutes = preset.duration.inMinutes.remainder(60);
+    final seconds = preset.duration.inSeconds.remainder(60);
+
+    final parts = <String>[];
+    if (hours > 0) {
+      parts.add('$hours ${hours == 1 ? l10n.hours_abbr : l10n.hours_abbr}');
+    }
+    if (minutes > 0) {
+      parts.add('$minutes ${minutes == 1 ? 'min' : l10n.minutes_abbr}');
+    }
+    if (seconds > 0) {
+      parts.add('$seconds sec');
+    }
+    if (parts.isEmpty) {
+      return '0 min';
+    }
+    return parts.join(' ');
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final formattedTime = formatPresetDuration(preset.duration);
-    final isHourBased = preset.duration.inHours > 0;
-    final unitLabel = isHourBased ? l10n.hours_abbr : l10n.minutes_abbr;
-    final numericPart = formattedTime.replaceAll(unitLabel, '').trim();
+    final subtitle = _getPresetSubtitle(context, l10n);
 
     return InkWell(
       onTap: isEditing ? onEdit : onSelect,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             if (isEditing) ...[
               GestureDetector(
                 onTap: onDelete,
-                child: const Icon(
-                  Icons.remove_circle_outline,
-                  color: AppColors.textPrimary,
+                child: Icon(
+                  Icons.remove_circle,
+                  color: colorScheme.error,
+                  size: 24,
                 ),
               ),
               const SizedBox(width: 16),
             ],
-            // Column to support custom name or default time display
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (preset.name != null && preset.name!.isNotEmpty) ...[
-                    Text(
-                      preset.name!,
-                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                        color: AppColors.textPrimary,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
+                  Text(
+                    formattedTime,
+                    style: TextStyle(
+                      fontFamily: MechanixFontFamily.geistMono,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w400,
+                      color: colorScheme.onSurface,
+                      height: 1.1,
                     ),
-                    const SizedBox(height: 4),
-                    Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(
-                            text: formattedTime,
-                            style: Theme.of(context).textTheme.bodyLarge
-                                ?.copyWith(color: AppColors.textGrey),
-                          ),
-                          TextSpan(
-                            text: ' $unitLabel',
-                            style: Theme.of(context).textTheme.bodyLarge
-                                ?.copyWith(
-                                  fontSize: 18,
-                                  color: AppColors.textGrey,
-                                ),
-                          ),
-                        ],
-                      ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontFamily: MechanixFontFamily.geist,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: colorScheme.onSurfaceVariant,
                     ),
-                  ] else ...[
-                    RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: numericPart,
-                            style: Theme.of(context).textTheme.displayMedium,
-                          ),
-                          const WidgetSpan(child: SizedBox(width: 6)),
-                          TextSpan(
-                            text: unitLabel,
-                            style: Theme.of(context).textTheme.bodyLarge
-                                ?.copyWith(color: AppColors.textGrey),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                  ),
                 ],
               ),
             ),
             if (!isEditing)
-              IconButton(
-                icon: const Icon(
-                  Icons.play_arrow_outlined,
-                  size: 28,
-                  color: AppColors.textPrimary,
-                ),
+              MechanixIconButton.filled(
+                type: ButtonType.rounded,
+                size: IconButtonSize.medium,
+                backgroundColor: colorScheme.surfaceContainerHigh,
+                foregroundColor: colorScheme.onSurface,
+                icon: const ImageIcon(AssetImage(ClockIcons.play)),
                 onPressed: onPlay,
               ),
           ],

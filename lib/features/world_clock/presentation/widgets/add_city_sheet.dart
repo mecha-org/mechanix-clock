@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:timezone/timezone.dart' as tz;
+import 'package:mechanix_clock/core/utils/icons.dart';
+import 'package:widgets/widgets.dart';
 
-import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../bloc/world_clock_bloc.dart';
 import '../../bloc/world_clock_event.dart';
@@ -25,25 +25,70 @@ class _AddCitySheetState extends State<AddCitySheet> {
     super.dispose();
   }
 
-  String _formatTimezoneOffset(String timezoneId) {
-    try {
-      final location = tz.getLocation(timezoneId);
-      final now = tz.TZDateTime.now(location);
-      final offset = now.timeZoneOffset;
-      final hours = offset.inHours;
-      final minutes = offset.inMinutes.remainder(60).abs();
-      final sign = hours >= 0 ? '+' : '−';
-      final hoursStr = hours.abs().toString().padLeft(2, '0');
-      final minutesStr = minutes.toString().padLeft(2, '0');
-      return 'UTC$sign$hoursStr:$minutesStr';
-    } catch (e) {
-      return 'UTC+00:00';
+  Widget _buildHighlightedText(
+    String text,
+    String query,
+    BuildContext context,
+  ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    if (query.isEmpty) {
+      return Text(
+        text,
+        style: theme.textTheme.titleMedium?.copyWith(
+          color: colorScheme.onSurface,
+          fontWeight: FontWeight.w400,
+        ),
+      );
     }
+
+    final lowerText = text.toLowerCase();
+    final lowerQuery = query.toLowerCase();
+    final index = lowerText.indexOf(lowerQuery);
+
+    if (index == -1) {
+      return Text(
+        text,
+        style: theme.textTheme.titleMedium?.copyWith(
+          color: colorScheme.onSurface,
+          fontWeight: FontWeight.w400,
+        ),
+      );
+    }
+
+    final before = text.substring(0, index);
+    final match = text.substring(index, index + query.length);
+    final after = text.substring(index + query.length);
+
+    return RichText(
+      text: TextSpan(
+        style: theme.textTheme.titleMedium?.copyWith(
+          color: colorScheme.onSurface,
+          fontWeight: FontWeight.w400,
+        ),
+        children: [
+          if (before.isNotEmpty) TextSpan(text: before),
+          TextSpan(
+            text: match,
+            style: TextStyle(
+              color: colorScheme.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          if (after.isNotEmpty) TextSpan(text: after),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     final filteredCities = worldCities.where((city) {
       final query = _searchQuery.toLowerCase();
       return city.name.toLowerCase().contains(query) ||
@@ -51,76 +96,88 @@ class _AddCitySheetState extends State<AddCitySheet> {
           city.timezoneId.toLowerCase().contains(query);
     }).toList();
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      resizeToAvoidBottomInset: true,
-      body: SafeArea(
-        bottom: false,
+    return SizedBox(
+      height: screenHeight * 0.85,
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 8,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+        ),
         child: Column(
           children: [
-            // Top Right Close Icon
-            Align(
-              alignment: Alignment.topRight,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 8, right: 8),
-                child: IconButton(
-                  key: const Key('add_city_close_button'),
-                  icon: const Icon(
-                    Icons.close,
-                    color: AppColors.textPrimary,
-                    size: 28,
-                  ),
-                  onPressed: () => Navigator.pop(context),
+            MechanixSearchBar(
+              key: const Key('add_city_search_field'),
+              controller: _searchController,
+              hintText: l10n.search_country_region,
+              textStyle: WidgetStatePropertyAll(
+                theme.textTheme.titleLarge?.copyWith(fontSize: 20),
+              ),
+              hintStyle: WidgetStatePropertyAll(
+                theme.textTheme.titleLarge?.copyWith(
+                  fontSize: 20,
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
+              leading: ImageIcon(
+                const AssetImage(ClockIcons.search),
+                color: theme.colorScheme.onSurface,
+                size: 24,
+              ),
+              onChanged: (val) {
+                setState(() {
+                  _searchQuery = val;
+                });
+              },
+              trailing: _searchQuery.isNotEmpty
+                  ? [
+                      MechanixIconButton.standard(
+                        type: IconButtonType.rounded,
+                        icon: ImageIcon(
+                          const AssetImage(ClockIcons.cancel),
+                          color: theme.colorScheme.onSurface,
+                        ),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {
+                            _searchQuery = '';
+                          });
+                        },
+                      ),
+                    ]
+                  : null,
             ),
+
+            const SizedBox(height: 12),
             // Cities List
             Expanded(
               child: filteredCities.isEmpty
                   ? Center(
                       child: Text(
                         l10n.no_cities_found,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textGrey,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
                         ),
                       ),
                     )
                   : ListView.separated(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 4),
                       itemCount: filteredCities.length,
-                      separatorBuilder: (context, index) => Divider(
-                        color: AppColors.textPrimary.withValues(alpha: 0.08),
-                        height: 1,
-                      ),
+                      separatorBuilder: (context, index) =>
+                          MechanixDivider(color: colorScheme.outline),
                       itemBuilder: (context, index) {
                         final city = filteredCities[index];
-                        final offsetStr = _formatTimezoneOffset(
-                          city.timezoneId,
-                        );
-                        return ListTile(
+                        final fullCityText = '${city.name}, ${city.country}';
+
+                        return MechanixListTile(
                           key: Key(
                             'add_city_tile_${city.name.replaceAll(' ', '_')}',
                           ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 8,
-                          ),
-                          title: Text(
-                            '${city.name}, ${city.country}',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          subtitle: Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              '$offsetStr • ${city.timezoneId.replaceAll('_', ' ')}',
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(
-                                    fontSize: 14,
-                                    color: AppColors.textGrey,
-                                  ),
-                            ),
+                          labelText: fullCityText,
+                          label: Text(
+                            fullCityText,
+                            style: theme.textTheme.titleLarge,
                           ),
                           onTap: () {
                             context.read<WorldClockBloc>().add(
@@ -135,62 +192,6 @@ class _AddCitySheetState extends State<AddCitySheet> {
                         );
                       },
                     ),
-            ),
-            // Sticky Bottom Search Bar
-            Container(
-              color: AppColors.surface,
-              padding: EdgeInsets.only(
-                left: 16,
-                right: 16,
-                top: 12,
-                bottom: 12 + MediaQuery.of(context).padding.bottom,
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppColors.border.withValues(alpha: 0.5),
-                    width: 0.5,
-                  ),
-                ),
-                child: TextField(
-                  key: const Key('add_city_search_field'),
-                  controller: _searchController,
-                  onChanged: (val) {
-                    setState(() {
-                      _searchQuery = val;
-                    });
-                  },
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(
-                      Icons.search,
-                      color: AppColors.textGrey,
-                    ),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(
-                              Icons.cancel_rounded,
-                              color: AppColors.textGrey,
-                            ),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() {
-                                _searchQuery = '';
-                              });
-                            },
-                          )
-                        : null,
-                    hintText: l10n.search_country_region,
-                    hintStyle: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: AppColors.textDim),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                ),
-              ),
             ),
           ],
         ),

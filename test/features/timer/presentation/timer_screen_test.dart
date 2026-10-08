@@ -1,5 +1,4 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -8,12 +7,13 @@ import 'package:mechanix_clock/core/utils/constants.dart';
 import 'package:mechanix_clock/features/timer/bloc/timer_bloc.dart';
 import 'package:mechanix_clock/features/timer/bloc/timer_event.dart';
 import 'package:mechanix_clock/features/timer/bloc/timer_state.dart';
+import 'package:mechanix_clock/features/timer/data/models/active_timer_data.dart';
 import 'package:mechanix_clock/features/timer/data/models/timer_preset.dart';
 import 'package:mechanix_clock/features/timer/presentation/timer_screen.dart';
-import 'package:mechanix_clock/features/timer/presentation/widgets/timer_button.dart';
 import 'package:mechanix_clock/features/timer/presentation/widgets/timer_custom_picker.dart';
 import 'package:mechanix_clock/l10n/app_localizations.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:widgets/widgets.dart';
 
 class MockTimerBloc extends MockBloc<TimerEvent, TimerState>
     implements TimerBloc {}
@@ -22,13 +22,10 @@ void main() {
   late MockTimerBloc mockTimerBloc;
 
   setUpAll(() {
-    registerFallbackValue(const AddTimerPreset(Duration.zero));
-    registerFallbackValue(
-      const UpdateTimerPreset(id: '', name: '', duration: Duration.zero),
-    );
-    registerFallbackValue(const ReorderTimerPresets(0, 0));
-    registerFallbackValue(const DeleteTimerPreset(''));
+    registerFallbackValue(const StartTimer(Duration.zero));
     registerFallbackValue(CancelTimer());
+    registerFallbackValue(PauseTimer());
+    registerFallbackValue(ResumeTimer());
   });
 
   setUp(() {
@@ -51,30 +48,8 @@ void main() {
     );
   }
 
-  testWidgets('timer_add_preset_button is visible in idle status', (
-    tester,
-  ) async {
-    when(
-      () => mockTimerBloc.state,
-    ).thenReturn(const TimerState(status: TimerStatus.idle, presets: []));
-
-    await tester.pumpWidget(createWidgetUnderTest());
-    expect(find.byKey(const Key('timer_add_preset_button')), findsOneWidget);
-  });
-
-  testWidgets('timer_add_preset_button is absent in running status', (
-    tester,
-  ) async {
-    when(
-      () => mockTimerBloc.state,
-    ).thenReturn(const TimerState(status: TimerStatus.running, presets: []));
-
-    await tester.pumpWidget(createWidgetUnderTest());
-    expect(find.byKey(const Key('timer_add_preset_button')), findsNothing);
-  });
-
   testWidgets(
-    'shows warning SnackBar when trying to save a 0 duration preset',
+    'initially displays timer setting screen without AppBar action buttons',
     (tester) async {
       when(
         () => mockTimerBloc.state,
@@ -82,257 +57,161 @@ void main() {
 
       await tester.pumpWidget(createWidgetUnderTest());
 
-      // Locate the three CupertinoPicker widgets inside TimerCustomPicker.
-      // Set hours, minutes, and seconds to 0.
-      final pickers = find.byType(CupertinoPicker);
-      expect(pickers, findsNWidgets(3));
+      // Setting screen elements are present
+      expect(find.byType(TimerCustomPicker), findsOneWidget);
+      expect(find.byKey(const Key('timer_start_button')), findsOneWidget);
+      expect(find.byKey(const Key('timer_left_button')), findsOneWidget);
 
-      // Scroll/Change picker values to 0
-      // Hours (initial is 0 anyway, but let's select 0 to be sure)
-      await tester.tap(find.text('00').first);
-      // Minutes (initial is 5, scroll to 0)
-      final CupertinoPicker minutesPicker = tester.widget<CupertinoPicker>(
-        pickers.at(1),
-      );
-      minutesPicker.onSelectedItemChanged?.call(0);
-      // Seconds (initial is 2, scroll to 0)
-      final CupertinoPicker secondsPicker = tester.widget<CupertinoPicker>(
-        pickers.at(2),
-      );
-      secondsPicker.onSelectedItemChanged?.call(0);
-
-      await tester.pumpAndSettle();
-
-      // Click the add preset button
-      await tester.tap(find.byKey(const Key('timer_add_preset_button')));
-      await tester.pump();
-
-      // Verify warning SnackBar is shown
-      expect(
-        find.text('Please select a duration greater than 0'),
-        findsOneWidget,
-      );
-      verifyNever(() => mockTimerBloc.add(any()));
+      // AppBar action buttons (+ / edit) are removed from setting screen
+      expect(find.byKey(const Key('timer_goto_setting_button')), findsNothing);
+      expect(find.byKey(const Key('timer_add_preset_button')), findsNothing);
+      expect(find.byKey(const Key('timer_edit_mode_button')), findsNothing);
     },
   );
 
-  testWidgets('shows warning SnackBar when preset already exists', (
+  testWidgets('tapping start button dispatches StartTimer event', (
     tester,
   ) async {
-    final existingPreset = TimerPreset(
-      id: '1',
-      duration: const Duration(minutes: 1),
-    );
-    when(() => mockTimerBloc.state).thenReturn(
-      TimerState(status: TimerStatus.idle, presets: [existingPreset]),
-    );
-
-    await tester.pumpWidget(createWidgetUnderTest());
-
-    // By default: selected hours = 0, minutes = 1, seconds = 0.
-    // This matches the existingPreset (1 min).
-    await tester.tap(find.byKey(const Key('timer_add_preset_button')));
-    await tester.pump();
-
-    // Verify Warning SnackBar is shown
-    expect(find.text('Preset already exists'), findsOneWidget);
-    verifyNever(() => mockTimerBloc.add(any()));
-  });
-
-  testWidgets('adds preset when valid', (tester) async {
     when(
       () => mockTimerBloc.state,
     ).thenReturn(const TimerState(status: TimerStatus.idle, presets: []));
 
     await tester.pumpWidget(createWidgetUnderTest());
 
-    // By default: selected hours = 0, minutes = 1, seconds = 0.
-    await tester.tap(find.byKey(const Key('timer_add_preset_button')));
-    await tester.pumpAndSettle();
-
-    // Verify dialog opened
-    expect(find.text('Add Preset (01:00 mins)'), findsOneWidget);
-
-    // Enter name
-    await tester.enterText(find.byType(TextField), 'Work');
+    // Default duration is 1 min (hours: 0, minutes: 1, seconds: 0)
+    await tester.tap(find.byKey(const Key('timer_start_button')));
     await tester.pump();
 
-    // Tap Save
-    await tester.tap(find.text('Save'));
-    await tester.pumpAndSettle();
-
-    // Verify AddTimerPreset is called with the name
     verify(
       () => mockTimerBloc.add(
-        const AddTimerPreset(Duration(minutes: 1), name: 'Work'),
+        const StartTimer(Duration(minutes: 1), resetOldActiveTimers: true),
       ),
     ).called(1);
   });
 
   testWidgets(
-    'clicking a preset in edit mode opens rename dialog and updates preset',
+    'tapping reset button on setting screen resets picker time to 0',
     (tester) async {
-      final existingPreset = TimerPreset(
-        id: 'preset_123',
-        duration: const Duration(minutes: 10),
-        name: 'Old Name',
+      when(
+        () => mockTimerBloc.state,
+      ).thenReturn(const TimerState(status: TimerStatus.idle, presets: []));
+
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      // Tap reset button
+      await tester.tap(find.byKey(const Key('timer_left_button')));
+      await tester.pumpAndSettle();
+
+      // Start button should now be disabled (no time selected)
+      final startButton = tester.widget<MechanixIconButton>(
+        find.byKey(const Key('timer_start_button')),
+      );
+      expect(startButton.onPressed, isNull);
+    },
+  );
+
+  testWidgets(
+    'running timer displays play/pause screen with orange + button and active pause button',
+    (tester) async {
+      final preset1 = const TimerPreset(
+        id: 'p1',
+        duration: Duration(minutes: 5),
+      );
+      final preset2 = const TimerPreset(
+        id: 'p2',
+        duration: Duration(minutes: 30),
       );
       when(() => mockTimerBloc.state).thenReturn(
         TimerState(
-          status: TimerStatus.idle,
-          presets: [existingPreset],
-          isEditingPresets: true,
+          status: TimerStatus.running,
+          duration: const Duration(minutes: 5),
+          remaining: const Duration(minutes: 4, seconds: 50),
+          presets: [preset1, preset2],
+          activePresetId: 'p1',
         ),
       );
 
       await tester.pumpWidget(createWidgetUnderTest());
 
-      // Find the preset item and tap it (in edit mode, onTap is onEdit)
-      await tester.tap(find.text('Old Name'));
-      await tester.pumpAndSettle();
-
-      // Verify rename dialog opened
-      expect(find.text('Edit Preset'), findsOneWidget);
+      // Play screen is visible
+      expect(find.byType(TimerCustomPicker), findsNothing);
       expect(
-        find.text('Old Name'),
-        findsNWidgets(2),
-      ); // One in the list, one in the TextField
+        find.byKey(const Key('timer_goto_setting_button')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('timer_active_pause_button')),
+        findsOneWidget,
+      );
 
-      // Enter new name
-      await tester.enterText(find.byType(TextField), 'New Name');
+      // Other presets in list are visible
+      expect(find.text('30:00'), findsOneWidget);
+
+      // Tapping pause button dispatches PauseTimer
+      await tester.tap(find.byKey(const Key('timer_active_pause_button')));
       await tester.pump();
-
-      // Tap Save
-      await tester.tap(find.text('Save'));
-      await tester.pumpAndSettle();
-
-      // Verify UpdateTimerPreset is dispatched
-      verify(
-        () => mockTimerBloc.add(
-          const UpdateTimerPreset(
-            id: 'preset_123',
-            name: 'New Name',
-            duration: Duration(minutes: 10),
-          ),
-        ),
-      ).called(1);
+      verify(() => mockTimerBloc.add(PauseTimer())).called(1);
     },
   );
 
-  testWidgets(
-    'clicking cancel button dispatches CancelTimer when preset is active',
-    (tester) async {
-      final existingPreset = TimerPreset(
-        id: 'preset_123',
-        duration: const Duration(minutes: 10),
-      );
-      when(() => mockTimerBloc.state).thenReturn(
-        TimerState(
-          status: TimerStatus.running,
-          duration: const Duration(minutes: 10),
-          remaining: const Duration(minutes: 8),
-          presets: [existingPreset],
-          activePresetId: 'preset_123',
-        ),
-      );
-
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      // Click the cancel button
-      await tester.tap(find.text('Cancel'));
-      await tester.pump();
-
-      // Verify CancelTimer is dispatched
-      verify(() => mockTimerBloc.add(CancelTimer())).called(1);
-      // Verify DeleteTimerPreset is NOT dispatched
-      verifyNever(() => mockTimerBloc.add(any<DeleteTimerPreset>()));
-    },
-  );
-
-  testWidgets(
-    'clicking cancel button dispatches CancelTimer when no preset is active',
-    (tester) async {
-      when(() => mockTimerBloc.state).thenReturn(
-        const TimerState(
-          status: TimerStatus.running,
-          duration: Duration(minutes: 10),
-          remaining: Duration(minutes: 8),
-          presets: [],
-        ),
-      );
-
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      // Click the cancel button
-      await tester.tap(find.text('Cancel'));
-      await tester.pump();
-
-      // Verify CancelTimer is dispatched
-      verify(() => mockTimerBloc.add(CancelTimer())).called(1);
-    },
-  );
-
-  testWidgets('reordering presets dispatches ReorderTimerPresets event', (
+  testWidgets('paused timer displays resume button on play screen', (
     tester,
   ) async {
-    final preset1 = const TimerPreset(id: '1', duration: Duration(minutes: 1));
-    final preset2 = const TimerPreset(id: '2', duration: Duration(minutes: 2));
+    final preset1 = const TimerPreset(id: 'p1', duration: Duration(minutes: 5));
     when(() => mockTimerBloc.state).thenReturn(
       TimerState(
-        status: TimerStatus.idle,
-        presets: [preset1, preset2],
-        isEditingPresets: true,
+        status: TimerStatus.paused,
+        duration: const Duration(minutes: 5),
+        remaining: const Duration(minutes: 4, seconds: 50),
+        presets: [preset1],
+        activePresetId: 'p1',
       ),
     );
 
     await tester.pumpWidget(createWidgetUnderTest());
 
-    // Verify ReorderableListView is present
-    expect(find.byType(ReorderableListView), findsOneWidget);
+    expect(find.byKey(const Key('timer_active_resume_button')), findsOneWidget);
 
-    // Trigger onReorderItem on the ReorderableListView
-    final reorderableList = tester.widget<ReorderableListView>(
-      find.byType(ReorderableListView),
-    );
-    reorderableList.onReorderItem?.call(0, 1);
-
-    verify(() => mockTimerBloc.add(const ReorderTimerPresets(0, 1))).called(1);
+    await tester.tap(find.byKey(const Key('timer_active_resume_button')));
+    await tester.pump();
+    verify(() => mockTimerBloc.add(ResumeTimer())).called(1);
   });
 
-  testWidgets('start button is disabled when in editing mode', (tester) async {
-    when(() => mockTimerBloc.state).thenReturn(
-      const TimerState(
-        status: TimerStatus.idle,
-        presets: [],
-        isEditingPresets: true,
-      ),
-    );
+  testWidgets(
+    'tapping + button on play/pause screen navigates to timer setting screen',
+    (tester) async {
+      final preset1 = const TimerPreset(
+        id: 'p1',
+        duration: Duration(minutes: 5),
+      );
+      when(() => mockTimerBloc.state).thenReturn(
+        TimerState(
+          status: TimerStatus.running,
+          duration: const Duration(minutes: 5),
+          remaining: const Duration(minutes: 5),
+          presets: [preset1],
+          activePresetId: 'p1',
+        ),
+      );
 
-    await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpWidget(createWidgetUnderTest());
 
-    final startButtonFinder = find.byWidgetPredicate(
-      (widget) => widget is TimerButton && widget.label == 'Start',
-    );
-    expect(startButtonFinder, findsOneWidget);
+      // Verify on play screen initially
+      expect(
+        find.byKey(const Key('timer_goto_setting_button')),
+        findsOneWidget,
+      );
+      expect(find.byType(TimerCustomPicker), findsNothing);
 
-    final timerButton = tester.widget<TimerButton>(startButtonFinder);
-    expect(timerButton.enabled, isFalse);
-  });
+      // Tap + button
+      await tester.tap(find.byKey(const Key('timer_goto_setting_button')));
+      await tester.pumpAndSettle();
 
-  testWidgets('custom picker is absent when in editing mode', (tester) async {
-    when(() => mockTimerBloc.state).thenReturn(
-      const TimerState(
-        status: TimerStatus.idle,
-        presets: [],
-        isEditingPresets: true,
-      ),
-    );
-
-    await tester.pumpWidget(createWidgetUnderTest());
-
-    final pickerFinder = find.byType(TimerCustomPicker);
-    expect(pickerFinder, findsNothing);
-  });
+      // Now on setting screen
+      expect(find.byType(TimerCustomPicker), findsOneWidget);
+      expect(find.byKey(const Key('timer_start_button')), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'finished dialog shows restart and dismiss buttons, restart triggers StartTimer',
@@ -380,4 +259,106 @@ void main() {
       ).called(1);
     },
   );
+
+  testWidgets(
+    'play screen renders paused timer, running timer, and idle preset simultaneously',
+    (tester) async {
+      final preset1 = const TimerPreset(
+        id: 'p1',
+        duration: Duration(seconds: 10),
+      );
+      final preset2 = const TimerPreset(
+        id: 'p2',
+        duration: Duration(minutes: 5),
+      );
+      final preset3 = const TimerPreset(
+        id: 'p3',
+        duration: Duration(minutes: 30),
+      );
+
+      when(() => mockTimerBloc.state).thenReturn(
+        TimerState(
+          status: TimerStatus.running,
+          presets: [preset1, preset2, preset3],
+          activePresetId: 'p2',
+          activeTimers: const {
+            'p1': ActiveTimerData(
+              id: 'p1',
+              duration: Duration(seconds: 10),
+              remaining: Duration(seconds: 10),
+              status: TimerStatus.paused,
+            ),
+            'p2': ActiveTimerData(
+              id: 'p2',
+              duration: Duration(minutes: 5),
+              remaining: Duration(minutes: 5),
+              status: TimerStatus.running,
+            ),
+          },
+        ),
+      );
+
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      // Should display 1 pause button (for running p2) and 1 resume button (for paused p1)
+      expect(
+        find.byKey(const Key('timer_active_pause_button')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('timer_active_resume_button')),
+        findsOneWidget,
+      );
+
+      // Preset 3 is idle in list
+      expect(find.text('30:00'), findsOneWidget);
+    },
+  );
+
+  testWidgets('play screen renders active timers above inactive presets', (
+    tester,
+  ) async {
+    final preset1 = const TimerPreset(id: 'p1', duration: Duration(minutes: 1));
+    final preset2 = const TimerPreset(id: 'p2', duration: Duration(minutes: 5));
+    final preset3 = const TimerPreset(
+      id: 'p3',
+      duration: Duration(minutes: 10),
+    );
+
+    // Suppose p3 is running and p1, p2 are inactive presets
+    when(() => mockTimerBloc.state).thenReturn(
+      TimerState(
+        status: TimerStatus.running,
+        presets: [preset1, preset2, preset3],
+        activePresetId: 'p3',
+        activeTimers: const {
+          'p3': ActiveTimerData(
+            id: 'p3',
+            duration: Duration(minutes: 10),
+            remaining: Duration(minutes: 10),
+            status: TimerStatus.running,
+          ),
+        },
+      ),
+    );
+
+    await tester.pumpWidget(createWidgetUnderTest());
+
+    // Find all TimerActiveItem and TimerPresetItem positions
+    final activeFinder = find.byKey(const ValueKey('p3'));
+    final inactive1Finder = find.byKey(const ValueKey('p1'));
+    final inactive2Finder = find.byKey(const ValueKey('p2'));
+
+    expect(activeFinder, findsOneWidget);
+    expect(inactive1Finder, findsOneWidget);
+    expect(inactive2Finder, findsOneWidget);
+
+    final activeTop = tester.getTopLeft(activeFinder).dy;
+    final inactive1Top = tester.getTopLeft(inactive1Finder).dy;
+    final inactive2Top = tester.getTopLeft(inactive2Finder).dy;
+
+    // Active timer p3 must be rendered above inactive presets p1 and p2
+    expect(activeTop < inactive1Top, isTrue);
+    expect(activeTop < inactive2Top, isTrue);
+  });
 }

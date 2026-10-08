@@ -54,18 +54,44 @@ class ReorderTimerPresets extends TimerEvent {
 class StartTimer extends TimerEvent {
   final Duration duration;
   final String presetId;
+  final bool resetOldActiveTimers;
 
-  const StartTimer(this.duration, {this.presetId = ''});
+  const StartTimer(
+    this.duration, {
+    this.presetId = '',
+    this.resetOldActiveTimers = false,
+  });
 
   @override
-  List<Object?> get props => [duration, presetId];
+  List<Object?> get props => [duration, presetId, resetOldActiveTimers];
 }
 
-class PauseTimer extends TimerEvent {}
+class PauseTimer extends TimerEvent {
+  final String presetId;
 
-class ResumeTimer extends TimerEvent {}
+  const PauseTimer({this.presetId = ''});
 
-class CancelTimer extends TimerEvent {}
+  @override
+  List<Object?> get props => [presetId];
+}
+
+class ResumeTimer extends TimerEvent {
+  final String presetId;
+
+  const ResumeTimer({this.presetId = ''});
+
+  @override
+  List<Object?> get props => [presetId];
+}
+
+class CancelTimer extends TimerEvent {
+  final String presetId;
+
+  const CancelTimer({this.presetId = ''});
+
+  @override
+  List<Object?> get props => [presetId];
+}
 
 class TimerTick extends TimerEvent {
   const TimerTick();

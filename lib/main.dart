@@ -12,8 +12,8 @@ import 'package:mechanix_clock/l10n/app_localizations.dart';
 import 'package:show_fps/show_fps.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:widgets/widgets.dart';
 
-import 'core/theme/app_theme.dart';
 import 'features/alarm/bloc/alarm_bloc.dart';
 import 'features/navigation/presentation/screens/main_navigation_container.dart';
 import 'features/stopwatch/bloc/stopwatch_bloc.dart';
@@ -44,6 +44,7 @@ void main() {
 
 void _configureLocalTimezone(SystemAlarmService systemAlarmService) {
   final timezoneName = systemAlarmService.getTimezoneSync();
+
   try {
     tz.setLocalLocation(tz.getLocation(timezoneName));
   } catch (_) {
@@ -67,47 +68,57 @@ class MechanixClockApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final showFps = Platform.environment['SHOW_FPS'] == 'true';
+    final showFps =
+        Platform.environment['SHOW_FPS'] == 'true' ||
+        const String.fromEnvironment('SHOW_FPS') == 'true';
 
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (context) => AlarmBloc(
-            repository: repository,
-            systemAlarmService: systemAlarmService,
-          )..add(LoadAlarms()),
-        ),
-        BlocProvider(create: (context) => StopwatchBloc()),
-        BlocProvider(
-          create: (context) => TimerBloc(
-            repository: timerRepository,
-            systemAlarmService: systemAlarmService,
-          )..add(LoadTimerPresets()),
-        ),
-        BlocProvider(
-          create: (context) =>
-              WorldClockBloc(repository: worldClockRepository)
-                ..add(LoadWorldClocks()),
-        ),
-      ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Mechanix Clock',
-        theme: AppTheme.darkTheme,
-        locale: const Locale('en'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: const MainNavigationContainer(),
-        builder: showFps
-            ? (context, child) {
-                return ShowFPS(
-                  visible: showFps,
-                  showChart: false,
-                  child: child!,
-                );
-              }
-            : null,
-      ),
+    return MechanixTheme(
+      builder: (context, theme, child) {
+        final darkTheme = theme.dark;
+
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (context) => AlarmBloc(
+                repository: repository,
+                systemAlarmService: systemAlarmService,
+              )..add(LoadAlarms()),
+            ),
+            BlocProvider(create: (context) => StopwatchBloc()),
+            BlocProvider(
+              create: (context) => TimerBloc(
+                repository: timerRepository,
+                systemAlarmService: systemAlarmService,
+              )..add(LoadTimerPresets()),
+            ),
+            BlocProvider(
+              create: (context) =>
+                  WorldClockBloc(repository: worldClockRepository)
+                    ..add(LoadWorldClocks()),
+            ),
+          ],
+          child: MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'Mechanix Clock',
+            theme: darkTheme,
+            darkTheme: darkTheme,
+            themeMode: theme.mode,
+            locale: const Locale('en'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const MainNavigationContainer(),
+            builder: showFps
+                ? (context, child) {
+                    return ShowFPS(
+                      visible: showFps,
+                      showChart: false,
+                      child: child!,
+                    );
+                  }
+                : null,
+          ),
+        );
+      },
     );
   }
 }
