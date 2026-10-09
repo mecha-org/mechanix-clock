@@ -173,10 +173,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get add_preset => 'Add Preset';
 
   @override
+  String get hour_abbr => ' hr';
+
+  @override
   String get hours_abbr => ' hrs';
 
   @override
+  String get min_abbr => ' min';
+
+  @override
   String get minutes_abbr => ' mins';
+
+  @override
+  String get sec_abbr => ' sec';
+
+  @override
+  String get seconds_abbr => ' secs';
+
+  @override
+  String get zero_min => '0 min';
 
   @override
   String get restart => 'Restart';

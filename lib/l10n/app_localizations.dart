@@ -412,17 +412,47 @@ abstract class AppLocalizations {
   /// **'Add Preset'**
   String get add_preset;
 
+  /// Abbreviated label for single hour with a leading space
+  ///
+  /// In en, this message translates to:
+  /// **' hr'**
+  String get hour_abbr;
+
   /// Abbreviated label for hours with a leading space
   ///
   /// In en, this message translates to:
   /// **' hrs'**
   String get hours_abbr;
 
+  /// Abbreviated label for single minute with a leading space
+  ///
+  /// In en, this message translates to:
+  /// **' min'**
+  String get min_abbr;
+
   /// Abbreviated label for minutes with a leading space
   ///
   /// In en, this message translates to:
   /// **' mins'**
   String get minutes_abbr;
+
+  /// Abbreviated label for single second with a leading space
+  ///
+  /// In en, this message translates to:
+  /// **' sec'**
+  String get sec_abbr;
+
+  /// Abbreviated label for seconds with a leading space
+  ///
+  /// In en, this message translates to:
+  /// **' secs'**
+  String get seconds_abbr;
+
+  /// Label for zero minute preset duration
+  ///
+  /// In en, this message translates to:
+  /// **'0 min'**
+  String get zero_min;
 
   /// Button text to restart the timer
   ///

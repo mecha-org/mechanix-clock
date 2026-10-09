@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mechanix_clock/core/utils/icons.dart';
 import 'package:mechanix_clock/features/alarm/bloc/alarm_bloc.dart';
 import 'package:mechanix_clock/features/alarm/bloc/alarm_event.dart';
 import 'package:mechanix_clock/features/alarm/bloc/alarm_state.dart';
@@ -145,7 +146,7 @@ class _AlarmItem extends StatelessWidget {
             }
           },
           icon: ImageIcon(
-            const AssetImage('assets/icons/delete.png'),
+            const AssetImage(ClockIcons.delete),
             color: theme.colorScheme.onPrimary,
           ),
           size: IconButtonSize.xLarge,

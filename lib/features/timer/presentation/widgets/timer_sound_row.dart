@@ -17,42 +17,32 @@ class TimerSoundRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return MechanixListTile(
       onTap: isIdle ? onTap : null,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      label: Text(
-        l10n.sound,
-        style: TextStyle(
-          fontFamily: MechanixFontFamily.geist,
-          fontSize: 16,
-          fontWeight: FontWeight.w400,
-          color: isIdle ? colorScheme.onSurface : colorScheme.onSurfaceVariant,
-        ),
-      ),
+      labelText: l10n.sound,
       trailingWidgets: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              sound,
-              style: TextStyle(
-                fontFamily: MechanixFontFamily.geist,
-                fontSize: 14,
-                color: colorScheme.onSurfaceVariant,
-              ),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 180),
+          child: Text(
+            sound,
+            textAlign: TextAlign.end,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
-            if (isIdle) ...[
-              const SizedBox(width: 8),
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 14,
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ],
-          ],
+          ),
+        ),
+        MechanixIconButton.standard(
+          icon: const Icon(
+            Icons.chevron_right,
+            size: 28,
+            color: Color(0xFFA1A1A5),
+          ),
+
+          type: IconButtonType.rounded,
+          onPressed: isIdle ? onTap : null,
         ),
       ],
     );

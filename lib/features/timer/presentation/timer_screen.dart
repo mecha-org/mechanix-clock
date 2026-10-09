@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mechanix_clock/core/utils/icons.dart';
@@ -227,7 +229,9 @@ class _TimerScreenState extends State<TimerScreen> with WidgetsBindingObserver {
                 ),
               );
             },
-            onDelete: () {},
+            onDelete: () {
+              context.read<TimerBloc>().add(DeleteTimerPreset(preset.id));
+            },
             onEdit: () {},
             formatPresetDuration: _formatPresetDuration,
           );
@@ -258,176 +262,181 @@ class _TimerScreenState extends State<TimerScreen> with WidgetsBindingObserver {
         _selectedHours > 0 || _selectedMinutes > 0 || _selectedSeconds > 0;
     final canStart = !state.isEditingPresets && hasTime;
 
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          const SizedBox(height: 24),
-          if (!state.isEditingPresets)
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(
+        dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            const SizedBox(height: 24),
+            if (!state.isEditingPresets)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: TimerCustomPicker(
+                  selectedHours: _selectedHours,
+                  selectedMinutes: _selectedMinutes,
+                  selectedSeconds: _selectedSeconds,
+                  onHoursChanged: (v) {
+                    if (_selectedHours != v && mounted) {
+                      setState(() => _selectedHours = v);
+                    }
+                  },
+                  onMinutesChanged: (v) {
+                    if (_selectedMinutes != v && mounted) {
+                      setState(() => _selectedMinutes = v);
+                    }
+                  },
+                  onSecondsChanged: (v) {
+                    if (_selectedSeconds != v && mounted) {
+                      setState(() => _selectedSeconds = v);
+                    }
+                  },
+                ),
+              ),
+
+            const SizedBox(height: 24),
+
+            // Action Buttons Row
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: TimerCustomPicker(
-                selectedHours: _selectedHours,
-                selectedMinutes: _selectedMinutes,
-                selectedSeconds: _selectedSeconds,
-                onHoursChanged: (v) {
-                  if (_selectedHours != v && mounted) {
-                    setState(() => _selectedHours = v);
-                  }
-                },
-                onMinutesChanged: (v) {
-                  if (_selectedMinutes != v && mounted) {
-                    setState(() => _selectedMinutes = v);
-                  }
-                },
-                onSecondsChanged: (v) {
-                  if (_selectedSeconds != v && mounted) {
-                    setState(() => _selectedSeconds = v);
-                  }
-                },
+              padding: const EdgeInsets.symmetric(horizontal: 56),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Left Button: Reset time picker to 00:00:00
+                  MechanixIconButton.outline(
+                    key: const Key('timer_left_button'),
+                    type: ButtonType.rounded,
+                    size: IconButtonSize.large,
+                    backgroundColor: colorScheme.surfaceContainerHigh,
+                    foregroundColor: colorScheme.onSurface,
+                    icon: ImageIcon(
+                      const AssetImage(ClockIcons.cancel),
+                      color: theme.colorScheme.onSecondaryFixed,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _selectedHours = 0;
+                        _selectedMinutes = 0;
+                        _selectedSeconds = 0;
+                      });
+                    },
+                  ),
+
+                  const SizedBox(width: 32),
+                  // Right Button: Start Timer
+                  MechanixIconButton.filled(
+                    key: const Key('timer_start_button'),
+                    type: ButtonType.rounded,
+                    size: IconButtonSize.large,
+                    backgroundColor: canStart
+                        ? colorScheme.primary
+                        : colorScheme.surfaceContainerHigh,
+                    foregroundColor: canStart
+                        ? colorScheme.onPrimary
+                        : colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                    icon: const ImageIcon(AssetImage(ClockIcons.play)),
+                    onPressed: canStart
+                        ? () {
+                            final duration = Duration(
+                              hours: _selectedHours,
+                              minutes: _selectedMinutes,
+                              seconds: _selectedSeconds,
+                            );
+                            context.read<TimerBloc>().add(
+                              StartTimer(duration, resetOldActiveTimers: true),
+                            );
+                            setState(() {
+                              _isSettingMode = false;
+                            });
+                          }
+                        : null,
+                  ),
+                ],
               ),
             ),
 
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
+            MechanixDivider(color: colorScheme.outline.withValues(alpha: 0.38)),
 
-          // Action Buttons Row
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 56),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Left Button: Reset time picker to 00:00:00
-                MechanixIconButton.outline(
-                  key: const Key('timer_left_button'),
-                  type: ButtonType.rounded,
-                  size: IconButtonSize.large,
-                  backgroundColor: colorScheme.surfaceContainerHigh,
-                  foregroundColor: colorScheme.onSurface,
-                  icon: ImageIcon(
-                    const AssetImage(ClockIcons.cancel),
-                    color: theme.colorScheme.onSecondaryFixed,
+            // Sound Selection Row
+            TimerSoundRow(
+              sound: state.sound,
+              isIdle: true,
+              onTap: () async {
+                final result = await Navigator.push<String>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        SoundSelectionScreen(initialSound: state.sound),
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _selectedHours = 0;
-                      _selectedMinutes = 0;
-                      _selectedSeconds = 0;
-                    });
-                  },
-                ),
-
-                const SizedBox(width: 32),
-                // Right Button: Start Timer
-                MechanixIconButton.filled(
-                  key: const Key('timer_start_button'),
-                  type: ButtonType.rounded,
-                  size: IconButtonSize.large,
-                  backgroundColor: canStart
-                      ? colorScheme.primary
-                      : colorScheme.surfaceContainerHigh,
-                  foregroundColor: canStart
-                      ? colorScheme.onPrimary
-                      : colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                  icon: const ImageIcon(AssetImage(ClockIcons.play)),
-                  onPressed: canStart
-                      ? () {
-                          final duration = Duration(
-                            hours: _selectedHours,
-                            minutes: _selectedMinutes,
-                            seconds: _selectedSeconds,
-                          );
-                          context.read<TimerBloc>().add(
-                            StartTimer(duration, resetOldActiveTimers: true),
-                          );
-                          setState(() {
-                            _isSettingMode = false;
-                          });
-                        }
-                      : null,
-                ),
-              ],
+                );
+                if (result != null && context.mounted) {
+                  context.read<TimerBloc>().add(SetTimerSound(result));
+                }
+              },
             ),
-          ),
+            MechanixDivider(color: colorScheme.outline.withValues(alpha: 0.38)),
 
-          const SizedBox(height: 24),
-          MechanixDivider(color: colorScheme.outline.withValues(alpha: 0.38)),
-
-          // Sound Selection Row
-          TimerSoundRow(
-            sound: state.sound,
-            isIdle: true,
-            onTap: () async {
-              final result = await Navigator.push<String>(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      SoundSelectionScreen(initialSound: state.sound),
-                ),
-              );
-              if (result != null && context.mounted) {
-                context.read<TimerBloc>().add(SetTimerSound(result));
-              }
-            },
-          ),
-          MechanixDivider(color: colorScheme.outline.withValues(alpha: 0.38)),
-
-          // Presets List
-          ReorderableListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: state.presets.length,
-            buildDefaultDragHandles: state.isEditingPresets,
-            onReorderItem: (oldIndex, newIndex) {
-              context.read<TimerBloc>().add(
-                ReorderTimerPresets(oldIndex, newIndex),
-              );
-            },
-            itemBuilder: (context, index) {
-              final preset = state.presets[index];
-              return Column(
-                key: ValueKey(preset.id),
-                children: [
-                  TimerPresetItem(
-                    preset: preset,
-                    isEditing: state.isEditingPresets,
-                    onSelect: () {
-                      final hours = preset.duration.inHours;
-                      final minutes = preset.duration.inMinutes.remainder(60);
-                      final seconds = preset.duration.inSeconds.remainder(60);
-                      setState(() {
-                        _selectedHours = hours;
-                        _selectedMinutes = minutes;
-                        _selectedSeconds = seconds;
-                      });
-                    },
-                    onPlay: () {
-                      context.read<TimerBloc>().add(
-                        StartTimer(
-                          preset.duration,
-                          presetId: preset.id,
-                          resetOldActiveTimers: true,
-                        ),
-                      );
-                      setState(() {
-                        _isSettingMode = false;
-                      });
-                    },
-                    onDelete: () {
-                      context.read<TimerBloc>().add(
-                        DeleteTimerPreset(preset.id),
-                      );
-                    },
-                    onEdit: () {},
-                    formatPresetDuration: _formatPresetDuration,
-                  ),
-                  if (index < state.presets.length - 1)
-                    MechanixDivider(
-                      color: colorScheme.outline.withValues(alpha: 0.38),
+            // Presets List
+            ReorderableListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: state.presets.length,
+              buildDefaultDragHandles: state.isEditingPresets,
+              onReorderItem: (oldIndex, newIndex) {
+                context.read<TimerBloc>().add(
+                  ReorderTimerPresets(oldIndex, newIndex),
+                );
+              },
+              itemBuilder: (context, index) {
+                final preset = state.presets[index];
+                return Column(
+                  key: ValueKey(preset.id),
+                  children: [
+                    TimerPresetItem(
+                      preset: preset,
+                      isEditing: state.isEditingPresets,
+                      onSelect: () {
+                        final hours = preset.duration.inHours;
+                        final minutes = preset.duration.inMinutes.remainder(60);
+                        final seconds = preset.duration.inSeconds.remainder(60);
+                        setState(() {
+                          _selectedHours = hours;
+                          _selectedMinutes = minutes;
+                          _selectedSeconds = seconds;
+                        });
+                      },
+                      onPlay: () {
+                        context.read<TimerBloc>().add(
+                          StartTimer(
+                            preset.duration,
+                            presetId: preset.id,
+                            resetOldActiveTimers: true,
+                          ),
+                        );
+                        setState(() {
+                          _isSettingMode = false;
+                        });
+                      },
+                      onDelete: () {
+                        context.read<TimerBloc>().add(
+                          DeleteTimerPreset(preset.id),
+                        );
+                      },
+                      onEdit: () {},
+                      formatPresetDuration: _formatPresetDuration,
                     ),
-                ],
-              );
-            },
-          ),
-        ],
+                    if (index < state.presets.length - 1)
+                      MechanixDivider(
+                        color: colorScheme.outline.withValues(alpha: 0.38),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

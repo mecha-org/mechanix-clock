@@ -1,7 +1,6 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mechanix_clock/core/utils/icons.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:widgets/widgets.dart';
 
@@ -27,7 +26,6 @@ class WorldClockItem extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final use24Hour = MediaQuery.alwaysUse24HourFormatOf(context);
 
     tz.Location location;
     try {
@@ -35,10 +33,6 @@ class WorldClockItem extends StatelessWidget {
     } catch (_) {
       location = tz.UTC;
     }
-    // final targetNow = tz.TZDateTime.now(location);
-
-    // final timeStr = DateFormat(use24Hour ? 'HH:mm' : 'h:mm').format(targetNow);
-    // final amPmStr = use24Hour ? '' : (targetNow.hour < 12 ? l10n.am : l10n.pm);
 
     final targetNow = tz.TZDateTime.now(location);
 
@@ -56,7 +50,7 @@ class WorldClockItem extends StatelessWidget {
           key: Key('delete_clock_${clock.id}'),
           onPressed: onDelete,
           icon: ImageIcon(
-            const AssetImage('ClockIcons.delete'),
+            const AssetImage(ClockIcons.delete),
             color: colorScheme.onPrimary,
           ),
           size: IconButtonSize.large,
@@ -73,30 +67,13 @@ class WorldClockItem extends StatelessWidget {
       ),
       supportingText: relativeInfo,
       trailingWidgets: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            Text(
-              timeStr,
-              style: theme.textTheme.displayMedium?.copyWith(
-                fontFamily: MechanixFontFamily.geistMono,
-                fontSize: 32,
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-            if (amPmStr.isNotEmpty) ...[
-              const SizedBox(width: 4),
-              Text(
-                amPmStr,
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  fontFamily: MechanixFontFamily.geistMono,
-                  fontSize: 32,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ],
-          ],
+        Text(
+          [timeStr, amPmStr].where((value) => value.isNotEmpty).join(' '),
+          style: theme.textTheme.displayMedium?.copyWith(
+            fontFamily: MechanixFontFamily.geistMono,
+            fontSize: 32,
+            fontWeight: FontWeight.w400,
+          ),
         ),
       ],
     );

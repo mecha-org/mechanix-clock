@@ -27,7 +27,7 @@ class TimerCustomPicker extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return SizedBox(
-      height: 220,
+      height: 186,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -36,11 +36,21 @@ class TimerCustomPicker extends StatelessWidget {
             itemCount: 24,
             initialValue: selectedHours,
             isHour: false,
-            width: 80,
-            selectedFontSize: 58,
-            unselectedFontSize: 30,
+            width: 100,
             onChanged: onHoursChanged,
             enabled: enabled,
+            selectedTextStyle: Theme.of(context).textTheme.displayLarge
+                ?.copyWith(
+                  fontFamily: MechanixFontFamily.geistMono,
+                  fontSize: 80,
+                  fontWeight: FontWeight.w400,
+                ),
+            unselectedTextStyle: Theme.of(context).textTheme.displayLarge
+                ?.copyWith(
+                  fontFamily: MechanixFontFamily.geistMono,
+                  fontSize: 32,
+                  fontWeight: FontWeight.w400,
+                ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 2),
@@ -61,11 +71,21 @@ class TimerCustomPicker extends StatelessWidget {
             itemCount: 60,
             initialValue: selectedMinutes,
             isHour: false,
-            width: 80,
-            selectedFontSize: 58,
-            unselectedFontSize: 30,
+            width: 100,
             onChanged: onMinutesChanged,
             enabled: enabled,
+            selectedTextStyle: Theme.of(context).textTheme.displayLarge
+                ?.copyWith(
+                  fontFamily: MechanixFontFamily.geistMono,
+                  fontSize: 80,
+                  fontWeight: FontWeight.w400,
+                ),
+            unselectedTextStyle: Theme.of(context).textTheme.displayLarge
+                ?.copyWith(
+                  fontFamily: MechanixFontFamily.geistMono,
+                  fontSize: 32,
+                  fontWeight: FontWeight.w400,
+                ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 2),
@@ -86,11 +106,21 @@ class TimerCustomPicker extends StatelessWidget {
             itemCount: 60,
             initialValue: selectedSeconds,
             isHour: false,
-            width: 80,
-            selectedFontSize: 58,
-            unselectedFontSize: 30,
+            width: 100,
             onChanged: onSecondsChanged,
             enabled: enabled,
+            selectedTextStyle: Theme.of(context).textTheme.displayLarge
+                ?.copyWith(
+                  fontFamily: MechanixFontFamily.geistMono,
+                  fontSize: 80,
+                  fontWeight: FontWeight.w400,
+                ),
+            unselectedTextStyle: Theme.of(context).textTheme.displayLarge
+                ?.copyWith(
+                  fontFamily: MechanixFontFamily.geistMono,
+                  fontSize: 32,
+                  fontWeight: FontWeight.w400,
+                ),
           ),
         ],
       ),

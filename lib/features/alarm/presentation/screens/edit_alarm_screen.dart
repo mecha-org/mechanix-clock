@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mechanix_clock/core/utils/icons.dart';
 import 'package:mechanix_clock/features/alarm/bloc/alarm_bloc.dart';
 import 'package:mechanix_clock/features/alarm/bloc/alarm_event.dart';
 import 'package:mechanix_clock/features/alarm/data/models/alarm_model.dart';
@@ -80,12 +81,6 @@ class _EditAlarmScreenState extends State<EditAlarmScreen> {
     }
   }
 
-  String _getRepeatSummary(AppLocalizations l10n) {
-    if (_repeatDays.isEmpty) return l10n.once.toUpperCase();
-    if (_repeatDays.length == 7) return l10n.daily.toUpperCase();
-    return l10n.custom.toUpperCase();
-  }
-
   bool get _hasChanges {
     final alarm = widget.alarm;
     if (alarm == null) return true;
@@ -126,7 +121,7 @@ class _EditAlarmScreenState extends State<EditAlarmScreen> {
           if (widget.alarm != null)
             MechanixIconButton.standard(
               icon: ImageIcon(
-                const AssetImage('assets/icons/delete.png'),
+                const AssetImage(ClockIcons.delete),
                 color: theme.colorScheme.error,
               ),
               onPressed: _deleteAlarm,
@@ -156,19 +151,15 @@ class _EditAlarmScreenState extends State<EditAlarmScreen> {
 
               // Alarm time row with AM/PM Switch
               _buildAlarmTimeRow(l10n),
-              const SizedBox(height: 28),
 
               // Repeat section
               _buildRepeatSection(l10n),
-              const SizedBox(height: 28),
 
               // Sound row
               _buildSoundRow(l10n),
-              const SizedBox(height: 28),
 
               // Snooze row
               _buildSnoozeRow(l10n),
-              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -218,10 +209,63 @@ class _EditAlarmScreenState extends State<EditAlarmScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         MechanixListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 16,
+            horizontal: 16,
+          ),
+
           labelText: l10n.repeat,
-          trailingText: _getRepeatSummary(l10n),
-          trailingWidgets: const [
-            Icon(Icons.chevron_right, size: 20, color: Color(0xFFA1A1A5)),
+          trailingWidgets: [
+            if (_repeatDays.isEmpty)
+              Text(
+                l10n.once.toUpperCase(),
+                style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+
+            if (_repeatDays.length == 7)
+              Text(
+                l10n.daily.toUpperCase(),
+                style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+
+            if (_repeatType == RepeatType.custom)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: 8,
+                children: List.generate(7, (index) {
+                  return DayBubble(
+                    size: 20,
+                    label: days[index],
+                    isSelected: _repeatDays.contains(index),
+                  );
+                }),
+              ),
+
+            MechanixIconButton.standard(
+              icon: const Icon(
+                Icons.chevron_right,
+                size: 28,
+                color: Color(0xFFA1A1A5),
+              ),
+
+              type: IconButtonType.rounded,
+              onPressed: () async {
+                final result = await Navigator.push<List<int>>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        RepeatSelectionScreen(initialDays: _repeatDays),
+                  ),
+                );
+                if (result != null) {
+                  setState(() => _repeatDays = List<int>.from(result));
+                }
+              },
+            ),
           ],
           onTap: () async {
             final result = await Navigator.push<List<int>>(
@@ -235,13 +279,6 @@ class _EditAlarmScreenState extends State<EditAlarmScreen> {
               setState(() => _repeatDays = List<int>.from(result));
             }
           },
-          // ),
-        ),
-        const SizedBox(height: 16),
-        // Days or Once / Daily text
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: _buildRepeatContent(context, days),
         ),
       ],
     );
@@ -249,6 +286,7 @@ class _EditAlarmScreenState extends State<EditAlarmScreen> {
 
   Widget _buildSoundRow(AppLocalizations l10n) {
     return MechanixListTile(
+      contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       labelText: l10n.sound,
       trailingWidgets: [
         ConstrainedBox(
@@ -258,10 +296,32 @@ class _EditAlarmScreenState extends State<EditAlarmScreen> {
             textAlign: TextAlign.end,
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
-            style: const TextStyle(fontSize: 16, color: Color(0xFFA1A1A5)),
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
-        const Icon(Icons.chevron_right, size: 20, color: Color(0xFFA1A1A5)),
+        MechanixIconButton.standard(
+          icon: const Icon(
+            Icons.chevron_right,
+            size: 28,
+            color: Color(0xFFA1A1A5),
+          ),
+
+          type: IconButtonType.rounded,
+          onPressed: () async {
+            final result = await Navigator.push<String>(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    SoundSelectionScreen(initialSound: _sound),
+              ),
+            );
+            if (result != null) {
+              setState(() => _sound = result);
+            }
+          },
+        ),
       ],
       onTap: () async {
         final result = await Navigator.push<String>(
@@ -279,6 +339,7 @@ class _EditAlarmScreenState extends State<EditAlarmScreen> {
 
   Widget _buildSnoozeRow(AppLocalizations l10n) {
     return MechanixListTile(
+      contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       labelText: l10n.snooze,
       trailingWidgets: [
         MechanixSwitch(
@@ -295,32 +356,5 @@ class _EditAlarmScreenState extends State<EditAlarmScreen> {
     if (_repeatDays.isEmpty) return RepeatType.once;
     if (_repeatDays.length == 7) return RepeatType.daily;
     return RepeatType.custom;
-  }
-
-  Widget? _buildRepeatContent(BuildContext context, List<String> days) {
-    if (_repeatType == RepeatType.custom) {
-      return Row(
-        spacing: 8,
-        children: List.generate(7, (index) {
-          final isSelected = _repeatDays.contains(index);
-          return DayBubble(
-            label: days[index],
-            isSelected: isSelected,
-            onTap: () {
-              setState(() {
-                if (isSelected) {
-                  _repeatDays.remove(index);
-                } else {
-                  _repeatDays.add(index);
-                  _repeatDays.sort();
-                }
-              });
-            },
-          );
-        }),
-      );
-    } else {
-      return null;
-    }
   }
 }

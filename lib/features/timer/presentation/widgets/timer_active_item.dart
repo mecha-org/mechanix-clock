@@ -66,9 +66,9 @@ class TimerActiveItem extends StatelessWidget {
             Expanded(
               child: RichText(
                 text: TextSpan(
-                  style: const TextStyle(
+                  style: Theme.of(context).textTheme.displayLarge?.copyWith(
                     fontFamily: MechanixFontFamily.geistMono,
-                    fontSize: 36,
+                    fontSize: 80,
                     fontWeight: FontWeight.w400,
                     letterSpacing: 0,
                   ),

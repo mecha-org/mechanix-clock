@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mechanix_clock/core/utils/icons.dart';
 import 'package:mechanix_clock/features/alarm/presentation/screens/alarm_list_screen.dart';
 import 'package:mechanix_clock/features/stopwatch/presentation/screens/stopwatch_screen.dart';
 import 'package:mechanix_clock/features/timer/presentation/timer_screen.dart';
@@ -26,6 +27,7 @@ class _MainNavigationContainerState extends State<MainNavigationContainer> {
       const WorldClockScreen(),
       const TimerScreen(),
     ];
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       body: IndexedStack(index: _currentIndex, children: screens),
@@ -40,19 +42,31 @@ class _MainNavigationContainerState extends State<MainNavigationContainer> {
         },
         destinations: [
           MechanixNavigationDestination(
-            icon: const Icon(Icons.alarm_outlined),
+            icon: ImageIcon(
+              const AssetImage(ClockIcons.alarm),
+              color: colorScheme.onSurfaceVariant,
+            ),
             label: l10n?.alarms ?? '',
           ),
           MechanixNavigationDestination(
-            icon: const Icon(Icons.timer_outlined),
+            icon: ImageIcon(
+              const AssetImage(ClockIcons.stopwatch),
+              color: colorScheme.onSurfaceVariant,
+            ),
             label: l10n?.stopwatch ?? '',
           ),
           MechanixNavigationDestination(
-            icon: const Icon(Icons.public_outlined),
+            icon: ImageIcon(
+              const AssetImage(ClockIcons.worldClock),
+              color: colorScheme.onSurfaceVariant,
+            ),
             label: l10n?.world_clock ?? '',
           ),
           MechanixNavigationDestination(
-            icon: const Icon(Icons.hourglass_empty_outlined),
+            icon: ImageIcon(
+              const AssetImage(ClockIcons.timer),
+              color: colorScheme.onSurfaceVariant,
+            ),
             label: l10n?.timers ?? '',
           ),
         ],

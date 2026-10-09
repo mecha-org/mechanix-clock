@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:widgets/widgets.dart';
 
 class PickerColumn extends StatefulWidget {
   final int itemCount;
@@ -8,10 +7,10 @@ class PickerColumn extends StatefulWidget {
   final bool isHour;
   final double width;
   final ValueChanged<int> onChanged;
-  final bool showBorder;
   final bool enabled;
-  final double selectedFontSize;
-  final double unselectedFontSize;
+  final TextStyle? selectedTextStyle;
+  final TextStyle? unselectedTextStyle;
+  final double squeeze;
 
   const PickerColumn({
     super.key,
@@ -20,10 +19,10 @@ class PickerColumn extends StatefulWidget {
     required this.isHour,
     required this.width,
     required this.onChanged,
-    this.showBorder = false,
     this.enabled = true,
-    this.selectedFontSize = 80,
-    this.unselectedFontSize = 32,
+    this.squeeze = 1.0,
+    this.selectedTextStyle,
+    this.unselectedTextStyle,
   });
 
   @override
@@ -79,18 +78,18 @@ class PickerColumnState extends State<PickerColumn> {
 
     return SizedBox(
       width: widget.width,
-      height: 220,
+      height: 300,
       child: Stack(
         alignment: Alignment.center,
         children: [
           IgnorePointer(
             ignoring: !widget.enabled,
             child: CupertinoPicker(
-              itemExtent: 82,
+              itemExtent: widget.selectedTextStyle?.fontSize ?? 80 + 2,
               scrollController: _controller,
               selectionOverlay: const SizedBox.shrink(),
-              squeeze: 1.0,
-              diameterRatio: 120,
+              squeeze: widget.squeeze,
+              diameterRatio: 180,
               looping: true,
               onSelectedItemChanged: (index) {
                 final actualIndex = index % widget.itemCount;
@@ -109,21 +108,15 @@ class PickerColumnState extends State<PickerColumn> {
                   builder: (_, selected, _) {
                     final isSelected = index == (selected % widget.itemCount);
                     final activeColor = colorScheme.onSurface;
-                    final inactiveColor = colorScheme.secondaryFixedDim;
+                    final inactiveColor = colorScheme.onSurfaceVariant;
 
                     final textStyle = isSelected
-                        ? Theme.of(context).textTheme.displayLarge?.copyWith(
-                            fontFamily: MechanixFontFamily.geistMono,
-                            fontSize: widget.selectedFontSize,
-                            fontWeight: FontWeight.w400,
+                        ? widget.selectedTextStyle!.copyWith(
                             color: widget.enabled
                                 ? activeColor
                                 : activeColor.withValues(alpha: 0.3),
                           )
-                        : Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontFamily: MechanixFontFamily.geistMono,
-                            fontSize: widget.unselectedFontSize,
-                            fontWeight: FontWeight.w400,
+                        : widget.unselectedTextStyle!.copyWith(
                             color: widget.enabled
                                 ? inactiveColor
                                 : inactiveColor.withValues(alpha: 0.2),
@@ -135,23 +128,6 @@ class PickerColumnState extends State<PickerColumn> {
               }),
             ),
           ),
-          if (widget.showBorder)
-            Positioned(
-              top: (220 - 72) / 2,
-              left: 0,
-              right: 0,
-              child: IgnorePointer(
-                child: Container(
-                  height: 72,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: const Color(0xFF2D2D2D),
-                      width: 1,
-                    ),
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mechanix_clock/core/utils/icons.dart';
 import 'package:mechanix_clock/l10n/app_localizations.dart';
 import 'package:widgets/widgets.dart';
 
@@ -58,11 +59,11 @@ class DeleteAlarmConfirmationSheet extends StatelessWidget {
                       key: const Key('delete_alarm_trash_button'),
                       size: ButtonSize.large,
                       icon: ImageIcon(
-                        const AssetImage('assets/icons/delete.png'),
+                        const AssetImage(ClockIcons.delete),
                         color: colorScheme.error,
                         size: 20,
                       ),
-                      label: l10n.trash_uppercase,
+                      label: l10n.delete.toUpperCase(),
 
                       backgroundColor: colorScheme.surfaceContainerHigh,
                       foregroundColor: colorScheme.error,

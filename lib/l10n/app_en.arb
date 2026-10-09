@@ -222,13 +222,33 @@
   "@add_preset": {
     "description": "Title for adding a preset"
   },
+  "hour_abbr": " hr",
+  "@hour_abbr": {
+    "description": "Abbreviated label for single hour with a leading space"
+  },
   "hours_abbr": " hrs",
   "@hours_abbr": {
     "description": "Abbreviated label for hours with a leading space"
   },
+  "min_abbr": " min",
+  "@min_abbr": {
+    "description": "Abbreviated label for single minute with a leading space"
+  },
   "minutes_abbr": " mins",
   "@minutes_abbr": {
     "description": "Abbreviated label for minutes with a leading space"
+  },
+  "sec_abbr": " sec",
+  "@sec_abbr": {
+    "description": "Abbreviated label for single second with a leading space"
+  },
+  "seconds_abbr": " secs",
+  "@seconds_abbr": {
+    "description": "Abbreviated label for seconds with a leading space"
+  },
+  "zero_min": "0 min",
+  "@zero_min": {
+    "description": "Label for zero minute preset duration"
   },
   "restart": "Restart",
   "@restart": {

@@ -23,7 +23,7 @@ class CustomTimePicker extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return SizedBox(
-      height: 220,
+      height: 300,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -32,11 +32,22 @@ class CustomTimePicker extends StatelessWidget {
             itemCount: 12,
             initialValue: selectedHour,
             isHour: true,
-            width: 110,
-            // selectedFontSize: 80,
-            // unselectedFontSize: 36,
+            width: 180,
             onChanged: onHourChanged,
             enabled: enabled,
+            squeeze: 1.2,
+            selectedTextStyle: Theme.of(context).textTheme.displayLarge
+                ?.copyWith(
+                  fontFamily: MechanixFontFamily.geistMono,
+                  fontSize: 128,
+                  fontWeight: FontWeight.w100,
+                ),
+            unselectedTextStyle: Theme.of(context).textTheme.displayLarge
+                ?.copyWith(
+                  fontFamily: MechanixFontFamily.geistMono,
+                  fontSize: 36,
+                  fontWeight: FontWeight.w100,
+                ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -57,9 +68,19 @@ class CustomTimePicker extends StatelessWidget {
             itemCount: 60,
             initialValue: selectedMinute,
             isHour: false,
-            width: 110,
-            // selectedFontSize: 70,
-            // unselectedFontSize: 36,
+            width: 180,
+            selectedTextStyle: Theme.of(context).textTheme.displayLarge
+                ?.copyWith(
+                  fontFamily: MechanixFontFamily.geistMono,
+                  fontSize: 128,
+                  fontWeight: FontWeight.w100,
+                ),
+            unselectedTextStyle: Theme.of(context).textTheme.displayLarge
+                ?.copyWith(
+                  fontFamily: MechanixFontFamily.geistMono,
+                  fontSize: 36,
+                  fontWeight: FontWeight.w100,
+                ),
             onChanged: onMinuteChanged,
             enabled: enabled,
           ),

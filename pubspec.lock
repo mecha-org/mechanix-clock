@@ -718,7 +718,7 @@ packages:
     description:
       path: widgets
       ref: "feat/search-bar"
-      resolved-ref: "47bf59eac5841854d58502edac352c15994fe021"
+      resolved-ref: "9550b2d09ffbabbad3184e866f8c489da39eb839"
       url: "https://github.com/yogitah-mecha/mechanix-ui"
     source: git
     version: "0.0.1"

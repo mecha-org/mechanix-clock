@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mechanix_clock/core/utils/icons.dart';
 import 'package:mechanix_clock/features/stopwatch/bloc/stopwatch_bloc.dart';
 import 'package:mechanix_clock/features/stopwatch/bloc/stopwatch_event.dart';
 import 'package:mechanix_clock/features/stopwatch/bloc/stopwatch_state.dart';
@@ -80,7 +81,7 @@ class StopwatchScreen extends StatelessWidget {
                           context.read<StopwatchBloc>().add(LapStopwatch());
                         },
                         icon: ImageIcon(
-                          const AssetImage('assets/icons/add.png'),
+                          const AssetImage(ClockIcons.add),
                           color: theme.colorScheme.onPrimary,
                         ),
                         size: IconButtonSize.large,
@@ -94,7 +95,7 @@ class StopwatchScreen extends StatelessWidget {
                           context.read<StopwatchBloc>().add(ResetStopwatch());
                         },
                         icon: ImageIcon(
-                          const AssetImage('assets/icons/reset.png'),
+                          const AssetImage(ClockIcons.reset),
                           color: theme.colorScheme.onSurface,
                         ),
                         size: IconButtonSize.large,
@@ -106,7 +107,7 @@ class StopwatchScreen extends StatelessWidget {
                         key: const Key('stopwatch_lap_button'),
                         onPressed: null,
                         icon: ImageIcon(
-                          const AssetImage('assets/icons/add.png'),
+                          const AssetImage(ClockIcons.add),
                           color: theme.colorScheme.onSurfaceVariant.withAlpha(
                             120,
                           ),
@@ -126,7 +127,7 @@ class StopwatchScreen extends StatelessWidget {
                           context.read<StopwatchBloc>().add(StopStopwatch());
                         },
                         icon: ImageIcon(
-                          const AssetImage('assets/icons/pause.png'),
+                          const AssetImage(ClockIcons.pause),
                           color: theme.colorScheme.onSurface,
                         ),
                         size: IconButtonSize.large,
@@ -140,7 +141,7 @@ class StopwatchScreen extends StatelessWidget {
                           context.read<StopwatchBloc>().add(StartStopwatch());
                         },
                         icon: ImageIcon(
-                          const AssetImage('assets/icons/play.png'),
+                          const AssetImage(ClockIcons.play),
                           color: theme.colorScheme.onPrimary,
                         ),
                         size: IconButtonSize.large,

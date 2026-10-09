@@ -34,13 +34,7 @@ class _AddCitySheetState extends State<AddCitySheet> {
     final colorScheme = theme.colorScheme;
 
     if (query.isEmpty) {
-      return Text(
-        text,
-        style: theme.textTheme.titleMedium?.copyWith(
-          color: colorScheme.onSurface,
-          fontWeight: FontWeight.w400,
-        ),
-      );
+      return Text(text, style: theme.textTheme.titleLarge);
     }
 
     final lowerText = text.toLowerCase();
@@ -109,6 +103,7 @@ class _AddCitySheetState extends State<AddCitySheet> {
           children: [
             MechanixSearchBar(
               key: const Key('add_city_search_field'),
+
               controller: _searchController,
               hintText: l10n.search_country_region,
               textStyle: WidgetStatePropertyAll(
@@ -165,7 +160,7 @@ class _AddCitySheetState extends State<AddCitySheet> {
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       itemCount: filteredCities.length,
                       separatorBuilder: (context, index) =>
-                          MechanixDivider(color: colorScheme.outline),
+                          MechanixDivider(color: colorScheme.outline, space: 1),
                       itemBuilder: (context, index) {
                         final city = filteredCities[index];
                         final fullCityText = '${city.name}, ${city.country}';
@@ -175,9 +170,10 @@ class _AddCitySheetState extends State<AddCitySheet> {
                             'add_city_tile_${city.name.replaceAll(' ', '_')}',
                           ),
                           labelText: fullCityText,
-                          label: Text(
+                          label: _buildHighlightedText(
                             fullCityText,
-                            style: theme.textTheme.titleLarge,
+                            _searchQuery,
+                            context,
                           ),
                           onTap: () {
                             context.read<WorldClockBloc>().add(
