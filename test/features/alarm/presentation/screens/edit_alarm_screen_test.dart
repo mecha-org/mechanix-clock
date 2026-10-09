@@ -1,3 +1,4 @@
+import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -12,15 +13,20 @@ import 'package:mechanix_clock/features/alarm/presentation/widgets/time_picker_c
 import 'package:mechanix_clock/l10n/app_localizations.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockAlarmBloc extends Mock implements AlarmBloc {}
+class MockAlarmBloc extends MockBloc<AlarmEvent, AlarmState>
+    implements AlarmBloc {}
 
 void main() {
   late MockAlarmBloc mockAlarmBloc;
 
+  setUpAll(() {
+    registerFallbackValue(const DeleteAlarm(''));
+    registerFallbackValue(LoadAlarms());
+  });
+
   setUp(() {
     mockAlarmBloc = MockAlarmBloc();
     when(() => mockAlarmBloc.state).thenReturn(const AlarmLoaded([]));
-    when(() => mockAlarmBloc.stream).thenAnswer((_) => const Stream.empty());
   });
 
   testWidgets(
@@ -60,7 +66,7 @@ void main() {
   );
 
   testWidgets(
-    'Tapping delete shows confirmation dialog with CANCEL and TRASH; CANCEL dismisses without deleting',
+    'Tapping delete shows confirmation dialog with CANCEL and DELETE; CANCEL dismisses without deleting',
     (tester) async {
       final testAlarm = const Alarm(
         id: 'alarm_1',
@@ -90,15 +96,13 @@ void main() {
       await tester.pumpAndSettle();
 
       // Tap the delete icon button in app bar
-      final deleteBtn = find.byKey(const Key('delete_alarm_button'));
-      expect(deleteBtn, findsOneWidget);
-      await tester.tap(deleteBtn);
+      await tester.tap(find.byKey(const Key('delete_alarm_button')));
       await tester.pumpAndSettle();
 
       // Verify confirmation sheet elements
       expect(find.text('Delete alarm?'), findsOneWidget);
       expect(find.text('CANCEL'), findsOneWidget);
-      expect(find.text('TRASH'), findsOneWidget);
+      expect(find.text('DELETE'), findsOneWidget);
 
       // Tap CANCEL
       await tester.tap(find.byKey(const Key('delete_alarm_cancel_button')));
@@ -106,12 +110,12 @@ void main() {
 
       // Verify sheet is dismissed and DeleteAlarm was NOT dispatched
       expect(find.text('Delete alarm?'), findsNothing);
-      verifyNever(() => mockAlarmBloc.add(any()));
+      verifyNever(() => mockAlarmBloc.add(const DeleteAlarm('alarm_1')));
     },
   );
 
   testWidgets(
-    'Tapping TRASH in confirmation dialog dispatches DeleteAlarm and closes screen',
+    'Tapping DELETE in confirmation dialog dispatches DeleteAlarm and closes screen',
     (tester) async {
       final testAlarm = const Alarm(
         id: 'alarm_1',
@@ -145,8 +149,8 @@ void main() {
       await tester.tap(deleteBtn);
       await tester.pumpAndSettle();
 
-      // Tap TRASH button
-      await tester.tap(find.byKey(const Key('delete_alarm_trash_button')));
+      // Tap DELETE button
+      await tester.tap(find.byKey(const Key('delete_alarm_delete_button')));
       await tester.pumpAndSettle();
 
       // Verify DeleteAlarm event was dispatched

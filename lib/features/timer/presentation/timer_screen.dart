@@ -95,13 +95,16 @@ class _TimerScreenState extends State<TimerScreen> with WidgetsBindingObserver {
             ),
             actions: showPlayScreen
                 ? [
-                    MechanixIconButton.filled(
+                    MechanixIconButton.tonal(
                       key: const Key('timer_goto_setting_button'),
                       type: ButtonType.rounded,
-                      size: IconButtonSize.medium,
+                      size: IconButtonSize.small,
                       backgroundColor: colorScheme.surfaceContainerHigh,
                       foregroundColor: colorScheme.primary,
-                      icon: Icon(Icons.add_rounded, color: colorScheme.primary),
+                      icon: ImageIcon(
+                        const AssetImage(ClockIcons.add),
+                        color: theme.colorScheme.primary,
+                      ),
                       onPressed: () {
                         setState(() {
                           _isSettingMode = true;

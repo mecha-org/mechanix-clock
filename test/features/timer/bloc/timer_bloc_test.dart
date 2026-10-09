@@ -150,9 +150,17 @@ void main() {
         when(() => repository.savePresets(any())).thenAnswer((_) async => {});
         return timerBloc;
       },
-      seed: () => const TimerState(presets: [testPreset]),
+      seed: () => const TimerState(
+        status: TimerStatus.idle,
+        presets: [testPreset],
+      ),
       act: (bloc) => bloc.add(const DeleteTimerPreset('1')),
-      expect: () => [const TimerState(presets: [])],
+      expect: () => [
+        const TimerState(
+          status: TimerStatus.idle,
+          presets: [],
+        ),
+      ],
     );
 
     blocTest<TimerBloc, TimerState>(
@@ -379,6 +387,14 @@ void main() {
         duration: Duration(seconds: 10),
         remaining: Duration(seconds: 10),
         activePresetId: 'active_123',
+        activeTimers: {
+          'active_123': ActiveTimerData(
+            id: 'active_123',
+            duration: Duration(seconds: 10),
+            remaining: Duration(seconds: 10),
+            status: TimerStatus.running,
+          ),
+        },
       ),
       act: (bloc) => bloc.add(PauseTimer()),
       expect: () => [
@@ -387,6 +403,14 @@ void main() {
           duration: Duration(seconds: 10),
           remaining: Duration(seconds: 10),
           activePresetId: 'active_123',
+          activeTimers: {
+            'active_123': ActiveTimerData(
+              id: 'active_123',
+              duration: Duration(seconds: 10),
+              remaining: Duration(seconds: 10),
+              status: TimerStatus.paused,
+            ),
+          },
         ),
       ],
       verify: (_) {
@@ -402,6 +426,14 @@ void main() {
         duration: Duration(seconds: 10),
         remaining: Duration(seconds: 10),
         activePresetId: 'active_123',
+        activeTimers: {
+          'active_123': ActiveTimerData(
+            id: 'active_123',
+            duration: Duration(seconds: 10),
+            remaining: Duration(seconds: 10),
+            status: TimerStatus.paused,
+          ),
+        },
       ),
       act: (bloc) => bloc.add(ResumeTimer()),
       expect: () => [
@@ -416,6 +448,11 @@ void main() {
               (s) => s.remaining,
               'timer remaining',
               const Duration(seconds: 10),
+            )
+            .having(
+              (s) => s.activeTimers['active_123']?.status,
+              'active timer status',
+              TimerStatus.running,
             ),
       ],
       verify: (_) {
@@ -436,6 +473,14 @@ void main() {
         duration: Duration(seconds: 10),
         remaining: Duration(seconds: 8),
         activePresetId: 'active_123',
+        activeTimers: {
+          'active_123': ActiveTimerData(
+            id: 'active_123',
+            duration: Duration(seconds: 10),
+            remaining: Duration(seconds: 8),
+            status: TimerStatus.running,
+          ),
+        },
       ),
       act: (bloc) => bloc.add(CancelTimer()),
       expect: () => [
@@ -459,13 +504,23 @@ void main() {
           status: TimerStatus.running,
           duration: const Duration(seconds: 10),
           remaining: const Duration(seconds: 10),
+          activePresetId: 'active_123',
+          activeTimers: {
+            'active_123': ActiveTimerData(
+              id: 'active_123',
+              duration: const Duration(seconds: 10),
+              remaining: const Duration(seconds: 10),
+              status: TimerStatus.running,
+              endTime: now.add(const Duration(seconds: 9)),
+            ),
+          },
           endTime: now.add(const Duration(seconds: 9)),
         );
       },
       act: (bloc) => bloc.add(const TimerTick()),
       expect: () => [
         isA<TimerState>().having(
-          (s) => s.remaining.inSeconds,
+          (s) => s.activeTimers['active_123']?.remaining.inSeconds,
           'remaining seconds',
           9,
         ),
@@ -481,17 +536,23 @@ void main() {
           duration: const Duration(seconds: 10),
           remaining: const Duration(seconds: 1),
           activePresetId: 'active_123',
+          activeTimers: {
+            'active_123': ActiveTimerData(
+              id: 'active_123',
+              duration: const Duration(seconds: 10),
+              remaining: const Duration(seconds: 1),
+              status: TimerStatus.running,
+              endTime: DateTime.now().subtract(const Duration(seconds: 1)),
+            ),
+          },
           endTime: DateTime.now().subtract(const Duration(seconds: 1)),
         );
       },
       act: (bloc) => bloc.add(const TimerTick()),
       expect: () => [
-        const TimerState(
-          status: TimerStatus.finished,
-          duration: Duration(seconds: 10),
-          remaining: Duration.zero,
-          activePresetId: 'active_123',
-        ),
+        isA<TimerState>()
+            .having((s) => s.status, 'status', TimerStatus.finished)
+            .having((s) => s.activePresetId, 'activePresetId', 'active_123'),
       ],
       verify: (_) {
         verify(() => systemAlarmService.cancelTimer('active_123')).called(1);

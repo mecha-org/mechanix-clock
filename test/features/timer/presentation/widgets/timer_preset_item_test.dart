@@ -66,7 +66,7 @@ void main() {
     expect(selected, isTrue);
 
     // Tap play button
-    final playBtnFinder = find.byType(MechanixIconButton);
+    final playBtnFinder = find.byKey(const Key('timer_preset_play_button_p1'));
     expect(playBtnFinder, findsOneWidget);
     await tester.tap(playBtnFinder);
     await tester.pump();

@@ -104,6 +104,7 @@ class TimerPresetItem extends StatelessWidget {
       trailingWidgets: [
         if (!isEditing)
           MechanixIconButton.filled(
+            key: Key('timer_preset_play_button_${preset.id}'),
             type: ButtonType.rounded,
             size: IconButtonSize.medium,
             backgroundColor: colorScheme.surfaceContainerHigh,

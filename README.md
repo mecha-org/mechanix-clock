@@ -6,6 +6,8 @@ A modern, functional clock app built with Flutter Elinux for Mechanix OS. It fea
 
 - **Alarm**: Set, edit, and manage multiple alarms with custom sounds.
 - **Stopwatch**: Track elapsed time with lap support.
+- **World Clock**: Search and add global cities across timezones.
+- **Timers & Presets**: Custom duration picker (hours, minutes, seconds), concurrent active timer support with pause/resume, swipe-to-delete presets, sound selection.
 - **Modern UI**: Clean and intuitive interface designed for Mechanix OS.
 - **Localization**: Support for English (default) and extensible to other languages.
 
@@ -25,10 +27,13 @@ A modern, functional clock app built with Flutter Elinux for Mechanix OS. It fea
    ```
 
 2. Navigate to the project directory:
+
    ```bash
-   cd mechanix_clock
+   cd mechanix-clock
    ```
+
 3. Get dependencies:
+
    ```bash
    flutter-elinux pub get
    ```

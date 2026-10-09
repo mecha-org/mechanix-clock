@@ -56,7 +56,7 @@ class DeleteAlarmConfirmationSheet extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: MechanixButton(
-                      key: const Key('delete_alarm_trash_button'),
+                      key: const Key('delete_alarm_delete_button'),
                       size: ButtonSize.large,
                       icon: ImageIcon(
                         const AssetImage(ClockIcons.delete),

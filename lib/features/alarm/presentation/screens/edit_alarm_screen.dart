@@ -120,6 +120,7 @@ class _EditAlarmScreenState extends State<EditAlarmScreen> {
           ),
           if (widget.alarm != null)
             MechanixIconButton.standard(
+              key: const Key('delete_alarm_button'),
               icon: ImageIcon(
                 const AssetImage(ClockIcons.delete),
                 color: theme.colorScheme.error,

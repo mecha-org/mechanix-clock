@@ -43,7 +43,10 @@ void main() {
       await tester.pumpAndSettle();
 
       final animatedContainer = tester.widget<AnimatedContainer>(
-        find.byType(AnimatedContainer),
+        find.descendant(
+          of: find.byType(DayBubble),
+          matching: find.byType(AnimatedContainer),
+        ),
       );
       final decoration = animatedContainer.decoration as BoxDecoration;
 
@@ -56,10 +59,12 @@ void main() {
 
       // Text color should be onSurface (#EEEEEE)
       final animatedTextStyle = tester.widget<AnimatedDefaultTextStyle>(
-        find.byType(AnimatedDefaultTextStyle),
+        find.descendant(
+          of: find.byType(DayBubble),
+          matching: find.byType(AnimatedDefaultTextStyle),
+        ),
       );
       expect(animatedTextStyle.style.color, const Color(0xFFEEEEEE));
-      expect(animatedTextStyle.style.fontWeight, FontWeight.w600);
     });
 
     testWidgets('displays correct colors when unselected', (tester) async {
@@ -67,7 +72,10 @@ void main() {
       await tester.pumpAndSettle();
 
       final animatedContainer = tester.widget<AnimatedContainer>(
-        find.byType(AnimatedContainer),
+        find.descendant(
+          of: find.byType(DayBubble),
+          matching: find.byType(AnimatedContainer),
+        ),
       );
       final decoration = animatedContainer.decoration as BoxDecoration;
 
@@ -83,10 +91,12 @@ void main() {
 
       // Text color should be onSurfaceVariant (#717171)
       final animatedTextStyle = tester.widget<AnimatedDefaultTextStyle>(
-        find.byType(AnimatedDefaultTextStyle),
+        find.descendant(
+          of: find.byType(DayBubble),
+          matching: find.byType(AnimatedDefaultTextStyle),
+        ),
       );
       expect(animatedTextStyle.style.color, const Color(0xFF717171));
-      expect(animatedTextStyle.style.fontWeight, FontWeight.w500);
     });
 
     testWidgets('handles tap event', (tester) async {

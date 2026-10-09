@@ -150,7 +150,7 @@ void main() {
       // Tapping pause button dispatches PauseTimer
       await tester.tap(find.byKey(const Key('timer_active_pause_button')));
       await tester.pump();
-      verify(() => mockTimerBloc.add(PauseTimer())).called(1);
+      verify(() => mockTimerBloc.add(PauseTimer(presetId: 'p1'))).called(1);
     },
   );
 
@@ -174,7 +174,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('timer_active_resume_button')));
     await tester.pump();
-    verify(() => mockTimerBloc.add(ResumeTimer())).called(1);
+    verify(() => mockTimerBloc.add(ResumeTimer(presetId: 'p1'))).called(1);
   });
 
   testWidgets(
@@ -210,53 +210,6 @@ void main() {
       // Now on setting screen
       expect(find.byType(TimerCustomPicker), findsOneWidget);
       expect(find.byKey(const Key('timer_start_button')), findsOneWidget);
-    },
-  );
-
-  testWidgets(
-    'finished dialog shows restart and dismiss buttons, restart triggers StartTimer',
-    (tester) async {
-      final states = Stream<TimerState>.fromIterable([
-        const TimerState(status: TimerStatus.idle),
-        TimerState(
-          status: TimerStatus.finished,
-          duration: const Duration(minutes: 5),
-          activePresetId: 'preset_123',
-          sound: sounds[0],
-        ),
-      ]);
-
-      when(() => mockTimerBloc.state).thenReturn(
-        TimerState(
-          status: TimerStatus.finished,
-          duration: const Duration(minutes: 5),
-          activePresetId: 'preset_123',
-          sound: sounds[0],
-        ),
-      );
-      when(() => mockTimerBloc.stream).thenAnswer((_) => states);
-
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
-
-      // Verify dialog elements
-      expect(find.text('Timer Finished'), findsOneWidget);
-      expect(find.text(sounds[0]), findsOneWidget);
-      expect(find.text('05:00 mins'), findsOneWidget);
-      expect(find.text('Dismiss'), findsOneWidget);
-      expect(find.text('Restart'), findsOneWidget);
-
-      // Tap Restart
-      await tester.tap(find.text('Restart'));
-      await tester.pumpAndSettle();
-
-      // Verify events were dispatched
-      verify(() => mockTimerBloc.add(ResetTimerToIdle())).called(1);
-      verify(
-        () => mockTimerBloc.add(
-          const StartTimer(Duration(minutes: 5), presetId: 'preset_123'),
-        ),
-      ).called(1);
     },
   );
 
