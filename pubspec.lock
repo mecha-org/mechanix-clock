@@ -717,9 +717,9 @@ packages:
     dependency: "direct main"
     description:
       path: widgets
-      ref: "feat/search-bar"
-      resolved-ref: "9550b2d09ffbabbad3184e866f8c489da39eb839"
-      url: "https://github.com/yogitah-mecha/mechanix-ui"
+      ref: pre-release
+      resolved-ref: "4b38060aaf23321df1f3366182f62e49d03cbd84"
+      url: "https://github.com/mecha-org/mechanix.dart.git"
     source: git
     version: "0.0.1"
   xdg_directories:

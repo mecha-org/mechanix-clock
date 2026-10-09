@@ -44,12 +44,9 @@ dependencies:
   timezone: ^0.11.1
   widgets:
     git:
-      # url: https://github.com/mecha-org/mechanix.dart.git
-      # path: widgets
-      # ref: pre-release
-      url: https://github.com/yogitah-mecha/mechanix-ui
+      url: https://github.com/mecha-org/mechanix.dart.git
       path: widgets
-      ref: feat/search-bar
+      ref: pre-release
 
 dev_dependencies:
   flutter_test:
