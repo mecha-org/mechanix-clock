@@ -175,82 +175,88 @@ class _TimerScreenState extends State<TimerScreen> with WidgetsBindingObserver {
 
     final allItems = [...activePresets, ...inactivePresets];
 
-    return ListView.builder(
-      itemCount: allItems.length,
-      itemBuilder: (context, index) {
-        final preset = allItems[index];
-        final timerData = state.activeTimers[preset.id];
-        final isRunning =
-            timerData?.status == TimerStatus.running ||
-            (timerData == null &&
-                state.activePresetId == preset.id &&
-                state.status == TimerStatus.running);
-        final isPaused =
-            timerData?.status == TimerStatus.paused ||
-            (timerData == null &&
-                state.activePresetId == preset.id &&
-                state.status == TimerStatus.paused);
-        final isActive = isRunning || isPaused;
-        final displayDuration =
-            timerData?.remaining ??
-            (state.activePresetId == preset.id &&
-                    state.remaining > Duration.zero
-                ? state.remaining
-                : preset.duration);
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(
+        dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
+      ),
+      child: ListView.builder(
+        itemCount: allItems.length,
+        itemBuilder: (context, index) {
+          final preset = allItems[index];
+          final timerData = state.activeTimers[preset.id];
+          final isRunning =
+              timerData?.status == TimerStatus.running ||
+              (timerData == null &&
+                  state.activePresetId == preset.id &&
+                  state.status == TimerStatus.running);
+          final isPaused =
+              timerData?.status == TimerStatus.paused ||
+              (timerData == null &&
+                  state.activePresetId == preset.id &&
+                  state.status == TimerStatus.paused);
+          final isActive = isRunning || isPaused;
+          final displayDuration =
+              timerData?.remaining ??
+              (state.activePresetId == preset.id &&
+                      state.remaining > Duration.zero
+                  ? state.remaining
+                  : preset.duration);
 
-        Widget itemWidget;
-        if (isActive) {
-          itemWidget = TimerActiveItem(
-            duration: displayDuration,
-            isRunning: isRunning,
-            isPaused: isPaused,
-            onPause: () {
-              context.read<TimerBloc>().add(PauseTimer(presetId: preset.id));
-            },
-            onResume: () {
-              context.read<TimerBloc>().add(ResumeTimer(presetId: preset.id));
-            },
-          );
-        } else {
-          itemWidget = TimerPresetItem(
-            preset: preset,
-            isEditing: false,
-            onSelect: () {
-              setState(() {
-                _selectedHours = preset.duration.inHours;
-                _selectedMinutes = preset.duration.inMinutes.remainder(60);
-                _selectedSeconds = preset.duration.inSeconds.remainder(60);
-                _isSettingMode = true;
-              });
-            },
-            onPlay: () {
-              context.read<TimerBloc>().add(
-                StartTimer(
-                  preset.duration,
-                  presetId: preset.id,
-                  resetOldActiveTimers: false,
+          Widget itemWidget;
+          if (isActive) {
+            itemWidget = TimerActiveItem(
+              duration: displayDuration,
+              isRunning: isRunning,
+              isPaused: isPaused,
+              onPause: () {
+                context.read<TimerBloc>().add(PauseTimer(presetId: preset.id));
+              },
+              onResume: () {
+                context.read<TimerBloc>().add(ResumeTimer(presetId: preset.id));
+              },
+            );
+          } else {
+            itemWidget = TimerPresetItem(
+              preset: preset,
+              isEditing: false,
+              onSelect: () {
+                setState(() {
+                  _selectedHours = preset.duration.inHours;
+                  _selectedMinutes = preset.duration.inMinutes.remainder(60);
+                  _selectedSeconds = preset.duration.inSeconds.remainder(60);
+                  _isSettingMode = true;
+                });
+              },
+              onPlay: () {
+                context.read<TimerBloc>().add(
+                  StartTimer(
+                    preset.duration,
+                    presetId: preset.id,
+                    resetOldActiveTimers: false,
+                  ),
+                );
+              },
+              onDelete: () {
+                context.read<TimerBloc>().add(DeleteTimerPreset(preset.id));
+              },
+              onEdit: () {},
+              formatPresetDuration: _formatPresetDuration,
+            );
+          }
+
+          return Column(
+            key: ValueKey(preset.id),
+            children: [
+              itemWidget,
+              if (index < allItems.length - 1)
+                MechanixDivider(
+                  color: colorScheme.outline.withValues(alpha: 0.38),
+                  space: 1,
                 ),
-              );
-            },
-            onDelete: () {
-              context.read<TimerBloc>().add(DeleteTimerPreset(preset.id));
-            },
-            onEdit: () {},
-            formatPresetDuration: _formatPresetDuration,
+            ],
           );
-        }
-
-        return Column(
-          key: ValueKey(preset.id),
-          children: [
-            itemWidget,
-            if (index < allItems.length - 1)
-              MechanixDivider(
-                color: colorScheme.outline.withValues(alpha: 0.38),
-              ),
-          ],
-        );
-      },
+        },
+      ),
     );
   }
 
@@ -360,7 +366,10 @@ class _TimerScreenState extends State<TimerScreen> with WidgetsBindingObserver {
             ),
 
             const SizedBox(height: 24),
-            MechanixDivider(color: colorScheme.outline.withValues(alpha: 0.38)),
+            MechanixDivider(
+              color: colorScheme.outline.withValues(alpha: 0.38),
+              space: 1,
+            ),
 
             // Sound Selection Row
             TimerSoundRow(
@@ -379,7 +388,10 @@ class _TimerScreenState extends State<TimerScreen> with WidgetsBindingObserver {
                 }
               },
             ),
-            MechanixDivider(color: colorScheme.outline.withValues(alpha: 0.38)),
+            MechanixDivider(
+              color: colorScheme.outline.withValues(alpha: 0.38),
+              space: 1,
+            ),
 
             // Presets List
             ReorderableListView.builder(
@@ -433,6 +445,7 @@ class _TimerScreenState extends State<TimerScreen> with WidgetsBindingObserver {
                     if (index < state.presets.length - 1)
                       MechanixDivider(
                         color: colorScheme.outline.withValues(alpha: 0.38),
+                        space: 1,
                       ),
                   ],
                 );

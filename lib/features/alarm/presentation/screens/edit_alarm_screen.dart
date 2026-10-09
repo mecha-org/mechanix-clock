@@ -247,10 +247,10 @@ class _EditAlarmScreenState extends State<EditAlarmScreen> {
               ),
 
             MechanixIconButton.standard(
-              icon: const Icon(
+              icon: Icon(
                 Icons.chevron_right,
                 size: 28,
-                color: Color(0xFFA1A1A5),
+                color: Theme.of(context).colorScheme.onSurface,
               ),
 
               type: IconButtonType.rounded,
@@ -303,10 +303,10 @@ class _EditAlarmScreenState extends State<EditAlarmScreen> {
           ),
         ),
         MechanixIconButton.standard(
-          icon: const Icon(
+          icon: Icon(
             Icons.chevron_right,
             size: 28,
-            color: Color(0xFFA1A1A5),
+            color: Theme.of(context).colorScheme.onSurface,
           ),
 
           type: IconButtonType.rounded,

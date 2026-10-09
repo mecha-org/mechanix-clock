@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
 
 class WorldClockEmptyState extends StatelessWidget {
@@ -23,7 +22,7 @@ class WorldClockEmptyState extends StatelessWidget {
             l10n.tap_to_add_cities,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               fontSize: 14,
-              color: AppColors.textGrey,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],
