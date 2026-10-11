@@ -58,7 +58,7 @@ class TimerCustomPicker extends StatelessWidget {
               ':',
               style: TextStyle(
                 fontFamily: MechanixFontFamily.geistMono,
-                fontSize: 58,
+                fontSize: 80,
                 fontWeight: FontWeight.w300,
                 color: enabled
                     ? colorScheme.onSurface
@@ -93,7 +93,7 @@ class TimerCustomPicker extends StatelessWidget {
               ':',
               style: TextStyle(
                 fontFamily: MechanixFontFamily.geistMono,
-                fontSize: 58,
+                fontSize: 80,
                 fontWeight: FontWeight.w300,
                 color: enabled
                     ? colorScheme.onSurface

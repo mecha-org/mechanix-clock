@@ -22,7 +22,7 @@ class _RepeatSelectionScreenState extends State<RepeatSelectionScreen> {
     super.initState();
     if (widget.initialDays.isEmpty) {
       _repeatType = RepeatType.once;
-      _customDays = []; // default custom preset (M, W, S)
+      _customDays = [];
     } else if (widget.initialDays.length == 7) {
       _repeatType = RepeatType.daily;
       _customDays = List<int>.from(widget.initialDays);
@@ -151,6 +151,8 @@ class _RepeatSelectionScreenState extends State<RepeatSelectionScreen> {
                       _customDays.contains(index);
 
                   return DayBubble(
+                    key: Key('day_$index'),
+
                     size: 40,
                     label: days[index],
                     isSelected: isSelected,

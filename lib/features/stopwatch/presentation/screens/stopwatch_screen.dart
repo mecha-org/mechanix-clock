@@ -45,9 +45,7 @@ class StopwatchScreen extends StatelessWidget {
               child: BlocSelector<StopwatchBloc, StopwatchState, List<LapTime>>(
                 selector: (state) => state.laps,
                 builder: (context, laps) {
-                  // Laps ordered ascending (LAP 01, LAP 02, LAP 03...)
-                  final displayedLaps = laps.reversed.toList();
-                  return _LapListView(laps: displayedLaps);
+                  return _LapListView(laps: laps);
                 },
               ),
             ),
@@ -56,11 +54,13 @@ class StopwatchScreen extends StatelessWidget {
           // ── Digital Timer Display ──────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 0.0),
-            child: BlocSelector<StopwatchBloc, StopwatchState, Duration>(
-              selector: (state) => state.elapsed,
-              builder: (context, elapsed) {
-                return _StopwatchTimeDisplay(elapsed: elapsed);
-              },
+            child: RepaintBoundary(
+              child: BlocSelector<StopwatchBloc, StopwatchState, Duration>(
+                selector: (state) => state.elapsed,
+                builder: (context, elapsed) {
+                  return _StopwatchTimeDisplay(elapsed: elapsed);
+                },
+              ),
             ),
           ),
 
@@ -224,7 +224,8 @@ class _LapListViewState extends State<_LapListView> {
           padding: EdgeInsets.zero,
           itemCount: widget.laps.length,
           itemBuilder: (context, index) {
-            final lap = widget.laps[index];
+            // Display in ascending order (LAP 01, LAP 02, ...)
+            final lap = widget.laps[widget.laps.length - 1 - index];
             final isLatest = index == widget.laps.length - 1;
 
             return Column(

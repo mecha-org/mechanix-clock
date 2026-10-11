@@ -19,7 +19,7 @@ class StopwatchBloc extends Bloc<StopwatchEvent, StopwatchState> {
   void _onStart(StartStopwatch event, Emitter<StopwatchState> emit) {
     _stopwatch.start();
     _timer?.cancel();
-    _timer = Timer.periodic(const Duration(milliseconds: 30), (timer) {
+    _timer = Timer.periodic(const Duration(milliseconds: 40), (timer) {
       add(StopwatchTick(_stopwatch.elapsed));
     });
     emit(state.copyWith(status: StopwatchStatus.running));
@@ -40,7 +40,9 @@ class StopwatchBloc extends Bloc<StopwatchEvent, StopwatchState> {
 
   void _onLap(LapStopwatch event, Emitter<StopwatchState> emit) {
     final currentTotal = _stopwatch.elapsed;
-    final lastLapTotal = state.laps.isEmpty ? Duration.zero : state.laps.first.totalTime;
+    final lastLapTotal = state.laps.isEmpty
+        ? Duration.zero
+        : state.laps.first.totalTime;
     final lapDuration = currentTotal - lastLapTotal;
 
     final newLap = LapTime(

@@ -115,6 +115,7 @@ class _EditAlarmScreenState extends State<EditAlarmScreen> {
         ),
         actions: [
           MechanixIconButton.standard(
+            key: const Key('save_alarm_button'),
             icon: const Icon(Icons.check),
             onPressed: hasChanges ? _saveAlarm : null,
           ),
@@ -148,7 +149,7 @@ class _EditAlarmScreenState extends State<EditAlarmScreen> {
 
                 child: _buildLargeTimePicker(),
               ),
-              const SizedBox(height: 36),
+              const SizedBox(height: 12),
 
               // Alarm time row with AM/PM Switch
               _buildAlarmTimeRow(l10n),
@@ -210,6 +211,8 @@ class _EditAlarmScreenState extends State<EditAlarmScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         MechanixListTile(
+          key: const Key('option_repeat'),
+
           contentPadding: const EdgeInsets.symmetric(
             vertical: 16,
             horizontal: 16,
@@ -287,6 +290,7 @@ class _EditAlarmScreenState extends State<EditAlarmScreen> {
 
   Widget _buildSoundRow(AppLocalizations l10n) {
     return MechanixListTile(
+      key: const Key('option_sound'),
       contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       labelText: l10n.sound,
       trailingWidgets: [
@@ -340,6 +344,8 @@ class _EditAlarmScreenState extends State<EditAlarmScreen> {
 
   Widget _buildSnoozeRow(AppLocalizations l10n) {
     return MechanixListTile(
+      key: const Key('snooze_switch'),
+
       contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       labelText: l10n.snooze,
       trailingWidgets: [

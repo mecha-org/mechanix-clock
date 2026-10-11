@@ -50,7 +50,8 @@ class _AlarmListScreenState extends State<AlarmListScreen> {
           child: MechanixDivider(color: theme.colorScheme.outline, space: 1),
         ),
       ),
-      body: BlocBuilder<AlarmBloc, AlarmState>(
+      body: BlocSelector<AlarmBloc, AlarmState, AlarmState>(
+        selector: (state) => state,
         builder: (context, state) {
           if (state is AlarmLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -70,14 +71,32 @@ class _AlarmListScreenState extends State<AlarmListScreen> {
                 dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
               ),
               child: MechanixSwipableList(
+                key: const Key('alarm_item_tap'),
+
                 child: ListView.separated(
                   padding: const EdgeInsets.symmetric(vertical: 20),
                   itemCount: state.alarms.length,
                   separatorBuilder: (context, index) =>
                       const SizedBox(height: 24),
                   itemBuilder: (context, index) {
-                    final alarm = state.alarms[index];
-                    return _AlarmItem(key: ValueKey(alarm.id), alarm: alarm);
+                    final alarmId = state.alarms[index].id;
+                    return BlocSelector<AlarmBloc, AlarmState, Alarm?>(
+                      selector: (state) {
+                        if (state is AlarmLoaded) {
+                          for (final a in state.alarms) {
+                            if (a.id == alarmId) return a;
+                          }
+                        }
+                        return null;
+                      },
+                      builder: (context, alarm) {
+                        if (alarm == null) return const SizedBox.shrink();
+                        return _AlarmItem(
+                          key: ValueKey(alarm.id),
+                          alarm: alarm,
+                        );
+                      },
+                    );
                   },
                 ),
               ),

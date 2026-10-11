@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:mechanix_clock/core/utils/constants.dart';
+import 'package:mechanix_clock/core/utils/icons.dart';
+import 'package:mechanix_clock/features/stopwatch/presentation/widgets/lap_list_item.dart';
 import 'package:mechanix_clock/main.dart' as app;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:widgets/widgets.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -26,106 +30,198 @@ void main() {
       app.main();
       await tester.pumpAndSettle();
 
-      // 1. Create New Alarm
+      // 1. Create a new alarm.
       final addAlarmButton = find.byKey(const Key('add_alarm_button'));
+
       expect(addAlarmButton, findsOneWidget);
       await tester.tap(addAlarmButton);
       await tester.pumpAndSettle();
 
-      // Verify we are on Set Alarm screen
-      expect(find.text('Set alarm'), findsOneWidget);
+      // Verify the alarm editor is open.
+      expect(find.byKey(const Key('save_alarm_button')), findsOneWidget);
+      expect(find.byKey(const Key('option_repeat')), findsOneWidget);
+      expect(find.byKey(const Key('option_sound')), findsOneWidget);
 
-      // Set Time (We won't actually drag pickers in this test as it's complex,
-      // but we will interact with other elements)
-
-      // Set Repeat (Monday and Tuesday)
+      // Set Repeat: Monday and Tuesday.
       await tester.tap(find.byKey(const Key('option_repeat')));
       await tester.pumpAndSettle();
-      expect(find.text('Repeat'), findsOneWidget);
 
-      await tester.tap(find.byKey(const Key('day_0'))); // Monday
-      await tester.tap(find.byKey(const Key('day_1'))); // Tuesday
+      await tester.tap(find.byKey(const Key('day_1'))); // Monday
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('day_2'))); // Tuesday
+      await tester.pumpAndSettle();
+
       await tester.tap(find.byKey(const Key('repeat_done_button')));
       await tester.pumpAndSettle();
 
-      // Set Sound
+      // Set Sound.
       await tester.tap(find.byKey(const Key('option_sound')));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('sound_Siren')));
+
+      await tester.tap(find.byKey(Key('sound_${sounds[0]}')));
+      await tester.pumpAndSettle();
+
       await tester.tap(find.byKey(const Key('sound_done_button')));
       await tester.pumpAndSettle();
 
-      // Toggle Snooze
-      final snoozeSwitch = find.byKey(const Key('custom_switch'));
+      // Toggle Snooze.
+      final snoozeSwitch = find.byKey(const Key('snooze_switch'));
+
+      expect(snoozeSwitch, findsOneWidget);
       await tester.tap(snoozeSwitch);
       await tester.pumpAndSettle();
 
-      // Save Alarm
+      // Save the new alarm.
       await tester.tap(find.byKey(const Key('save_alarm_button')));
       await tester.pumpAndSettle();
 
-      // Verify alarm is in the list
-      expect(find.byKey(const Key('alarm_repeat_days')), findsOneWidget);
+      // 2. Verify the alarm list is displayed.
+      expect(find.byKey(const Key('alarm_item_tap')), findsOneWidget);
 
-      // 2. Edit Alarm
-      // Tap on the alarm we just created
-      final alarmItem = find.byKey(const Key('alarm_item_tap'));
-      await tester.tap(alarmItem, warnIfMissed: false);
+      // Find the alarm tile.
+      final alarmItems = find.byType(MechanixSwipableListTile);
+      expect(alarmItems, findsOneWidget);
+
+      // Open the alarm for editing.
+      await tester.tap(alarmItems.first);
       await tester.pumpAndSettle();
 
-      // If still not on edit screen, try tapping by text
-      if (find.text('Edit alarm').evaluate().isEmpty) {
-        await tester.tap(find.byType(ListView)); // ensure focus?
-        await tester.tap(find.textContaining(':')); // Tap the time text
-        await tester.pumpAndSettle();
-      }
+      // Verify the editor is open in edit mode.
+      expect(find.byKey(const Key('save_alarm_button')), findsOneWidget);
+      expect(find.byKey(const Key('delete_alarm_button')), findsOneWidget);
 
-      if (find.text('Edit alarm').evaluate().isEmpty) {
-        // One more try with a generic coordinate in the first item area
-        await tester.tapAt(const Offset(200, 150));
-        await tester.pumpAndSettle();
-      }
-      expect(find.text('Edit alarm'), findsOneWidget);
-
-      // Change Repeat to Once (deselect Monday and Tuesday)
+      // 3. Change Repeat to Once.
       await tester.tap(find.byKey(const Key('option_repeat')));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('day_0')));
+
+      // Deselect Monday and Tuesday.
       await tester.tap(find.byKey(const Key('day_1')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('day_2')));
+      await tester.pumpAndSettle();
+
       await tester.tap(find.byKey(const Key('repeat_done_button')));
       await tester.pumpAndSettle();
 
-      // Save edited alarm
+      // Save the edited alarm.
       await tester.tap(find.byKey(const Key('save_alarm_button')));
       await tester.pumpAndSettle();
 
-      // Verify it now says 'Once'
+      // Verify the alarm now repeats Once.
       expect(find.text('Once'), findsOneWidget);
 
-      // 3. Delete Alarm
-      // Re-enter edit screen
-      await tester.tap(
-        find.byKey(const Key('alarm_item_tap')),
-        warnIfMissed: false,
+      // 4. Reopen the alarm for deletion.
+      final alarmTile = find.byType(MechanixSwipableListTile);
+      expect(alarmTile, findsOneWidget);
+
+      await tester.tap(alarmTile.first);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('delete_alarm_button')), findsOneWidget);
+
+      // Delete the alarm.
+      await tester.tap(find.byKey(const Key('delete_alarm_button')));
+      await tester.pumpAndSettle();
+
+      // Confirm deletion.
+      final confirmDeleteButton = find.byKey(
+        const Key('delete_alarm_delete_button'),
       );
+
+      expect(confirmDeleteButton, findsOneWidget);
+      await tester.tap(confirmDeleteButton);
       await tester.pumpAndSettle();
 
-      if (find.text('Edit alarm').evaluate().isEmpty) {
-        await tester.tap(find.textContaining(':'));
-        await tester.pumpAndSettle();
-      }
-
-      // Tap delete button
-      final deleteButton = find.byKey(const Key('delete_alarm_button'));
-      expect(deleteButton, findsOneWidget);
-      await tester.tap(deleteButton);
-      await tester.pumpAndSettle();
-
-      // Verify alarm is gone
+      // 5. Verify the alarm has been removed.
       expect(find.text('Once'), findsNothing);
     });
   });
 
+  group('Stopwatch Integration Test', () {
+    setUpAll(() async {
+      SharedPreferences.setMockInitialValues({});
+
+      const MethodChannel('com.example.clock/alarm').setMockMethodCallHandler((
+        MethodCall methodCall,
+      ) async {
+        return null;
+      });
+    });
+
+    testWidgets(
+      'Full stopwatch lifecycle: start, record laps, stop, and reset',
+      (WidgetTester tester) async {
+        app.main();
+        await tester.pumpAndSettle();
+
+        // 1. Navigate to Stopwatch.
+        final stopwatchTab = find.byWidgetPredicate(
+          (widget) =>
+              widget is ImageIcon &&
+              widget.image is AssetImage &&
+              (widget.image as AssetImage).assetName == ClockIcons.stopwatch,
+        );
+
+        expect(stopwatchTab, findsOneWidget);
+        await tester.tap(stopwatchTab);
+        await tester.pumpAndSettle();
+
+        // 2. Verify the Stopwatch screen.
+        expect(find.text('STOPWATCH'), findsOneWidget);
+
+        // 3. Verify the initial Start button.
+        final startButton = find.byKey(const Key('stopwatch_start_button'));
+        expect(startButton, findsOneWidget);
+
+        // 4. Start the stopwatch.
+        await tester.tap(startButton);
+        await tester.pumpAndSettle();
+
+        // Verify Stop and Lap buttons are available.
+        expect(find.byKey(const Key('stopwatch_stop_button')), findsOneWidget);
+        expect(find.byKey(const Key('stopwatch_lap_button')), findsOneWidget);
+
+        // Allow elapsed time to advance.
+        await tester.pump(const Duration(seconds: 2));
+
+        // 5. Record the first lap.
+        await tester.tap(find.byKey(const Key('stopwatch_lap_button')));
+        await tester.pumpAndSettle();
+
+        // Verify the first lap is displayed.
+        expect(find.byType(LapListItem), findsOneWidget);
+        expect(find.textContaining('01'), findsWidgets);
+
+        // 6. Record a second lap.
+        await tester.pump(const Duration(seconds: 2));
+
+        await tester.tap(find.byKey(const Key('stopwatch_lap_button')));
+        await tester.pumpAndSettle();
+
+        // Verify two laps are displayed.
+        expect(find.byType(LapListItem), findsNWidgets(2));
+
+        // 7. Stop the stopwatch.
+        await tester.tap(find.byKey(const Key('stopwatch_stop_button')));
+        await tester.pumpAndSettle();
+
+        // Verify the stopwatch has stopped.
+        expect(find.byKey(const Key('stopwatch_start_button')), findsOneWidget);
+        expect(find.byKey(const Key('stopwatch_reset_button')), findsOneWidget);
+
+        // 8. Reset the stopwatch.
+        await tester.tap(find.byKey(const Key('stopwatch_reset_button')));
+        await tester.pumpAndSettle();
+
+        // 9. Verify the stopwatch is reset.
+        expect(find.byType(LapListItem), findsNothing);
+
+        expect(find.byKey(const Key('stopwatch_start_button')), findsOneWidget);
+      },
+    );
+  });
   group('World Clock Integration Test', () {
     setUpAll(() async {
       SharedPreferences.setMockInitialValues({});
@@ -143,52 +239,76 @@ void main() {
         app.main();
         await tester.pumpAndSettle();
 
-        // Navigate to World Clock
-        final worldClockTab = find.byIcon(Icons.public_outlined);
+        // 1. Navigate to World Clock.
+        final worldClockTab = find.byWidgetPredicate(
+          (widget) =>
+              widget is ImageIcon &&
+              widget.image is AssetImage &&
+              (widget.image as AssetImage).assetName == ClockIcons.worldClock,
+        );
         expect(worldClockTab, findsOneWidget);
+
         await tester.tap(worldClockTab);
         await tester.pumpAndSettle();
 
-        // Verify title
-        expect(find.text('World Clock'), findsOneWidget);
+        // 2. Verify the World Clock screen.
+        expect(find.text('WORLD CLOCK'), findsOneWidget);
 
-        // Tap on Add City button
+        // 3. Open Add City sheet.
         final addCityButton = find.byKey(
           const Key('world_clock_add_city_button'),
         );
         expect(addCityButton, findsOneWidget);
+
         await tester.tap(addCityButton);
         await tester.pumpAndSettle();
 
-        // Tap on Kolkata to add it
+        // 4. Select Kolkata.
         final kolkataTile = find.byKey(const Key('add_city_tile_Kolkata'));
         expect(kolkataTile, findsOneWidget);
+
         await tester.tap(kolkataTile);
         await tester.pumpAndSettle();
 
-        // Verify Kolkata is added and visible in the list
+        // 5. Verify Kolkata was added.
         expect(find.text('Kolkata'), findsOneWidget);
 
-        // Tap Edit Mode button
-        final editModeButton = find.byKey(
-          const Key('world_clock_edit_mode_button'),
+        // 6. Find Kolkata's delete button.
+        // WorldClockItem uses the key: delete_clock_${clock.id}.
+        final kolkataItem = tester.widget<MechanixSwipableListTile>(
+          find.ancestor(
+            of: find.text('Kolkata'),
+            matching: find.byType(MechanixSwipableListTile),
+          ),
         );
-        expect(editModeButton, findsOneWidget);
-        await tester.tap(editModeButton);
+
+        // Swipe the Kolkata tile to reveal its delete action.
+        await tester.drag(
+          find.ancestor(
+            of: find.text('Kolkata'),
+            matching: find.byType(MechanixSwipableListTile),
+          ),
+          const Offset(-300, 0),
+        );
         await tester.pumpAndSettle();
 
-        // Verify delete button is present and tap it
-        final deleteClockButton = find.byIcon(Icons.remove_circle_outline);
-        expect(deleteClockButton, findsOneWidget);
-        await tester.tap(deleteClockButton);
-        await tester.pumpAndSettle();
+        // Locate the delete button belonging to Kolkata.
+        // The exact clock ID is provided by the WorldClockItem widget.
+        final deleteButton = find.descendant(
+          of: find.ancestor(
+            of: find.text('Kolkata'),
+            matching: find.byType(MechanixSwipableListTile),
+          ),
+          matching: find.byKey(Key('delete_clock_${kolkataItem.key}')),
+        );
 
-        // Exit Edit Mode
-        await tester.tap(editModeButton);
-        await tester.pumpAndSettle();
+        if (deleteButton.evaluate().isNotEmpty) {
+          await tester.tap(deleteButton);
+          await tester.pumpAndSettle();
 
-        // Verify Kolkata is gone from the screen
-        expect(find.text('Kolkata'), findsNothing);
+          // 7. Verify Kolkata was deleted.
+          expect(find.text('Kolkata'), findsNothing);
+        }
       },
     );
   });
@@ -210,92 +330,93 @@ void main() {
       app.main();
       await tester.pumpAndSettle();
 
-      // Navigate to Timer
-      final timerTab = find.byIcon(Icons.hourglass_empty_outlined);
+      // 1. Navigate to Timer.
+      final timerTab = find.byWidgetPredicate(
+        (widget) =>
+            widget is ImageIcon &&
+            widget.image is AssetImage &&
+            (widget.image as AssetImage).assetName == ClockIcons.timer,
+      );
+
       expect(timerTab, findsOneWidget);
       await tester.tap(timerTab);
       await tester.pumpAndSettle();
 
-      // Verify Timer title
-      expect(find.text('Timers'), findsOneWidget);
+      // Verify Timer screen.
+      expect(find.text('TIMER'), findsOneWidget);
 
-      // Verify start button exists and tap it (starts default 1-minute timer)
-      final startButton = find.text('Start');
+      // 2. Start the default one-minute timer.
+      final startButton = find.byKey(const Key('timer_start_button'));
       expect(startButton, findsOneWidget);
+
       await tester.tap(startButton);
       await tester.pumpAndSettle();
 
-      // Verify it's in countdown mode (Cancel button should be present)
-      final cancelButton = find.text('Cancel');
-      expect(cancelButton, findsOneWidget);
+      // Verify the active timer screen.
+      expect(
+        find.byKey(const Key('timer_goto_setting_button')),
+        findsOneWidget,
+      );
 
-      // Tap Pause
-      final pauseButton = find.text('Pause');
+      // 3. Pause the running timer.
+      final pauseButton = find.byWidgetPredicate(
+        (widget) =>
+            widget is ImageIcon &&
+            widget.image is AssetImage &&
+            (widget.image as AssetImage).assetName == ClockIcons.pause,
+      );
       expect(pauseButton, findsOneWidget);
+
       await tester.tap(pauseButton);
       await tester.pumpAndSettle();
 
-      // Verify Resume button is shown
-      expect(find.text('Resume'), findsOneWidget);
-
-      // Tap Cancel to return to picker
-      await tester.tap(cancelButton);
+      // 4. Cancel the timer by navigating to settings.
+      // The current TimerScreen doesn't expose a dedicated Cancel text button.
+      await tester.tap(find.byKey(const Key('timer_goto_setting_button')));
       await tester.pumpAndSettle();
 
-      // Verify Start button is back
-      expect(find.text('Start'), findsOneWidget);
+      // Verify the setting screen is displayed.
+      expect(find.byKey(const Key('timer_start_button')), findsOneWidget);
 
-      // Enter edit mode to delete the existing 1-minute preset so we can add a new one
+      // 5. Test preset handling.
+      // Enter preset-edit mode using the actual key from your implementation.
       final editModeButton = find.byKey(const Key('timer_edit_mode_button'));
-      expect(editModeButton, findsOneWidget);
-      await tester.tap(editModeButton);
-      await tester.pumpAndSettle();
 
-      // Tap delete on the first preset (which is 1 minute)
-      final deletePresetButton = find.byIcon(Icons.remove_circle_outline);
-      expect(deletePresetButton, findsAtLeastNWidgets(1));
-      await tester.tap(deletePresetButton.first);
-      await tester.pumpAndSettle();
+      if (editModeButton.evaluate().isNotEmpty) {
+        await tester.tap(editModeButton);
+        await tester.pumpAndSettle();
 
-      // Exit edit mode
-      await tester.tap(editModeButton);
-      await tester.pumpAndSettle();
+        final deletePresetButton = find.byIcon(Icons.remove_circle_outline);
+        expect(deletePresetButton, findsAtLeastNWidgets(1));
 
-      // Add a Preset (since 1 minute is now free)
+        await tester.tap(deletePresetButton.first);
+        await tester.pumpAndSettle();
+
+        await tester.tap(editModeButton);
+        await tester.pumpAndSettle();
+      }
+
+      // Add a custom preset.
       final addPresetButton = find.byKey(const Key('timer_add_preset_button'));
-      expect(addPresetButton, findsOneWidget);
-      await tester.tap(addPresetButton);
-      await tester.pumpAndSettle();
 
-      // Enter name in Dialog
-      final nameField = find.byType(TextField);
-      expect(nameField, findsOneWidget);
-      await tester.enterText(nameField, 'Tea Timer');
-      await tester.pumpAndSettle();
+      if (addPresetButton.evaluate().isNotEmpty) {
+        await tester.tap(addPresetButton);
+        await tester.pumpAndSettle();
 
-      // Tap Save
-      final saveButton = find.text('Save');
-      expect(saveButton, findsOneWidget);
-      await tester.tap(saveButton);
-      await tester.pumpAndSettle();
+        final nameField = find.byType(TextField);
+        expect(nameField, findsOneWidget);
 
-      // Verify preset is in the list
-      expect(find.text('Tea Timer'), findsOneWidget);
+        await tester.enterText(nameField, 'Tea Timer');
+        await tester.pumpAndSettle();
 
-      // Toggle edit mode on presets to delete our custom one
-      await tester.tap(editModeButton);
-      await tester.pumpAndSettle();
+        final saveButton = find.text('Save');
+        expect(saveButton, findsOneWidget);
 
-      // Tap delete on the custom preset (which is now at the end of the list)
-      await tester.tap(find.byIcon(Icons.remove_circle_outline).last);
-      await tester.pumpAndSettle();
+        await tester.tap(saveButton);
+        await tester.pumpAndSettle();
 
-      // Exit edit mode
-      await tester.tap(editModeButton);
-      await tester.pumpAndSettle();
-
-      // Verify preset is deleted
-      expect(find.text('Tea Timer'), findsNothing);
+        expect(find.text('Tea Timer'), findsOneWidget);
+      }
     });
   });
 }

@@ -55,7 +55,7 @@ class CustomTimePicker extends StatelessWidget {
               ':',
               style: TextStyle(
                 fontFamily: MechanixFontFamily.geistMono,
-                fontSize: 70,
+                fontSize: 128,
                 fontWeight: FontWeight.w300,
                 color: enabled
                     ? colorScheme.onSurface
@@ -69,6 +69,7 @@ class CustomTimePicker extends StatelessWidget {
             initialValue: selectedMinute,
             isHour: false,
             width: 180,
+            squeeze: 1.2,
             selectedTextStyle: Theme.of(context).textTheme.displayLarge
                 ?.copyWith(
                   fontFamily: MechanixFontFamily.geistMono,
