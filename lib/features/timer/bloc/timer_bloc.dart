@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mechanix_clock/core/utils/app_logger.dart';
 import 'package:mechanix_clock/core/utils/system_alarm_service.dart';
@@ -18,19 +19,37 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
   TimerBloc({required this.repository, SystemAlarmService? systemAlarmService})
     : systemAlarmService = systemAlarmService ?? SystemAlarmService(),
       super(const TimerState()) {
-    on<LoadTimerPresets>(_onLoadPresets);
-    on<AddTimerPreset>(_onAddPreset);
-    on<UpdateTimerPreset>(_onUpdatePreset);
-    on<DeleteTimerPreset>(_onDeletePreset);
-    on<ToggleEditPresetsMode>(_onToggleEditMode);
-    on<ReorderTimerPresets>(_onReorderPresets);
-    on<StartTimer>(_onStart);
-    on<PauseTimer>(_onPause);
-    on<ResumeTimer>(_onResume);
-    on<CancelTimer>(_onCancel);
-    on<TimerTick>(_onTick);
-    on<SetTimerSound>(_onSetSound);
-    on<ResetTimerToIdle>(_onResetToIdle);
+    on<TimerEvent>(_onEvent, transformer: sequential());
+  }
+
+  Future<void> _onEvent(TimerEvent event, Emitter<TimerState> emit) async {
+    if (event is LoadTimerPresets) {
+      await _onLoadPresets(event, emit);
+    } else if (event is AddTimerPreset) {
+      await _onAddPreset(event, emit);
+    } else if (event is UpdateTimerPreset) {
+      await _onUpdatePreset(event, emit);
+    } else if (event is DeleteTimerPreset) {
+      await _onDeletePreset(event, emit);
+    } else if (event is ToggleEditPresetsMode) {
+      _onToggleEditMode(event, emit);
+    } else if (event is ReorderTimerPresets) {
+      await _onReorderPresets(event, emit);
+    } else if (event is StartTimer) {
+      await _onStart(event, emit);
+    } else if (event is PauseTimer) {
+      await _onPause(event, emit);
+    } else if (event is ResumeTimer) {
+      await _onResume(event, emit);
+    } else if (event is CancelTimer) {
+      await _onCancel(event, emit);
+    } else if (event is TimerTick) {
+      await _onTick(event, emit);
+    } else if (event is SetTimerSound) {
+      await _onSetSound(event, emit);
+    } else if (event is ResetTimerToIdle) {
+      _onResetToIdle(event, emit);
+    }
   }
 
   Future<void> _onLoadPresets(
@@ -114,13 +133,19 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         .where((p) => p.id != event.id)
         .toList();
 
-    final updatedActiveTimers = Map<String, ActiveTimerData>.from(state.activeTimers)
-      ..remove(event.id);
+    final updatedActiveTimers = Map<String, ActiveTimerData>.from(
+      state.activeTimers,
+    )..remove(event.id);
 
     try {
       await repository.savePresets(updatedPresets);
-      if (state.activePresetId == event.id || !updatedActiveTimers.values.any((t) => t.status == TimerStatus.running)) {
-        if (!updatedActiveTimers.values.any((t) => t.status == TimerStatus.running)) {
+      if (state.activePresetId == event.id ||
+          !updatedActiveTimers.values.any(
+            (t) => t.status == TimerStatus.running,
+          )) {
+        if (!updatedActiveTimers.values.any(
+          (t) => t.status == TimerStatus.running,
+        )) {
           _ticker?.cancel();
         }
         try {
@@ -130,18 +155,30 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         }
       }
 
-      final hasRunning = updatedActiveTimers.values.any((t) => t.status == TimerStatus.running);
-      final hasPaused = updatedActiveTimers.values.any((t) => t.status == TimerStatus.paused);
-      final newStatus = hasRunning ? TimerStatus.running : (hasPaused ? TimerStatus.paused : TimerStatus.idle);
+      final hasRunning = updatedActiveTimers.values.any(
+        (t) => t.status == TimerStatus.running,
+      );
+      final hasPaused = updatedActiveTimers.values.any(
+        (t) => t.status == TimerStatus.paused,
+      );
+      final newStatus = hasRunning
+          ? TimerStatus.running
+          : (hasPaused ? TimerStatus.paused : TimerStatus.idle);
 
       emit(
         state.copyWith(
           presets: updatedPresets,
           activeTimers: updatedActiveTimers,
           status: newStatus,
-          duration: state.activePresetId == event.id ? Duration.zero : state.duration,
-          remaining: state.activePresetId == event.id ? Duration.zero : state.remaining,
-          activePresetId: state.activePresetId == event.id ? '' : state.activePresetId,
+          duration: state.activePresetId == event.id
+              ? Duration.zero
+              : state.duration,
+          remaining: state.activePresetId == event.id
+              ? Duration.zero
+              : state.remaining,
+          activePresetId: state.activePresetId == event.id
+              ? ''
+              : state.activePresetId,
           clearEndTime: state.activePresetId == event.id,
         ),
       );
@@ -190,10 +227,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
       timerId = event.presetId.isNotEmpty
           ? event.presetId
           : DateTime.now().millisecondsSinceEpoch.toString();
-      final newPreset = TimerPreset(
-        id: timerId,
-        duration: event.duration,
-      );
+      final newPreset = TimerPreset(id: timerId, duration: event.duration);
       currentPresets.add(newPreset);
       try {
         await repository.savePresets(currentPresets);
@@ -203,16 +237,19 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     }
 
     final now = DateTime.now();
-    final updatedActiveTimers = Map<String, ActiveTimerData>.from(state.activeTimers);
+    final updatedActiveTimers = Map<String, ActiveTimerData>.from(
+      state.activeTimers,
+    );
 
     if (event.resetOldActiveTimers) {
-      for (final key in updatedActiveTimers.keys) {
+      for (final timerId in updatedActiveTimers.keys) {
         try {
-          await systemAlarmService.cancelTimer(key);
+          await systemAlarmService.cancelTimer(timerId);
         } catch (e) {
           AppLogger.e('Failed to cancel old timer on reset: $e');
         }
       }
+
       updatedActiveTimers.clear();
     } else {
       // Pause any other currently running timer and capture its remaining time
@@ -222,7 +259,9 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
               ? entry.value.endTime!.difference(now)
               : entry.value.remaining;
           final ceiledSeconds = (remaining.inMilliseconds + 999) ~/ 1000;
-          final ceiledRemaining = ceiledSeconds > 0 ? Duration(seconds: ceiledSeconds) : Duration.zero;
+          final ceiledRemaining = ceiledSeconds > 0
+              ? Duration(seconds: ceiledSeconds)
+              : Duration.zero;
 
           updatedActiveTimers[entry.key] = entry.value.copyWith(
             status: TimerStatus.paused,
@@ -242,7 +281,8 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     // Set the selected timer to running
     final initialDuration = event.duration;
     final existingData = updatedActiveTimers[timerId];
-    final remainingToUse = (existingData != null && existingData.remaining > Duration.zero)
+    final remainingToUse =
+        (existingData != null && existingData.remaining > Duration.zero)
         ? existingData.remaining
         : initialDuration;
 
@@ -292,30 +332,38 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     final targetId = event.presetId.isNotEmpty
         ? event.presetId
         : (state.activePresetId.isNotEmpty
-            ? state.activePresetId
-            : state.activeTimers.entries
-                .firstWhere(
-                  (e) => e.value.status == TimerStatus.running,
-                  orElse: () => MapEntry('', const ActiveTimerData(id: '', duration: Duration.zero, remaining: Duration.zero, status: TimerStatus.idle)),
-                )
-                .key);
+              ? state.activePresetId
+              : state.activeTimers.entries
+                    .firstWhere(
+                      (e) => e.value.status == TimerStatus.running,
+                      orElse: () => const MapEntry(
+                        '',
+                        ActiveTimerData(
+                          id: '',
+                          duration: Duration.zero,
+                          remaining: Duration.zero,
+                          status: TimerStatus.idle,
+                        ),
+                      ),
+                    )
+                    .key);
 
     if (targetId.isEmpty) return;
 
     final now = DateTime.now();
-    final updatedActiveTimers = Map<String, ActiveTimerData>.from(state.activeTimers);
+    final updatedActiveTimers = Map<String, ActiveTimerData>.from(
+      state.activeTimers,
+    );
     final timerData = updatedActiveTimers[targetId];
 
     if (timerData != null && timerData.status == TimerStatus.running) {
       final remaining = timerData.endTime != null
           ? timerData.endTime!.difference(now)
           : timerData.remaining;
-      final ceiledSeconds = (remaining.inMilliseconds + 999) ~/ 1000;
-      final ceiledRemaining = ceiledSeconds > 0 ? Duration(seconds: ceiledSeconds) : Duration.zero;
-
+      final validRemaining = remaining.isNegative ? Duration.zero : remaining;
       updatedActiveTimers[targetId] = timerData.copyWith(
         status: TimerStatus.paused,
-        remaining: ceiledRemaining,
+        remaining: validRemaining,
         clearEndTime: true,
       );
 
@@ -325,7 +373,9 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         AppLogger.e('Failed to cancel timer on pause: $e');
       }
 
-      final hasRunning = updatedActiveTimers.values.any((t) => t.status == TimerStatus.running);
+      final hasRunning = updatedActiveTimers.values.any(
+        (t) => t.status == TimerStatus.running,
+      );
       if (!hasRunning) {
         _ticker?.cancel();
       }
@@ -334,7 +384,9 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         state.copyWith(
           status: hasRunning ? TimerStatus.running : TimerStatus.paused,
           activeTimers: updatedActiveTimers,
-          remaining: state.activePresetId == targetId ? ceiledRemaining : state.remaining,
+          remaining: state.activePresetId == targetId
+              ? validRemaining
+              : state.remaining,
           clearEndTime: state.activePresetId == targetId,
         ),
       );
@@ -345,18 +397,28 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     final targetId = event.presetId.isNotEmpty
         ? event.presetId
         : (state.activePresetId.isNotEmpty
-            ? state.activePresetId
-            : state.activeTimers.entries
-                .firstWhere(
-                  (e) => e.value.status == TimerStatus.paused,
-                  orElse: () => MapEntry('', const ActiveTimerData(id: '', duration: Duration.zero, remaining: Duration.zero, status: TimerStatus.idle)),
-                )
-                .key);
+              ? state.activePresetId
+              : state.activeTimers.entries
+                    .firstWhere(
+                      (e) => e.value.status == TimerStatus.paused,
+                      orElse: () => const MapEntry(
+                        '',
+                        ActiveTimerData(
+                          id: '',
+                          duration: Duration.zero,
+                          remaining: Duration.zero,
+                          status: TimerStatus.idle,
+                        ),
+                      ),
+                    )
+                    .key);
 
     if (targetId.isEmpty) return;
 
     final now = DateTime.now();
-    final updatedActiveTimers = Map<String, ActiveTimerData>.from(state.activeTimers);
+    final updatedActiveTimers = Map<String, ActiveTimerData>.from(
+      state.activeTimers,
+    );
 
     // Pause any other running timer
     for (final entry in updatedActiveTimers.entries) {
@@ -365,7 +427,9 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
             ? entry.value.endTime!.difference(now)
             : entry.value.remaining;
         final ceiledSeconds = (remaining.inMilliseconds + 999) ~/ 1000;
-        final ceiledRemaining = ceiledSeconds > 0 ? Duration(seconds: ceiledSeconds) : Duration.zero;
+        final ceiledRemaining = ceiledSeconds > 0
+            ? Duration(seconds: ceiledSeconds)
+            : Duration.zero;
 
         updatedActiveTimers[entry.key] = entry.value.copyWith(
           status: TimerStatus.paused,
@@ -389,12 +453,19 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     if (remaining <= Duration.zero) return;
 
     final newEndTime = now.add(remaining);
-    updatedActiveTimers[targetId] = (timerData ?? ActiveTimerData(id: targetId, duration: remaining, remaining: remaining, status: TimerStatus.running))
-        .copyWith(
-      status: TimerStatus.running,
-      remaining: remaining,
-      endTime: newEndTime,
-    );
+    updatedActiveTimers[targetId] =
+        (timerData ??
+                ActiveTimerData(
+                  id: targetId,
+                  duration: remaining,
+                  remaining: remaining,
+                  status: TimerStatus.running,
+                ))
+            .copyWith(
+              status: TimerStatus.running,
+              remaining: remaining,
+              endTime: newEndTime,
+            );
 
     try {
       await systemAlarmService.setTimer(targetId, remaining);
@@ -423,7 +494,9 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         ? event.presetId
         : state.activePresetId;
 
-    final updatedActiveTimers = Map<String, ActiveTimerData>.from(state.activeTimers);
+    final updatedActiveTimers = Map<String, ActiveTimerData>.from(
+      state.activeTimers,
+    );
 
     if (targetId.isNotEmpty) {
       updatedActiveTimers.remove(targetId);
@@ -441,9 +514,15 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
       updatedActiveTimers.clear();
     }
 
-    final hasRunning = updatedActiveTimers.values.any((t) => t.status == TimerStatus.running);
-    final hasPaused = updatedActiveTimers.values.any((t) => t.status == TimerStatus.paused);
-    final newStatus = hasRunning ? TimerStatus.running : (hasPaused ? TimerStatus.paused : TimerStatus.idle);
+    final hasRunning = updatedActiveTimers.values.any(
+      (t) => t.status == TimerStatus.running,
+    );
+    final hasPaused = updatedActiveTimers.values.any(
+      (t) => t.status == TimerStatus.paused,
+    );
+    final newStatus = hasRunning
+        ? TimerStatus.running
+        : (hasPaused ? TimerStatus.paused : TimerStatus.idle);
 
     if (!hasRunning) {
       _ticker?.cancel();
@@ -452,9 +531,15 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     emit(
       state.copyWith(
         status: newStatus,
-        duration: targetId == state.activePresetId ? Duration.zero : state.duration,
-        remaining: targetId == state.activePresetId ? Duration.zero : state.remaining,
-        activePresetId: targetId == state.activePresetId ? '' : state.activePresetId,
+        duration: targetId == state.activePresetId
+            ? Duration.zero
+            : state.duration,
+        remaining: targetId == state.activePresetId
+            ? Duration.zero
+            : state.remaining,
+        activePresetId: targetId == state.activePresetId
+            ? ''
+            : state.activePresetId,
         clearEndTime: targetId == state.activePresetId,
         activeTimers: updatedActiveTimers,
       ),
@@ -463,7 +548,9 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
 
   Future<void> _onTick(TimerTick event, Emitter<TimerState> emit) async {
     final now = DateTime.now();
-    final updatedActiveTimers = Map<String, ActiveTimerData>.from(state.activeTimers);
+    final updatedActiveTimers = Map<String, ActiveTimerData>.from(
+      state.activeTimers,
+    );
     String? finishedId;
     Duration? finishedDuration;
 
@@ -501,7 +588,9 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
       }
     }
 
-    final hasRunning = updatedActiveTimers.values.any((t) => t.status == TimerStatus.running);
+    final hasRunning = updatedActiveTimers.values.any(
+      (t) => t.status == TimerStatus.running,
+    );
     if (!hasRunning) {
       _ticker?.cancel();
     }
@@ -518,7 +607,9 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         ),
       );
     } else {
-      final primaryRemaining = state.activePresetId.isNotEmpty && updatedActiveTimers.containsKey(state.activePresetId)
+      final primaryRemaining =
+          state.activePresetId.isNotEmpty &&
+              updatedActiveTimers.containsKey(state.activePresetId)
           ? updatedActiveTimers[state.activePresetId]!.remaining
           : state.remaining;
 

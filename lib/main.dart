@@ -5,7 +5,7 @@ import 'package:mechanix_clock/features/alarm/data/repository/alarm_repository.d
 import 'package:mechanix_clock/features/world_clock/bloc/world_clock_bloc.dart';
 import 'package:mechanix_clock/features/world_clock/data/repository/world_clock_repository.dart';
 import 'package:mechanix_clock/l10n/app_localizations.dart';
-import 'package:timezone/data/latest_all.dart' as tz_data;
+import 'package:timezone/data/latest_10y.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:widgets/widgets.dart';
 

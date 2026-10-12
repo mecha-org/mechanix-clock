@@ -8,6 +8,8 @@ import '../../../../l10n/app_localizations.dart';
 import '../../data/models/world_clock_model.dart';
 
 class WorldClockItem extends StatelessWidget {
+  static final DateFormat _timeFormat = DateFormat('h:mm');
+
   final WorldClock clock;
   final VoidCallback? onTap;
   final VoidCallback onDelete;
@@ -36,7 +38,7 @@ class WorldClockItem extends StatelessWidget {
 
     final targetNow = tz.TZDateTime.now(location);
 
-    final timeStr = DateFormat('h:mm').format(targetNow);
+    final timeStr = _timeFormat.format(targetNow);
     final amPmStr = targetNow.hour < 12 ? l10n.am : l10n.pm;
 
     return MechanixSwipableListTile(

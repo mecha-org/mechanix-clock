@@ -169,41 +169,6 @@ class _LapListView extends StatefulWidget {
 }
 
 class _LapListViewState extends State<_LapListView> {
-  final ScrollController _scrollController = ScrollController();
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollToBottom();
-  }
-
-  @override
-  void didUpdateWidget(covariant _LapListView oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.laps.length != oldWidget.laps.length) {
-      _scrollToBottom();
-    }
-  }
-
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients &&
-          _scrollController.position.maxScrollExtent > 0) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-        );
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -219,20 +184,18 @@ class _LapListViewState extends State<_LapListView> {
           dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
         ),
         child: ListView.builder(
-          controller: _scrollController,
+          reverse: true,
           shrinkWrap: true,
           padding: EdgeInsets.zero,
           itemCount: widget.laps.length,
           itemBuilder: (context, index) {
-            // Display in ascending order (LAP 01, LAP 02, ...)
-            final lap = widget.laps[widget.laps.length - 1 - index];
-            final isLatest = index == widget.laps.length - 1;
+            // The latest lap appears at the bottom.
+            final lap = widget.laps[index];
+            final isLatest = index == 0;
 
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (index == 0)
-                  MechanixDivider(color: theme.colorScheme.outline),
                 LapListItem(
                   key: ValueKey(lap.lapNumber),
                   lap: lap,

@@ -51,22 +51,27 @@ class AlarmBloc extends Bloc<AlarmEvent, AlarmState> {
     UpdateAlarm event,
     Emitter<AlarmState> emit,
   ) async {
-    if (state is AlarmLoaded) {
-      final currentAlarms = (state as AlarmLoaded).alarms;
-      final updatedAlarms = currentAlarms.map((a) {
-        return a.id == event.alarm.id ? event.alarm : a;
-      }).toList();
-      try {
-        await repository.saveAlarms(updatedAlarms);
-        if (event.alarm.isActive) {
-          await _scheduleSystemAlarm(event.alarm);
-        } else {
-          await systemAlarmService.cancelAlarm(event.alarm.id);
-        }
-        emit(AlarmLoaded(updatedAlarms));
-      } catch (e) {
-        AppLogger.e('Failed to save alarms: $e');
+    if (state is! AlarmLoaded) return;
+
+    final currentAlarms = (state as AlarmLoaded).alarms;
+
+    final updatedAlarms = currentAlarms.map((alarm) {
+      return alarm.id == event.alarm.id ? event.alarm : alarm;
+    }).toList();
+
+    try {
+      await repository.saveAlarms(updatedAlarms);
+
+      // Remove the previous system schedule before replacing it.
+      await systemAlarmService.cancelAlarm(event.alarm.id);
+
+      if (event.alarm.isActive) {
+        await _scheduleSystemAlarm(event.alarm);
       }
+
+      emit(AlarmLoaded(updatedAlarms));
+    } catch (e) {
+      AppLogger.e('Failed to update alarm: $e');
     }
   }
 

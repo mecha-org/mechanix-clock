@@ -25,14 +25,13 @@ class MainNavigationContainer extends StatefulWidget {
 class _MainNavigationContainerState extends State<MainNavigationContainer> {
   int _currentIndex = 0;
 
-  // Track tabs whose initial data has already been requested.
+  // Track tabs that have been visited.
   final Set<int> _initializedTabs = {0};
 
   @override
   void initState() {
     super.initState();
 
-    // Load alarms because the Alarm tab is the initial screen.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
@@ -45,27 +44,32 @@ class _MainNavigationContainerState extends State<MainNavigationContainer> {
 
     setState(() {
       _currentIndex = index;
+      _initializedTabs.add(index);
     });
 
-    // Load data only the first time the user visits a tab.
-    if (_initializedTabs.add(index)) {
-      switch (index) {
-        case 0:
-          context.read<AlarmBloc>().add(LoadAlarms());
-          break;
+    // Load data only when a tab is visited for the first time.
+    switch (index) {
+      case 0:
+        if (_initializedTabs.contains(index)) {
+          // Alarm data is already requested during initial startup.
+        }
+        break;
 
-        case 2:
+      case 1:
+        // StopwatchBloc has no initial loading event.
+        break;
+
+      case 2:
+        if (_initializedTabs.contains(index)) {
           context.read<WorldClockBloc>().add(LoadWorldClocks());
-          break;
+        }
+        break;
 
-        case 3:
+      case 3:
+        if (_initializedTabs.contains(index)) {
           context.read<TimerBloc>().add(LoadTimerPresets());
-          break;
-
-        case 1:
-          // StopwatchBloc has no initial loading event.
-          break;
-      }
+        }
+        break;
     }
   }
 
@@ -82,7 +86,15 @@ class _MainNavigationContainerState extends State<MainNavigationContainer> {
     ];
 
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: screens),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: List.generate(
+          screens.length,
+          (index) => _initializedTabs.contains(index)
+              ? screens[index]
+              : const SizedBox.shrink(),
+        ),
+      ),
       bottomNavigationBar: MechanixNavigationBar(
         height: kBottomNavigationBarHeight,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,

@@ -9,6 +9,7 @@ import 'package:mechanix_clock/features/alarm/data/repository/alarm_repository.d
 import 'package:mechanix_clock/core/utils/system_alarm_service.dart';
 
 class MockAlarmRepository extends Mock implements AlarmRepository {}
+
 class MockSystemAlarmService extends Mock implements SystemAlarmService {}
 
 void main() {
@@ -65,8 +66,9 @@ void main() {
       'emits [AlarmLoaded] with new alarm when AddAlarm is added',
       build: () {
         when(() => repository.saveAlarms(any())).thenAnswer((_) async => {});
-        when(() => systemAlarmService.setAlarm(any(), any(), any(), any()))
-            .thenAnswer((_) async => {});
+        when(
+          () => systemAlarmService.setAlarm(any(), any(), any(), any()),
+        ).thenAnswer((_) async => {});
         return alarmBloc;
       },
       seed: () => const AlarmLoaded([]),
@@ -76,16 +78,25 @@ void main() {
       ],
       verify: (_) {
         verify(() => repository.saveAlarms(any())).called(1);
-        verify(() => systemAlarmService.setAlarm(any(), any(), any(), any())).called(1);
+        verify(
+          () => systemAlarmService.setAlarm(any(), any(), any(), any()),
+        ).called(1);
       },
     );
 
     blocTest<AlarmBloc, AlarmState>(
       'emits [AlarmLoaded] with updated alarm when UpdateAlarm is added',
       build: () {
-        when(() => repository.saveAlarms(any())).thenAnswer((_) async => {});
-        when(() => systemAlarmService.setAlarm(any(), any(), any(), any()))
-            .thenAnswer((_) async => {});
+        when(() => repository.saveAlarms(any())).thenAnswer((_) async {});
+
+        when(
+          () => systemAlarmService.cancelAlarm(any()),
+        ).thenAnswer((_) async {});
+
+        when(
+          () => systemAlarmService.setAlarm(any(), any(), any(), any()),
+        ).thenAnswer((_) async {});
+
         return alarmBloc;
       },
       seed: () => const AlarmLoaded([testAlarm]),
@@ -105,14 +116,14 @@ void main() {
       'emits [AlarmLoaded] without alarm when DeleteAlarm is added',
       build: () {
         when(() => repository.saveAlarms(any())).thenAnswer((_) async => {});
-        when(() => systemAlarmService.cancelAlarm(any())).thenAnswer((_) async => {});
+        when(
+          () => systemAlarmService.cancelAlarm(any()),
+        ).thenAnswer((_) async => {});
         return alarmBloc;
       },
       seed: () => const AlarmLoaded([testAlarm]),
       act: (bloc) => bloc.add(DeleteAlarm(testAlarm.id)),
-      expect: () => [
-        const AlarmLoaded([]),
-      ],
+      expect: () => [const AlarmLoaded([])],
       verify: (_) {
         verify(() => repository.saveAlarms(any())).called(1);
         verify(() => systemAlarmService.cancelAlarm(testAlarm.id)).called(1);
@@ -123,7 +134,9 @@ void main() {
       'emits [AlarmLoaded] with toggled alarm when ToggleAlarm is added',
       build: () {
         when(() => repository.saveAlarms(any())).thenAnswer((_) async => {});
-        when(() => systemAlarmService.cancelAlarm(any())).thenAnswer((_) async => {});
+        when(
+          () => systemAlarmService.cancelAlarm(any()),
+        ).thenAnswer((_) async => {});
         return alarmBloc;
       },
       seed: () => const AlarmLoaded([testAlarm]),

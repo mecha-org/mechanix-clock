@@ -22,22 +22,36 @@ class WorldClockScreen extends StatefulWidget {
 }
 
 class _WorldClockScreenState extends State<WorldClockScreen> {
-  late Timer _ticker;
+  Timer? _ticker;
 
   @override
   void initState() {
     super.initState();
+    _scheduleNextMinute();
+  }
 
-    _ticker = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (mounted) {
-        setState(() {});
-      }
+  void _scheduleNextMinute() {
+    final now = DateTime.now();
+
+    final nextMinute = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      now.hour,
+      now.minute + 1,
+    );
+
+    _ticker = Timer(nextMinute.difference(now), () {
+      if (!mounted) return;
+
+      setState(() {});
+      _scheduleNextMinute();
     });
   }
 
   @override
   void dispose() {
-    _ticker.cancel();
+    _ticker?.cancel();
     super.dispose();
   }
 

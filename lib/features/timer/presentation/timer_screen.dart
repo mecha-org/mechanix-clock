@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mechanix_clock/core/utils/icons.dart';
@@ -198,6 +199,20 @@ class _TimerScreenState extends State<TimerScreen> with WidgetsBindingObserver {
   }
 }
 
+class _OrderedTimerPresets {
+  final List<TimerPreset> presets;
+
+  const _OrderedTimerPresets(this.presets);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is _OrderedTimerPresets && listEquals(presets, other.presets);
+
+  @override
+  int get hashCode => Object.hashAll(presets);
+}
+
 class _TimerPlayPauseListScreen extends StatelessWidget {
   final ValueChanged<TimerPreset> onSelectPreset;
 
@@ -207,23 +222,26 @@ class _TimerPlayPauseListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return BlocSelector<TimerBloc, TimerState, List<TimerPreset>>(
+    return BlocSelector<TimerBloc, TimerState, _OrderedTimerPresets>(
       selector: (state) {
         final activePresets = <TimerPreset>[];
         final inactivePresets = <TimerPreset>[];
 
         for (final preset in state.presets) {
           final timerData = state.activeTimers[preset.id];
+
           final isRunning =
               timerData?.status == TimerStatus.running ||
               (timerData == null &&
                   state.activePresetId == preset.id &&
                   state.status == TimerStatus.running);
+
           final isPaused =
               timerData?.status == TimerStatus.paused ||
               (timerData == null &&
                   state.activePresetId == preset.id &&
                   state.status == TimerStatus.paused);
+
           if (isRunning || isPaused) {
             activePresets.add(preset);
           } else {
@@ -231,9 +249,11 @@ class _TimerPlayPauseListScreen extends StatelessWidget {
           }
         }
 
-        return [...activePresets, ...inactivePresets];
+        return _OrderedTimerPresets([...activePresets, ...inactivePresets]);
       },
-      builder: (context, allItems) {
+      builder: (context, orderedPresets) {
+        final allItems = orderedPresets.presets;
+
         return ScrollConfiguration(
           behavior: ScrollConfiguration.of(context).copyWith(
             dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},

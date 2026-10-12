@@ -46,6 +46,7 @@ dependencies:
       url: https://github.com/mecha-org/mechanix.dart.git
       path: widgets
       ref: pre-release
+  bloc_concurrency: ^0.3.0
 
 dev_dependencies:
   flutter_test:
