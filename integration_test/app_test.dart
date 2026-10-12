@@ -34,6 +34,7 @@ void main() {
       final addAlarmButton = find.byKey(const Key('add_alarm_button'));
 
       expect(addAlarmButton, findsOneWidget);
+      await tester.ensureVisible(addAlarmButton);
       await tester.tap(addAlarmButton);
       await tester.pumpAndSettle();
 
@@ -42,48 +43,76 @@ void main() {
       expect(find.byKey(const Key('option_repeat')), findsOneWidget);
       expect(find.byKey(const Key('option_sound')), findsOneWidget);
 
-      // Set Repeat: Monday and Tuesday.
-      await tester.tap(find.byKey(const Key('option_repeat')));
+      // Set repeat days.
+      final repeatOption = find.byKey(const Key('option_repeat_button'));
+
+      await tester.ensureVisible(repeatOption);
+      await tester.tap(repeatOption);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('day_1'))); // Monday
+      // Verify the repeat-selection screen is open.
+      final monday = find.byKey(const Key('day_1'));
+      expect(monday, findsOneWidget);
+
+      // Select Monday.
+      await tester.ensureVisible(monday);
+      await tester.tap(monday);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('day_2'))); // Tuesday
+      // Save repeat selection.
+      final repeatDoneButton = find.byKey(const Key('repeat_done_button'));
+
+      expect(repeatDoneButton, findsOneWidget);
+      await tester.ensureVisible(repeatDoneButton);
+      await tester.tap(repeatDoneButton);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('repeat_done_button')));
+      // Set sound.
+      final soundOption = find.byKey(const Key('option_sound'));
+
+      await tester.ensureVisible(soundOption);
+      await tester.tap(soundOption);
       await tester.pumpAndSettle();
 
-      // Set Sound.
-      await tester.tap(find.byKey(const Key('option_sound')));
+      // Select the first sound.
+      final soundItem = find.byKey(Key('sound_${sounds[0]}'));
+
+      expect(soundItem, findsOneWidget);
+      await tester.ensureVisible(soundItem);
+      await tester.tap(soundItem);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(Key('sound_${sounds[0]}')));
+      // Confirm sound selection.
+      final soundDoneButton = find.byKey(const Key('sound_done_button'));
+
+      expect(soundDoneButton, findsOneWidget);
+      await tester.ensureVisible(soundDoneButton);
+      await tester.tap(soundDoneButton);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('sound_done_button')));
-      await tester.pumpAndSettle();
-
-      // Toggle Snooze.
+      // Toggle snooze.
       final snoozeSwitch = find.byKey(const Key('snooze_switch'));
 
       expect(snoozeSwitch, findsOneWidget);
+      await tester.ensureVisible(snoozeSwitch);
       await tester.tap(snoozeSwitch);
       await tester.pumpAndSettle();
 
       // Save the new alarm.
-      await tester.tap(find.byKey(const Key('save_alarm_button')));
+      final saveAlarmButton = find.byKey(const Key('save_alarm_button'));
+
+      await tester.ensureVisible(saveAlarmButton);
+      await tester.tap(saveAlarmButton);
       await tester.pumpAndSettle();
 
       // 2. Verify the alarm list is displayed.
       expect(find.byKey(const Key('alarm_item_tap')), findsOneWidget);
 
-      // Find the alarm tile.
       final alarmItems = find.byType(MechanixSwipableListTile);
       expect(alarmItems, findsOneWidget);
 
       // Open the alarm for editing.
+      await tester.ensureVisible(alarmItems.first);
       await tester.tap(alarmItems.first);
       await tester.pumpAndSettle();
 
@@ -92,17 +121,27 @@ void main() {
       expect(find.byKey(const Key('delete_alarm_button')), findsOneWidget);
 
       // 3. Change Repeat to Once.
-      await tester.tap(find.byKey(const Key('option_repeat')));
+      final repeat = find.byKey(const Key('option_repeat_button'));
+
+      await tester.ensureVisible(repeat);
+      await tester.tap(repeat);
       await tester.pumpAndSettle();
 
-      // Deselect Monday and Tuesday.
-      await tester.tap(find.byKey(const Key('day_1')));
+      // Verify the repeat-selection screen is open.
+      final day1 = find.byKey(const Key('day_1'));
+      expect(day1, findsOneWidget);
+
+      // Select Monday.
+      await tester.ensureVisible(day1);
+      await tester.tap(day1);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('day_2')));
-      await tester.pumpAndSettle();
+      // Save repeat selection.
+      final repeatDone = find.byKey(const Key('repeat_done_button'));
 
-      await tester.tap(find.byKey(const Key('repeat_done_button')));
+      expect(repeatDone, findsOneWidget);
+      await tester.ensureVisible(repeatDone);
+      await tester.tap(repeatDone);
       await tester.pumpAndSettle();
 
       // Save the edited alarm.
@@ -114,15 +153,19 @@ void main() {
 
       // 4. Reopen the alarm for deletion.
       final alarmTile = find.byType(MechanixSwipableListTile);
-      expect(alarmTile, findsOneWidget);
 
+      expect(alarmTile, findsOneWidget);
+      await tester.ensureVisible(alarmTile.first);
       await tester.tap(alarmTile.first);
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('delete_alarm_button')), findsOneWidget);
 
       // Delete the alarm.
-      await tester.tap(find.byKey(const Key('delete_alarm_button')));
+      final deleteAlarmButton = find.byKey(const Key('delete_alarm_button'));
+
+      await tester.ensureVisible(deleteAlarmButton);
+      await tester.tap(deleteAlarmButton);
       await tester.pumpAndSettle();
 
       // Confirm deletion.
@@ -131,6 +174,7 @@ void main() {
       );
 
       expect(confirmDeleteButton, findsOneWidget);
+      await tester.ensureVisible(confirmDeleteButton);
       await tester.tap(confirmDeleteButton);
       await tester.pumpAndSettle();
 

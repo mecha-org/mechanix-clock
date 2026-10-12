@@ -7,6 +7,7 @@ import 'package:mechanix_clock/core/utils/icons.dart';
 import 'package:mechanix_clock/features/alarm/bloc/alarm_bloc.dart';
 import 'package:mechanix_clock/features/alarm/bloc/alarm_event.dart';
 import 'package:mechanix_clock/features/alarm/data/models/alarm_model.dart';
+import 'package:mechanix_clock/features/alarm/data/utils/date_time_utils.dart';
 import 'package:mechanix_clock/features/alarm/presentation/screens/repeat_selection_screen.dart';
 import 'package:mechanix_clock/features/alarm/presentation/screens/sound_selection_screen.dart';
 import 'package:mechanix_clock/features/alarm/presentation/widgets/am_pm_switch.dart';
@@ -103,7 +104,6 @@ class _EditAlarmScreenState extends State<EditAlarmScreen> {
   Widget build(BuildContext context) {
     final hasChanges = _hasChanges;
     final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
@@ -146,96 +146,170 @@ class _EditAlarmScreenState extends State<EditAlarmScreen> {
                   horizontal: 16,
                   vertical: 8,
                 ),
-
-                child: _buildLargeTimePicker(),
+                child: _TimePickerSection(
+                  selectedHour: _selectedHour,
+                  selectedMinute: _selectedMinute,
+                  onHourChanged: (value) {
+                    setState(() {
+                      _selectedHour = value;
+                    });
+                  },
+                  onMinuteChanged: (value) {
+                    setState(() {
+                      _selectedMinute = value;
+                    });
+                  },
+                ),
               ),
               const SizedBox(height: 12),
 
               // Alarm time row with AM/PM Switch
-              _buildAlarmTimeRow(l10n),
+              _AlarmTimeSection(
+                isAm: _isAm,
+                onAmPmChanged: (bool isAm) {
+                  setState(() {
+                    _isAm = isAm;
+                  });
+                },
+              ),
 
               // Repeat section
-              _buildRepeatSection(l10n),
+              _RepeatSection(
+                repeatDays: _repeatDays,
+                onRepeatDaysChanged: (days) {
+                  setState(() {
+                    _repeatDays = days;
+                  });
+                },
+              ),
 
               // Sound row
-              _buildSoundRow(l10n),
+              _SoundSection(
+                sound: _sound,
+                onSoundChanged: (sound) {
+                  setState(() {
+                    _sound = sound;
+                  });
+                },
+              ),
 
               // Snooze row
-              _buildSnoozeRow(l10n),
+              _SnoozeSection(
+                isSnoozeEnabled: _isSnoozeEnabled,
+                onSnoozeChanged: (enabled) {
+                  setState(() {
+                    _isSnoozeEnabled = enabled;
+                  });
+                },
+              ),
             ],
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildLargeTimePicker() {
+class _TimePickerSection extends StatelessWidget {
+  final int selectedHour;
+  final int selectedMinute;
+  final ValueChanged<int> onHourChanged;
+  final ValueChanged<int> onMinuteChanged;
+
+  const _TimePickerSection({
+    required this.selectedHour,
+    required this.selectedMinute,
+    required this.onHourChanged,
+    required this.onMinuteChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Center(
       child: CustomTimePicker(
-        selectedHour: _selectedHour,
-        selectedMinute: _selectedMinute,
-        onHourChanged: (value) {
-          setState(() {
-            _selectedHour = value;
-          });
-        },
-        onMinuteChanged: (value) {
-          setState(() {
-            _selectedMinute = value;
-          });
-        },
+        selectedHour: selectedHour,
+        selectedMinute: selectedMinute,
+        onHourChanged: onHourChanged,
+        onMinuteChanged: onMinuteChanged,
       ),
     );
   }
+}
 
-  Widget _buildAlarmTimeRow(AppLocalizations l10n) {
+class _AlarmTimeSection extends StatelessWidget {
+  final bool isAm;
+  final ValueChanged<bool> onAmPmChanged;
+
+  const _AlarmTimeSection({required this.isAm, required this.onAmPmChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return MechanixListTile(
       labelText: l10n.alarm_time,
-      trailingWidgets: [
-        AmPmSwitch(
-          isAm: _isAm,
-          onChanged: (bool isAm) {
-            setState(() {
-              _isAm = isAm;
-            });
-          },
-        ),
-      ],
+      trailingWidgets: [AmPmSwitch(isAm: isAm, onChanged: onAmPmChanged)],
     );
   }
+}
 
-  Widget _buildRepeatSection(AppLocalizations l10n) {
-    final days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+class _RepeatSection extends StatelessWidget {
+  final List<int> repeatDays;
+  final ValueChanged<List<int>> onRepeatDaysChanged;
+
+  const _RepeatSection({
+    required this.repeatDays,
+    required this.onRepeatDaysChanged,
+  });
+
+  RepeatType get _repeatType {
+    if (repeatDays.isEmpty) return RepeatType.once;
+    if (repeatDays.length == 7) return RepeatType.daily;
+    return RepeatType.custom;
+  }
+
+  Future<void> _openRepeatSelection(BuildContext context) async {
+    final result = await Navigator.push<List<int>>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => RepeatSelectionScreen(initialDays: repeatDays),
+      ),
+    );
+    if (result != null) {
+      onRepeatDaysChanged(List<int>.from(result));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final days = DateTimeUtils.getWeekdayAbbreviations(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         MechanixListTile(
           key: const Key('option_repeat'),
-
           contentPadding: const EdgeInsets.symmetric(
             vertical: 16,
             horizontal: 16,
           ),
-
           labelText: l10n.repeat,
           trailingWidgets: [
-            if (_repeatDays.isEmpty)
+            if (repeatDays.isEmpty)
               Text(
                 l10n.once.toUpperCase(),
-                style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                style: theme.textTheme.titleLarge!.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
-
-            if (_repeatDays.length == 7)
+            if (repeatDays.length == 7)
               Text(
                 l10n.daily.toUpperCase(),
-                style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                style: theme.textTheme.titleLarge!.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
-
             if (_repeatType == RepeatType.custom)
               Row(
                 mainAxisSize: MainAxisSize.min,
@@ -244,51 +318,51 @@ class _EditAlarmScreenState extends State<EditAlarmScreen> {
                   return DayBubble(
                     size: 20,
                     label: days[index],
-                    isSelected: _repeatDays.contains(index),
+                    isSelected: repeatDays.contains(index),
                   );
                 }),
               ),
-
             MechanixIconButton.standard(
+              key: const Key('option_repeat_button'),
               icon: Icon(
                 Icons.chevron_right,
                 size: 28,
-                color: Theme.of(context).colorScheme.onSurface,
+                color: theme.colorScheme.onSurface,
               ),
-
               type: IconButtonType.rounded,
-              onPressed: () async {
-                final result = await Navigator.push<List<int>>(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        RepeatSelectionScreen(initialDays: _repeatDays),
-                  ),
-                );
-                if (result != null) {
-                  setState(() => _repeatDays = List<int>.from(result));
-                }
-              },
+              onPressed: () => _openRepeatSelection(context),
             ),
           ],
-          onTap: () async {
-            final result = await Navigator.push<List<int>>(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    RepeatSelectionScreen(initialDays: _repeatDays),
-              ),
-            );
-            if (result != null) {
-              setState(() => _repeatDays = List<int>.from(result));
-            }
-          },
+          onTap: () => _openRepeatSelection(context),
         ),
       ],
     );
   }
+}
 
-  Widget _buildSoundRow(AppLocalizations l10n) {
+class _SoundSection extends StatelessWidget {
+  final String sound;
+  final ValueChanged<String> onSoundChanged;
+
+  const _SoundSection({required this.sound, required this.onSoundChanged});
+
+  Future<void> _openSoundSelection(BuildContext context) async {
+    final result = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SoundSelectionScreen(initialSound: sound),
+      ),
+    );
+    if (result != null) {
+      onSoundChanged(result);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
     return MechanixListTile(
       key: const Key('option_sound'),
       contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
@@ -297,12 +371,12 @@ class _EditAlarmScreenState extends State<EditAlarmScreen> {
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 180),
           child: Text(
-            _sound,
+            sound,
             textAlign: TextAlign.end,
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
-            style: Theme.of(context).textTheme.titleLarge!.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            style: theme.textTheme.titleLarge!.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
         ),
@@ -310,58 +384,37 @@ class _EditAlarmScreenState extends State<EditAlarmScreen> {
           icon: Icon(
             Icons.chevron_right,
             size: 28,
-            color: Theme.of(context).colorScheme.onSurface,
+            color: theme.colorScheme.onSurface,
           ),
-
           type: IconButtonType.rounded,
-          onPressed: () async {
-            final result = await Navigator.push<String>(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    SoundSelectionScreen(initialSound: _sound),
-              ),
-            );
-            if (result != null) {
-              setState(() => _sound = result);
-            }
-          },
+          onPressed: () => _openSoundSelection(context),
         ),
       ],
-      onTap: () async {
-        final result = await Navigator.push<String>(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SoundSelectionScreen(initialSound: _sound),
-          ),
-        );
-        if (result != null) {
-          setState(() => _sound = result);
-        }
-      },
+      onTap: () => _openSoundSelection(context),
     );
   }
+}
 
-  Widget _buildSnoozeRow(AppLocalizations l10n) {
+class _SnoozeSection extends StatelessWidget {
+  final bool isSnoozeEnabled;
+  final ValueChanged<bool> onSnoozeChanged;
+
+  const _SnoozeSection({
+    required this.isSnoozeEnabled,
+    required this.onSnoozeChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return MechanixListTile(
       key: const Key('snooze_switch'),
-
       contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       labelText: l10n.snooze,
       trailingWidgets: [
-        MechanixSwitch(
-          value: _isSnoozeEnabled,
-          onChanged: (v) {
-            setState(() => _isSnoozeEnabled = v);
-          },
-        ),
+        MechanixSwitch(value: isSnoozeEnabled, onChanged: onSnoozeChanged),
       ],
     );
-  }
-
-  RepeatType get _repeatType {
-    if (_repeatDays.isEmpty) return RepeatType.once;
-    if (_repeatDays.length == 7) return RepeatType.daily;
-    return RepeatType.custom;
   }
 }

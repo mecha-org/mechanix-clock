@@ -7,6 +7,7 @@ import 'package:mechanix_clock/features/alarm/bloc/alarm_bloc.dart';
 import 'package:mechanix_clock/features/alarm/bloc/alarm_event.dart';
 import 'package:mechanix_clock/features/alarm/bloc/alarm_state.dart';
 import 'package:mechanix_clock/features/alarm/data/models/alarm_model.dart';
+import 'package:mechanix_clock/features/alarm/data/utils/date_time_utils.dart';
 import 'package:mechanix_clock/features/alarm/presentation/widgets/day_bubble.dart';
 import 'package:mechanix_clock/features/alarm/presentation/widgets/delete_alarm_confirmation_sheet.dart';
 import 'package:mechanix_clock/l10n/app_localizations.dart';
@@ -73,11 +74,8 @@ class _AlarmListScreenState extends State<AlarmListScreen> {
               child: MechanixSwipableList(
                 key: const Key('alarm_item_tap'),
 
-                child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(vertical: 20),
+                child: ListView.builder(
                   itemCount: state.alarms.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 24),
                   itemBuilder: (context, index) {
                     final alarmId = state.alarms[index].id;
                     return BlocSelector<AlarmBloc, AlarmState, Alarm?>(
@@ -141,7 +139,7 @@ class _AlarmItem extends StatelessWidget {
         ? colorScheme.onSurface
         : colorScheme.onSurfaceVariant;
 
-    final days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    final days = DateTimeUtils.getWeekdayAbbreviations(context);
 
     return MechanixSwipableListTile(
       minHeight: 88.0,

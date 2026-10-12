@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mechanix_clock/features/world_clock/bloc/world_clock_bloc.dart';
 import 'package:mechanix_clock/features/world_clock/bloc/world_clock_event.dart';
 import 'package:mechanix_clock/features/world_clock/bloc/world_clock_state.dart';
+import 'package:mechanix_clock/features/world_clock/data/models/world_clock_model.dart';
 import 'package:mechanix_clock/features/world_clock/presentation/widgets/add_city_sheet.dart';
 import 'package:mechanix_clock/features/world_clock/presentation/widgets/world_clock_empty_state.dart';
 import 'package:mechanix_clock/features/world_clock/presentation/widgets/world_clock_item.dart';
@@ -112,62 +113,121 @@ class _WorldClockScreenState extends State<WorldClockScreen> {
           child: MechanixDivider(color: theme.colorScheme.outline, space: 1),
         ),
       ),
-      body: BlocBuilder<WorldClockBloc, WorldClockState>(
-        builder: (context, state) {
-          if (state is WorldClockLoading) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (state is WorldClockLoaded) {
-            if (state.clocks.isEmpty) {
-              return const WorldClockEmptyState();
-            }
-            return ScrollConfiguration(
-              behavior: ScrollConfiguration.of(context).copyWith(
-                dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
-              ),
-              child: MechanixSwipableList(
-                child: ListView.separated(
-                  itemCount: state.clocks.length,
-                  separatorBuilder: (context, index) => MechanixDivider(
-                    color: theme.colorScheme.outline,
-                    space: 1,
-                  ),
-                  itemBuilder: (context, index) {
-                    final clock = state.clocks[index];
-                    final relativeInfo = _getRelativeDayAndOffset(
-                      context,
-                      clock.timezoneId,
-                    );
-
-                    return WorldClockItem(
-                      key: ValueKey(clock.id),
-                      clock: clock,
-                      relativeInfo: relativeInfo,
-                      onDelete: () {
-                        context.read<WorldClockBloc>().add(
-                          DeleteWorldClock(clock.id),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            );
-          } else if (state is WorldClockError) {
-            return Center(
-              child: Text(
-                state.message,
-                style: TextStyle(color: theme.colorScheme.error),
-              ),
-            );
-          }
-          return const WorldClockEmptyState();
-        },
+      body: _WorldClockContent(
+        relativeInfoBuilder: (timezoneId) =>
+            _getRelativeDayAndOffset(context, timezoneId),
       ),
       floatingActionButton: MechanixFloatingActionButton(
         key: const Key('world_clock_add_city_button'),
         onPressed: _openAddCitySheet,
         icon: const Icon(Icons.add),
       ),
+    );
+  }
+}
+
+class _WorldClockContent extends StatelessWidget {
+  final String Function(String timezoneId) relativeInfoBuilder;
+
+  const _WorldClockContent({required this.relativeInfoBuilder});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocSelector<WorldClockBloc, WorldClockState, WorldClockState>(
+      selector: (state) => state,
+      builder: (context, state) {
+        if (state is WorldClockLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (state is WorldClockLoaded) {
+          if (state.clocks.isEmpty) {
+            return const WorldClockEmptyState();
+          }
+          return _WorldClockListView(
+            clocks: state.clocks,
+            relativeInfoBuilder: relativeInfoBuilder,
+          );
+        } else if (state is WorldClockError) {
+          return Center(
+            child: Text(
+              state.message,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          );
+        }
+        return const WorldClockEmptyState();
+      },
+    );
+  }
+}
+
+class _WorldClockListView extends StatelessWidget {
+  final List<WorldClock> clocks;
+  final String Function(String timezoneId) relativeInfoBuilder;
+
+  const _WorldClockListView({
+    required this.clocks,
+    required this.relativeInfoBuilder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(
+        dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
+      ),
+      child: MechanixSwipableList(
+        child: ListView.separated(
+          itemCount: clocks.length,
+          separatorBuilder: (context, index) =>
+              MechanixDivider(color: theme.colorScheme.outline, space: 1),
+          itemBuilder: (context, index) {
+            final clockId = clocks[index].id;
+            return BlocSelector<WorldClockBloc, WorldClockState, WorldClock?>(
+              selector: (state) {
+                if (state is WorldClockLoaded) {
+                  for (final c in state.clocks) {
+                    if (c.id == clockId) return c;
+                  }
+                }
+                return null;
+              },
+              builder: (context, clock) {
+                if (clock == null) return const SizedBox.shrink();
+                return _WorldClockItemTile(
+                  key: ValueKey(clock.id),
+                  clock: clock,
+                  relativeInfo: relativeInfoBuilder(clock.timezoneId),
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _WorldClockItemTile extends StatelessWidget {
+  final WorldClock clock;
+  final String relativeInfo;
+
+  const _WorldClockItemTile({
+    super.key,
+    required this.clock,
+    required this.relativeInfo,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return WorldClockItem(
+      key: ValueKey(clock.id),
+      clock: clock,
+      relativeInfo: relativeInfo,
+      onDelete: () {
+        context.read<WorldClockBloc>().add(DeleteWorldClock(clock.id));
+      },
     );
   }
 }

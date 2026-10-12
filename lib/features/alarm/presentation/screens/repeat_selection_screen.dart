@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mechanix_clock/features/alarm/data/utils/date_time_utils.dart';
 import 'package:mechanix_clock/features/alarm/presentation/widgets/day_bubble.dart';
 import 'package:mechanix_clock/l10n/app_localizations.dart';
 import 'package:widgets/widgets.dart';
@@ -48,7 +49,7 @@ class _RepeatSelectionScreenState extends State<RepeatSelectionScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    final days = DateTimeUtils.getWeekdayAbbreviations(context);
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
@@ -75,6 +76,7 @@ class _RepeatSelectionScreenState extends State<RepeatSelectionScreen> {
           children: [
             // Once option
             MechanixListTile(
+              key: const Key('option_repeat_once'),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 8,
@@ -98,6 +100,7 @@ class _RepeatSelectionScreenState extends State<RepeatSelectionScreen> {
 
             // Daily option
             MechanixListTile(
+              key: const Key('option_repeat_daily'),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 8,
@@ -120,6 +123,7 @@ class _RepeatSelectionScreenState extends State<RepeatSelectionScreen> {
 
             // Custom option
             MechanixListTile(
+              key: const Key('option_repeat_custom'),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 8,

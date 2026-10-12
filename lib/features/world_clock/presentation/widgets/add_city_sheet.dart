@@ -25,57 +25,6 @@ class _AddCitySheetState extends State<AddCitySheet> {
     super.dispose();
   }
 
-  Widget _buildHighlightedText(
-    String text,
-    String query,
-    BuildContext context,
-  ) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    if (query.isEmpty) {
-      return Text(text, style: theme.textTheme.titleLarge);
-    }
-
-    final lowerText = text.toLowerCase();
-    final lowerQuery = query.toLowerCase();
-    final index = lowerText.indexOf(lowerQuery);
-
-    if (index == -1) {
-      return Text(
-        text,
-        style: theme.textTheme.titleMedium?.copyWith(
-          color: colorScheme.onSurface,
-          fontWeight: FontWeight.w400,
-        ),
-      );
-    }
-
-    final before = text.substring(0, index);
-    final match = text.substring(index, index + query.length);
-    final after = text.substring(index + query.length);
-
-    return RichText(
-      text: TextSpan(
-        style: theme.textTheme.titleMedium?.copyWith(
-          color: colorScheme.onSurface,
-          fontWeight: FontWeight.w400,
-        ),
-        children: [
-          if (before.isNotEmpty) TextSpan(text: before),
-          TextSpan(
-            text: match,
-            style: TextStyle(
-              color: colorScheme.primary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          if (after.isNotEmpty) TextSpan(text: after),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -103,7 +52,6 @@ class _AddCitySheetState extends State<AddCitySheet> {
           children: [
             MechanixSearchBar(
               key: const Key('add_city_search_field'),
-
               controller: _searchController,
               hintText: l10n.search_country_region,
               textStyle: WidgetStatePropertyAll(
@@ -163,34 +111,107 @@ class _AddCitySheetState extends State<AddCitySheet> {
                           MechanixDivider(color: colorScheme.outline, space: 1),
                       itemBuilder: (context, index) {
                         final city = filteredCities[index];
-                        final fullCityText = '${city.name}, ${city.country}';
-
-                        return MechanixListTile(
-                          key: Key(
-                            'add_city_tile_${city.name.replaceAll(' ', '_')}',
-                          ),
-                          labelText: fullCityText,
-                          label: _buildHighlightedText(
-                            fullCityText,
-                            _searchQuery,
-                            context,
-                          ),
-                          onTap: () {
-                            context.read<WorldClockBloc>().add(
-                              AddWorldClock(
-                                cityName: city.name,
-                                country: city.country,
-                                timezoneId: city.timezoneId,
-                              ),
-                            );
-                            Navigator.pop(context);
-                          },
+                        return _CityListTile(
+                          city: city,
+                          searchQuery: _searchQuery,
                         );
                       },
                     ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _CityListTile extends StatelessWidget {
+  final City city;
+  final String searchQuery;
+
+  const _CityListTile({
+    required this.city,
+    required this.searchQuery,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final fullCityText = '${city.name}, ${city.country}';
+
+    return MechanixListTile(
+      key: Key('add_city_tile_${city.name.replaceAll(' ', '_')}'),
+      labelText: fullCityText,
+      label: _HighlightedCityText(
+        text: fullCityText,
+        query: searchQuery,
+      ),
+      onTap: () {
+        context.read<WorldClockBloc>().add(
+          AddWorldClock(
+            cityName: city.name,
+            country: city.country,
+            timezoneId: city.timezoneId,
+          ),
+        );
+        Navigator.pop(context);
+      },
+    );
+  }
+}
+
+class _HighlightedCityText extends StatelessWidget {
+  final String text;
+  final String query;
+
+  const _HighlightedCityText({
+    required this.text,
+    required this.query,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    if (query.isEmpty) {
+      return Text(text, style: theme.textTheme.titleLarge);
+    }
+
+    final lowerText = text.toLowerCase();
+    final lowerQuery = query.toLowerCase();
+    final index = lowerText.indexOf(lowerQuery);
+
+    if (index == -1) {
+      return Text(
+        text,
+        style: theme.textTheme.titleMedium?.copyWith(
+          color: colorScheme.onSurface,
+          fontWeight: FontWeight.w400,
+        ),
+      );
+    }
+
+    final before = text.substring(0, index);
+    final match = text.substring(index, index + query.length);
+    final after = text.substring(index + query.length);
+
+    return RichText(
+      text: TextSpan(
+        style: theme.textTheme.titleMedium?.copyWith(
+          color: colorScheme.onSurface,
+          fontWeight: FontWeight.w400,
+        ),
+        children: [
+          if (before.isNotEmpty) TextSpan(text: before),
+          TextSpan(
+            text: match,
+            style: TextStyle(
+              color: colorScheme.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          if (after.isNotEmpty) TextSpan(text: after),
+        ],
       ),
     );
   }
