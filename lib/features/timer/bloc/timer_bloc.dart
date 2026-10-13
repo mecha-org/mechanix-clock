@@ -19,37 +19,19 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
   TimerBloc({required this.repository, SystemAlarmService? systemAlarmService})
     : systemAlarmService = systemAlarmService ?? SystemAlarmService(),
       super(const TimerState()) {
-    on<TimerEvent>(_onEvent, transformer: sequential());
-  }
-
-  Future<void> _onEvent(TimerEvent event, Emitter<TimerState> emit) async {
-    if (event is LoadTimerPresets) {
-      await _onLoadPresets(event, emit);
-    } else if (event is AddTimerPreset) {
-      await _onAddPreset(event, emit);
-    } else if (event is UpdateTimerPreset) {
-      await _onUpdatePreset(event, emit);
-    } else if (event is DeleteTimerPreset) {
-      await _onDeletePreset(event, emit);
-    } else if (event is ToggleEditPresetsMode) {
-      _onToggleEditMode(event, emit);
-    } else if (event is ReorderTimerPresets) {
-      await _onReorderPresets(event, emit);
-    } else if (event is StartTimer) {
-      await _onStart(event, emit);
-    } else if (event is PauseTimer) {
-      await _onPause(event, emit);
-    } else if (event is ResumeTimer) {
-      await _onResume(event, emit);
-    } else if (event is CancelTimer) {
-      await _onCancel(event, emit);
-    } else if (event is TimerTick) {
-      await _onTick(event, emit);
-    } else if (event is SetTimerSound) {
-      await _onSetSound(event, emit);
-    } else if (event is ResetTimerToIdle) {
-      _onResetToIdle(event, emit);
-    }
+    on<LoadTimerPresets>(_onLoadPresets, transformer: sequential());
+    on<AddTimerPreset>(_onAddPreset, transformer: sequential());
+    on<UpdateTimerPreset>(_onUpdatePreset, transformer: sequential());
+    on<DeleteTimerPreset>(_onDeletePreset, transformer: sequential());
+    on<ToggleEditPresetsMode>(_onToggleEditMode, transformer: sequential());
+    on<ReorderTimerPresets>(_onReorderPresets, transformer: sequential());
+    on<StartTimer>(_onStart, transformer: sequential());
+    on<PauseTimer>(_onPause, transformer: sequential());
+    on<ResumeTimer>(_onResume, transformer: sequential());
+    on<CancelTimer>(_onCancel, transformer: sequential());
+    on<TimerTick>(_onTick, transformer: sequential());
+    on<SetTimerSound>(_onSetSound, transformer: sequential());
+    on<ResetTimerToIdle>(_onResetToIdle, transformer: sequential());
   }
 
   Future<void> _onLoadPresets(
