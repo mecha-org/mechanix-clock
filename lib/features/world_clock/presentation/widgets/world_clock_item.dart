@@ -44,8 +44,8 @@ class WorldClockItem extends StatelessWidget {
     return MechanixSwipableListTile(
       labelSupportingGap: 8.0,
       minHeight: 72.0,
-      extentRatio: 0.16,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      extentRatio: 0.14,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       onTap: onTap,
       actions: [
         MechanixIconButton.filled(

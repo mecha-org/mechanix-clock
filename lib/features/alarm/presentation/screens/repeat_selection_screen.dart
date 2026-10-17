@@ -81,15 +81,17 @@ class _RepeatSelectionScreenState extends State<RepeatSelectionScreen> {
                 horizontal: 16,
                 vertical: 8,
               ),
-              leading: MechanixRadio<RepeatType>(
-                value: RepeatType.once,
-                groupValue: _repeatType,
-                onChanged: (val) {
-                  if (val != null) {
-                    setState(() => _repeatType = val);
-                  }
-                },
-              ),
+              leadingWidgets: [
+                MechanixRadio<RepeatType>(
+                  value: RepeatType.once,
+                  groupValue: _repeatType,
+                  onChanged: (val) {
+                    if (val != null) {
+                      setState(() => _repeatType = val);
+                    }
+                  },
+                ),
+              ],
               labelText: l10n.once,
               trailingText: l10n.default_label,
               onTap: () {
@@ -105,15 +107,17 @@ class _RepeatSelectionScreenState extends State<RepeatSelectionScreen> {
                 horizontal: 16,
                 vertical: 8,
               ),
-              leading: MechanixRadio<RepeatType>(
-                value: RepeatType.daily,
-                groupValue: _repeatType,
-                onChanged: (val) {
-                  if (val != null) {
-                    setState(() => _repeatType = val);
-                  }
-                },
-              ),
+              leadingWidgets: [
+                MechanixRadio<RepeatType>(
+                  value: RepeatType.daily,
+                  groupValue: _repeatType,
+                  onChanged: (val) {
+                    if (val != null) {
+                      setState(() => _repeatType = val);
+                    }
+                  },
+                ),
+              ],
               labelText: l10n.daily,
               onTap: () {
                 setState(() => _repeatType = RepeatType.daily);
@@ -128,52 +132,53 @@ class _RepeatSelectionScreenState extends State<RepeatSelectionScreen> {
                 horizontal: 16,
                 vertical: 8,
               ),
-              leading: MechanixRadio<RepeatType>(
-                value: RepeatType.custom,
-                groupValue: _repeatType,
-                onChanged: (val) {
-                  if (val != null) {
-                    setState(() => _repeatType = val);
-                  }
-                },
-              ),
+              leadingWidgets: [
+                MechanixRadio<RepeatType>(
+                  value: RepeatType.custom,
+                  groupValue: _repeatType,
+                  onChanged: (val) {
+                    if (val != null) {
+                      setState(() => _repeatType = val);
+                    }
+                  },
+                ),
+              ],
               labelText: l10n.custom,
               onTap: () {
                 setState(() => _repeatType = RepeatType.custom);
               },
-            ),
-            const SizedBox(height: 12),
+              trailingWidgets: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Wrap(
+                    spacing: 8, // Gap between bubbles
+                    children: List.generate(7, (index) {
+                      final isSelected =
+                          _repeatType == RepeatType.custom &&
+                          _customDays.contains(index);
 
-            // Day bubbles row
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: List.generate(7, (index) {
-                  final isSelected =
-                      _repeatType == RepeatType.custom &&
-                      _customDays.contains(index);
+                      return DayBubble(
+                        key: Key('day_$index'),
+                        size: 40,
+                        label: days[index],
+                        isSelected: isSelected,
+                        onTap: () {
+                          setState(() {
+                            _repeatType = RepeatType.custom;
 
-                  return DayBubble(
-                    key: Key('day_$index'),
-
-                    size: 40,
-                    label: days[index],
-                    isSelected: isSelected,
-                    onTap: () {
-                      setState(() {
-                        _repeatType = RepeatType.custom;
-                        if (_customDays.contains(index)) {
-                          _customDays.remove(index);
-                        } else {
-                          _customDays.add(index);
-                          _customDays.sort();
-                        }
-                      });
-                    },
-                  );
-                }),
-              ),
+                            if (_customDays.contains(index)) {
+                              _customDays.remove(index);
+                            } else {
+                              _customDays.add(index);
+                              _customDays.sort();
+                            }
+                          });
+                        },
+                      );
+                    }),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

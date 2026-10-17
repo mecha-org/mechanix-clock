@@ -36,7 +36,7 @@ class DayBubble extends StatelessWidget {
         : outlineBase.withValues(alpha: 0.16);
 
     final Color textColor = isSelected
-        ? colorScheme.onSurface
+        ? colorScheme.onPrimaryFixed
         : colorScheme.onSurfaceVariant;
 
     return GestureDetector(
@@ -46,9 +46,7 @@ class DayBubble extends StatelessWidget {
         cursor: onTap != null
             ? SystemMouseCursors.click
             : SystemMouseCursors.basic,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeInOut,
+        child: Container(
           width: size,
           height: size,
           alignment: Alignment.center,
@@ -57,9 +55,7 @@ class DayBubble extends StatelessWidget {
             shape: BoxShape.circle,
             border: Border.all(color: borderColor, width: 1.0),
           ),
-          child: AnimatedDefaultTextStyle(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeInOut,
+          child: DefaultTextStyle(
             style: theme.textTheme.labelLarge!.copyWith(color: textColor),
             child: Text(label, textAlign: TextAlign.center),
           ),
