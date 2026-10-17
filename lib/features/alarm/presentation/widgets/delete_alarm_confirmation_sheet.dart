@@ -48,7 +48,11 @@ class DeleteAlarmConfirmationSheet extends StatelessWidget {
                     child: MechanixButton.outline(
                       key: const Key('delete_alarm_cancel_button'),
                       size: ButtonSize.large,
-                      icon: const Icon(Icons.close, size: 20),
+                      icon: ImageIcon(
+                        const AssetImage(ClockIcons.cancel),
+                        size: 32,
+                        color: colorScheme.onSurface,
+                      ),
                       label: l10n.cancel_uppercase,
                       onPressed: () => Navigator.pop(context, false),
                     ),
@@ -61,7 +65,7 @@ class DeleteAlarmConfirmationSheet extends StatelessWidget {
                       icon: ImageIcon(
                         const AssetImage(ClockIcons.delete),
                         color: colorScheme.error,
-                        size: 20,
+                        size: 32,
                       ),
                       label: l10n.delete.toUpperCase(),
 

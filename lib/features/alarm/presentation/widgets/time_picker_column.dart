@@ -75,60 +75,68 @@ class PickerColumnState extends State<PickerColumn> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final activeColor = colorScheme.onSurface;
+    final inactiveColor = colorScheme.onSurfaceVariant;
 
-    return SizedBox(
-      width: widget.width,
-      height: 300,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          IgnorePointer(
-            ignoring: !widget.enabled,
-            child: CupertinoPicker(
-              itemExtent: widget.selectedTextStyle?.fontSize ?? 80 + 2,
-              scrollController: _controller,
-              selectionOverlay: const SizedBox.shrink(),
-              squeeze: widget.squeeze,
-              diameterRatio: 180,
-              looping: true,
-              onSelectedItemChanged: (index) {
-                final actualIndex = index % widget.itemCount;
-                _selectedIndex.value = actualIndex;
-                if (!_isProgrammaticJump) {
-                  final value = widget.isHour ? actualIndex + 1 : actualIndex;
-                  widget.onChanged(value);
-                }
-              },
-              children: List.generate(widget.itemCount, (index) {
-                final label = (widget.isHour ? index + 1 : index)
-                    .toString()
-                    .padLeft(2, '0');
-                return ValueListenableBuilder<int>(
-                  valueListenable: _selectedIndex,
-                  builder: (_, selected, _) {
-                    final isSelected = index == (selected % widget.itemCount);
-                    final activeColor = colorScheme.onSurface;
-                    final inactiveColor = colorScheme.onSurfaceVariant;
+    final selectedStyle = widget.selectedTextStyle?.copyWith(
+      color: widget.enabled
+          ? activeColor
+          : activeColor.withValues(alpha: 0.3),
+    );
+    final unselectedStyle = widget.unselectedTextStyle?.copyWith(
+      color: widget.enabled
+          ? inactiveColor
+          : inactiveColor.withValues(alpha: 0.2),
+    );
 
-                    final textStyle = isSelected
-                        ? widget.selectedTextStyle!.copyWith(
-                            color: widget.enabled
-                                ? activeColor
-                                : activeColor.withValues(alpha: 0.3),
-                          )
-                        : widget.unselectedTextStyle!.copyWith(
-                            color: widget.enabled
-                                ? inactiveColor
-                                : inactiveColor.withValues(alpha: 0.2),
-                          );
+    return RepaintBoundary(
+      child: SizedBox(
+        width: widget.width,
+        height: 300,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            IgnorePointer(
+              ignoring: !widget.enabled,
+              child: CupertinoPicker.builder(
+                itemExtent: (widget.selectedTextStyle?.fontSize ?? 80) + 2,
+                scrollController: _controller,
+                selectionOverlay: const SizedBox.shrink(),
+                squeeze: widget.squeeze,
+                diameterRatio: 180,
+                onSelectedItemChanged: (index) {
+                  final actualIndex =
+                      (index % widget.itemCount + widget.itemCount) %
+                      widget.itemCount;
+                  _selectedIndex.value = actualIndex;
+                  if (!_isProgrammaticJump) {
+                    final value = widget.isHour ? actualIndex + 1 : actualIndex;
+                    widget.onChanged(value);
+                  }
+                },
+                itemBuilder: (context, index) {
+                  final actualIndex =
+                      (index % widget.itemCount + widget.itemCount) %
+                      widget.itemCount;
+                  final label = (widget.isHour ? actualIndex + 1 : actualIndex)
+                      .toString()
+                      .padLeft(2, '0');
+                  return ValueListenableBuilder<int>(
+                    valueListenable: _selectedIndex,
+                    builder: (_, selected, _) {
+                      final isSelected =
+                          actualIndex == (selected % widget.itemCount);
+                      final textStyle =
+                          isSelected ? selectedStyle : unselectedStyle;
 
-                    return Center(child: Text(label, style: textStyle));
-                  },
-                );
-              }),
+                      return Center(child: Text(label, style: textStyle));
+                    },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

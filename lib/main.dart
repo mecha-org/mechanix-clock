@@ -10,10 +10,13 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:widgets/widgets.dart';
 
 import 'features/alarm/bloc/alarm_bloc.dart';
+import 'features/alarm/bloc/alarm_event.dart';
 import 'features/navigation/presentation/screens/main_navigation_container.dart';
 import 'features/stopwatch/bloc/stopwatch_bloc.dart';
 import 'features/timer/bloc/timer_bloc.dart';
+import 'features/timer/bloc/timer_event.dart';
 import 'features/timer/data/repository/timer_repository.dart';
+import 'features/world_clock/bloc/world_clock_event.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -71,18 +74,19 @@ class MechanixClockApp extends StatelessWidget {
               create: (context) => AlarmBloc(
                 repository: repository,
                 systemAlarmService: systemAlarmService,
-              ),
+              )..add(LoadAlarms()),
             ),
             BlocProvider(create: (context) => StopwatchBloc()),
             BlocProvider(
               create: (context) => TimerBloc(
                 repository: timerRepository,
                 systemAlarmService: systemAlarmService,
-              ),
+              )..add(LoadTimerPresets()),
             ),
             BlocProvider(
               create: (context) =>
-                  WorldClockBloc(repository: worldClockRepository),
+                  WorldClockBloc(repository: worldClockRepository)
+                    ..add(LoadWorldClocks()),
             ),
           ],
           child: MaterialApp(

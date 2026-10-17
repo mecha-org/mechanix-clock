@@ -44,27 +44,30 @@ class _SoundSelectionScreenState extends State<SoundSelectionScreen> {
       body: ListView.separated(
         padding: const EdgeInsets.symmetric(vertical: 16),
         itemCount: sounds.length,
-        separatorBuilder: (context, index) => Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: MechanixDivider(
-            color: theme.colorScheme.outline.withValues(alpha: 0.38),
-          ),
+        separatorBuilder: (context, index) => const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: MechanixDivider(),
         ),
         itemBuilder: (context, index) {
           final sound = sounds[index];
 
           return MechanixListTile(
             key: Key('sound_$sound'),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: MechanixRadio<String>(
-              value: sound,
-              groupValue: _selectedSound,
-              onChanged: (val) {
-                if (val != null) {
-                  setState(() => _selectedSound = val);
-                }
-              },
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8,
             ),
+            leadingWidgets: [
+              MechanixRadio<String>(
+                value: sound,
+                groupValue: _selectedSound,
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() => _selectedSound = val);
+                  }
+                },
+              ),
+            ],
             labelText: sound,
             onTap: () {
               setState(() => _selectedSound = sound);

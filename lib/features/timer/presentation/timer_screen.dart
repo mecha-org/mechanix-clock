@@ -421,6 +421,7 @@ class _TimerSettingScreen extends StatelessWidget {
 
                 // Action Buttons Row
                 _TimerActionButtonsRow(
+                  canReset: hasTime,
                   canStart: canStart,
                   onReset: onResetPicker,
                   onStart: onStartTimer,
@@ -456,11 +457,13 @@ class _TimerSettingScreen extends StatelessWidget {
 }
 
 class _TimerActionButtonsRow extends StatelessWidget {
+  final bool canReset;
   final bool canStart;
   final VoidCallback onReset;
   final VoidCallback onStart;
 
   const _TimerActionButtonsRow({
+    required this.canReset,
     required this.canStart,
     required this.onReset,
     required this.onStart,
@@ -485,9 +488,11 @@ class _TimerActionButtonsRow extends StatelessWidget {
             foregroundColor: colorScheme.onSurface,
             icon: ImageIcon(
               const AssetImage(ClockIcons.cancel),
-              color: theme.colorScheme.onSecondaryFixed,
+              color: canReset
+                  ? theme.colorScheme.onSecondaryFixed
+                  : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
             ),
-            onPressed: onReset,
+            onPressed: canReset ? onReset : null,
           ),
 
           const SizedBox(width: 32),

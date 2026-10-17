@@ -131,12 +131,13 @@ class _EditAlarmScreenState extends State<EditAlarmScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: ScrollConfiguration(
-        behavior: ScrollConfiguration.of(context).copyWith(
-          dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
-        ),
-        child: SingleChildScrollView(
-          child: Column(
+      body: RepaintBoundary(
+        child: ScrollConfiguration(
+          behavior: ScrollConfiguration.of(context).copyWith(
+            dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
+          ),
+          child: SingleChildScrollView(
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 12),
@@ -206,6 +207,7 @@ class _EditAlarmScreenState extends State<EditAlarmScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 }
@@ -226,11 +228,13 @@ class _TimePickerSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: CustomTimePicker(
-        selectedHour: selectedHour,
-        selectedMinute: selectedMinute,
-        onHourChanged: onHourChanged,
-        onMinuteChanged: onMinuteChanged,
+      child: RepaintBoundary(
+        child: CustomTimePicker(
+          selectedHour: selectedHour,
+          selectedMinute: selectedMinute,
+          onHourChanged: onHourChanged,
+          onMinuteChanged: onMinuteChanged,
+        ),
       ),
     );
   }
@@ -283,7 +287,7 @@ class _RepeatSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final days = DateTimeUtils.getWeekdayAbbreviations(context);
+    final repeatType = _repeatType;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -310,17 +314,22 @@ class _RepeatSection extends StatelessWidget {
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
-            if (_repeatType == RepeatType.custom)
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                spacing: 8,
-                children: List.generate(7, (index) {
-                  return DayBubble(
-                    size: 20,
-                    label: days[index],
-                    isSelected: repeatDays.contains(index),
+            if (repeatType == RepeatType.custom)
+              Builder(
+                builder: (context) {
+                  final days = DateTimeUtils.getWeekdayAbbreviations(context);
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    spacing: 8,
+                    children: List.generate(7, (index) {
+                      return DayBubble(
+                        size: 20,
+                        label: days[index],
+                        isSelected: repeatDays.contains(index),
+                      );
+                    }),
                   );
-                }),
+                },
               ),
             MechanixIconButton.standard(
               key: const Key('option_repeat_button'),

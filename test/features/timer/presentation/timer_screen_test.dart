@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mechanix_clock/core/utils/constants.dart';
 import 'package:mechanix_clock/features/timer/bloc/timer_bloc.dart';
 import 'package:mechanix_clock/features/timer/bloc/timer_event.dart';
 import 'package:mechanix_clock/features/timer/bloc/timer_state.dart';
@@ -107,6 +106,12 @@ void main() {
         find.byKey(const Key('timer_start_button')),
       );
       expect(startButton.onPressed, isNull);
+
+      // Reset button should now be disabled (already 00:00:00)
+      final resetButton = tester.widget<MechanixIconButton>(
+        find.byKey(const Key('timer_left_button')),
+      );
+      expect(resetButton.onPressed, isNull);
     },
   );
 

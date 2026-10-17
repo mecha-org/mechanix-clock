@@ -26,7 +26,9 @@ class _AlarmListScreenState extends State<AlarmListScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<AlarmBloc>().add(LoadAlarms());
+    if (context.read<AlarmBloc>().state is AlarmInitial) {
+      context.read<AlarmBloc>().add(LoadAlarms());
+    }
   }
 
   @override
@@ -143,7 +145,7 @@ class _AlarmItem extends StatelessWidget {
 
     return MechanixSwipableListTile(
       minHeight: 88.0,
-      extentRatio: 0.28,
+      extentRatio: 0.18,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       onTap: () {
         Navigator.push(
