@@ -9,13 +9,7 @@ class AmPmSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context)!;
-
-    final activeColor = colorScheme.onSecondary;
-    final inactiveColor = colorScheme.onSecondaryContainer;
-    final segmentBgColor = colorScheme.secondaryContainer;
 
     return Padding(
       padding: const EdgeInsets.all(8),
@@ -23,20 +17,16 @@ class AmPmSwitch extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           _AmPmSegment(
+            key: const Key('am_segment'),
             label: l10n.am,
             isSelected: isAm,
             onTap: () => onChanged(true),
-            backgroundColor: segmentBgColor,
-            activeColor: activeColor,
-            inactiveColor: inactiveColor,
           ),
           _AmPmSegment(
+            key: const Key('pm_segment'),
             label: l10n.pm,
             isSelected: !isAm,
             onTap: () => onChanged(false),
-            backgroundColor: segmentBgColor,
-            activeColor: activeColor,
-            inactiveColor: inactiveColor,
           ),
         ],
       ),
@@ -46,20 +36,15 @@ class AmPmSwitch extends StatelessWidget {
 
 class _AmPmSegment extends StatefulWidget {
   const _AmPmSegment({
+    super.key,
     required this.label,
     required this.isSelected,
     required this.onTap,
-    required this.backgroundColor,
-    required this.activeColor,
-    required this.inactiveColor,
   });
 
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
-  final Color backgroundColor;
-  final Color activeColor;
-  final Color inactiveColor;
 
   @override
   State<_AmPmSegment> createState() => _AmPmSegmentState();
@@ -72,39 +57,50 @@ class _AmPmSegmentState extends State<_AmPmSegment> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
-    Color effectiveBg = widget.backgroundColor;
+    final Color baseBg = widget.isSelected
+        ? colorScheme.surfaceContainerLow
+        : Colors.transparent;
 
+    Color effectiveBg = baseBg;
     if (_isPressed) {
       effectiveBg = Color.alphaBlend(
-        theme.colorScheme.onSurface.withValues(alpha: 0.12),
-        widget.backgroundColor,
+        colorScheme.onSurface.withValues(alpha: 0.12),
+        baseBg,
       );
     } else if (_isHovered) {
       effectiveBg = Color.alphaBlend(
-        theme.colorScheme.onSurface.withValues(alpha: 0.08),
-        widget.backgroundColor,
+        colorScheme.onSurface.withValues(alpha: 0.08),
+        baseBg,
       );
     }
 
-    final textColor = widget.isSelected
-        ? widget.activeColor
-        : widget.inactiveColor;
+    final Color borderColor = widget.isSelected
+        ? Colors.transparent
+        : colorScheme.outline;
+
+    final Color textColor = widget.isSelected
+        ? colorScheme.primary
+        : colorScheme.onSecondaryFixed;
 
     return MouseRegion(
+      cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTapDown: (_) => setState(() => _isPressed = true),
         onTapUp: (_) => setState(() => _isPressed = false),
         onTapCancel: () => setState(() => _isPressed = false),
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 28),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 26),
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: effectiveBg,
+            border: Border.all(color: borderColor, width: 1.0),
             borderRadius: BorderRadius.circular(100),
           ),
           child: AnimatedDefaultTextStyle(
