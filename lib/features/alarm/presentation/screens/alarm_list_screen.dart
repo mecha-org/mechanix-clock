@@ -26,9 +26,6 @@ class _AlarmListScreenState extends State<AlarmListScreen> {
   @override
   void initState() {
     super.initState();
-    if (context.read<AlarmBloc>().state is AlarmInitial) {
-      context.read<AlarmBloc>().add(LoadAlarms());
-    }
   }
 
   @override
