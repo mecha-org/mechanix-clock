@@ -236,6 +236,11 @@ void main() {
         // 2. Verify the Stopwatch screen.
         expect(find.text('STOPWATCH'), findsOneWidget);
 
+        final stopwatchRunningDot = find.byKey(
+          const Key('stopwatch_running_dot'),
+        );
+        expect(stopwatchRunningDot, findsNothing);
+
         // 3. Verify the initial Start button.
         final startButton = find.byKey(const Key('stopwatch_start_button'));
         expect(startButton, findsOneWidget);
@@ -246,6 +251,9 @@ void main() {
 
         // Verify Stop and Lap buttons are available.
         expect(find.byKey(const Key('stopwatch_stop_button')), findsOneWidget);
+
+        // The Stopwatch tab shows the running dot.
+        expect(stopwatchRunningDot, findsOneWidget);
         expect(find.byKey(const Key('stopwatch_lap_button')), findsOneWidget);
 
         // Allow elapsed time to advance.
@@ -272,8 +280,9 @@ void main() {
         await tester.tap(find.byKey(const Key('stopwatch_stop_button')));
         await tester.pumpAndSettle();
 
-        // Verify the stopwatch has stopped.
+        // Verify the stopwatch has stopped, and the dot is gone.
         expect(find.byKey(const Key('stopwatch_start_button')), findsOneWidget);
+        expect(stopwatchRunningDot, findsNothing);
         expect(find.byKey(const Key('stopwatch_reset_button')), findsOneWidget);
 
         // 8. Reset the stopwatch.

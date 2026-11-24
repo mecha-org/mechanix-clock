@@ -14,7 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 * **Alarm labels**: an alarm can be given a name (e.g. "Medicine"), shown in the list and in mxclockd's notification.
 * **Snooze length**: each alarm picks how long Snooze waits (1, 5, 10, 15, 20 or 30 minutes; 10 by default).
-* **Keyboard**: ↑/↓ move between rows in every list and Enter opens or picks the row; Ctrl+N adds an alarm on the Alarms tab; Space starts or stops the Stopwatch.
+* **Keyboard**: ↑/↓ move between rows in every list and Enter opens or picks the row; Ctrl+N adds an alarm on the Alarms tab; Space starts or stops the Stopwatch.  
+* Restores the last selected tab on launch and displays a small indicator on the Stopwatch and Timer tabs while they are running.
 * The stopwatch keeps counting while the app is closed and is picked up again, laps included, when it reopens.
 * Clear messages when mxclockd isn't running, refuses a change, or is a version the app doesn't know: "Couldn't save alarm: …" and similar for switching, deleting and timers, and a Retry screen when the alarm list can't be loaded. The list reloads by itself when mxclockd starts.
 
