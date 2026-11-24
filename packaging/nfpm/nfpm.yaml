@@ -10,13 +10,21 @@ description: Mechanix Clock application
 homepage: https://github.com/mecha-org/mechanix-clock.git
 license: BSD
 
+# Alarms and timers are kept and rung by mxclockd
+# (https://github.com/mineshp-mecha/mxclockd), commit b88c9d3 or later:
+# per-alarm snooze (AddAlarm/UpdateAlarm take syyysubu) and timer status
+# (ListTimers returns a(ssxs)). Timers ring
+# with the daemon's own sound.
+# pw-play/paplay play the sound previews in the app.
 overrides:
   rpm:
     depends:
       - mechanix-flutter-engine = 3.47.1
+      - mxclockd
   deb:
     depends:
       - "mechanix-flutter-engine (= 3.47.1)"
+      - mxclockd
 
 contents:
   - src: ./stage/bundle/mechanix_clock
@@ -33,6 +41,10 @@ contents:
       mode: 0755
   - src: ./org.mechanix.clock.desktop
     dst: /usr/share/applications/org.mechanix.clock.desktop
+  # Alarm and timer sounds, at a fixed path mxclockd can play with the app
+  # closed (see lib/core/utils/alarm_sounds.dart).
+  - src: ./assets/sounds/*.ogg
+    dst: /usr/share/sounds/mechanix/clock/
   - src: ./assets/desktop_icon.png
     dst: /usr/share/icons/hicolor/48x48/apps/org.mechanix.clock.png
 

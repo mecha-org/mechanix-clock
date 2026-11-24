@@ -46,6 +46,7 @@ class WorldClockItem extends StatelessWidget {
       minHeight: 72.0,
       extentRatio: 0.14,
       contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      swipedBackgroundColor: colorScheme.secondaryContainer,
       onTap: onTap,
       actions: [
         MechanixIconButton.filled(
@@ -54,6 +55,7 @@ class WorldClockItem extends StatelessWidget {
           icon: ImageIcon(
             const AssetImage(ClockIcons.delete),
             color: colorScheme.onPrimary,
+            size: 24,
           ),
           size: IconButtonSize.large,
           type: ButtonType.rounded,

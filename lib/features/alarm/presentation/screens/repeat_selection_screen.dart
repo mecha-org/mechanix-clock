@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mechanix_clock/core/widgets/keyboard_list.dart';
 import 'package:mechanix_clock/features/alarm/data/utils/date_time_utils.dart';
 import 'package:mechanix_clock/features/alarm/presentation/widgets/day_bubble.dart';
 import 'package:mechanix_clock/l10n/app_localizations.dart';
@@ -69,118 +70,136 @@ class _RepeatSelectionScreenState extends State<RepeatSelectionScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Once option
-            MechanixListTile(
-              key: const Key('option_repeat_once'),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
-              leadingWidgets: [
-                MechanixRadio<RepeatType>(
-                  value: RepeatType.once,
-                  groupValue: _repeatType,
-                  onChanged: (val) {
-                    if (val != null) {
-                      setState(() => _repeatType = val);
-                    }
-                  },
-                ),
-              ],
-              labelText: l10n.once,
-              trailingText: l10n.default_label,
-              onTap: () {
-                setState(() => _repeatType = RepeatType.once);
-              },
-            ),
-            const SizedBox(height: 8),
-
-            // Daily option
-            MechanixListTile(
-              key: const Key('option_repeat_daily'),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
-              leadingWidgets: [
-                MechanixRadio<RepeatType>(
-                  value: RepeatType.daily,
-                  groupValue: _repeatType,
-                  onChanged: (val) {
-                    if (val != null) {
-                      setState(() => _repeatType = val);
-                    }
-                  },
-                ),
-              ],
-              labelText: l10n.daily,
-              onTap: () {
-                setState(() => _repeatType = RepeatType.daily);
-              },
-            ),
-            const SizedBox(height: 8),
-
-            // Custom option
-            MechanixListTile(
-              key: const Key('option_repeat_custom'),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
-              leadingWidgets: [
-                MechanixRadio<RepeatType>(
-                  value: RepeatType.custom,
-                  groupValue: _repeatType,
-                  onChanged: (val) {
-                    if (val != null) {
-                      setState(() => _repeatType = val);
-                    }
-                  },
-                ),
-              ],
-              labelText: l10n.custom,
-              onTap: () {
-                setState(() => _repeatType = RepeatType.custom);
-              },
-              trailingWidgets: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Wrap(
-                    spacing: 8, // Gap between bubbles
-                    children: List.generate(7, (index) {
-                      final isSelected =
-                          _repeatType == RepeatType.custom &&
-                          _customDays.contains(index);
-
-                      return DayBubble(
-                        key: Key('day_$index'),
-                        size: 40,
-                        label: days[index],
-                        isSelected: isSelected,
-                        onTap: () {
-                          setState(() {
-                            _repeatType = RepeatType.custom;
-
-                            if (_customDays.contains(index)) {
-                              _customDays.remove(index);
-                            } else {
-                              _customDays.add(index);
-                              _customDays.sort();
-                            }
-                          });
-                        },
-                      );
-                    }),
+      // ↑/↓ move between Once/Daily/Custom, Enter picks one.
+      body: KeyboardList(
+        autofocus: true,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Once option
+              KeyboardListItem(
+                index: 0,
+                onActivate: () => setState(() => _repeatType = RepeatType.once),
+                child: MechanixListTile(
+                  key: const Key('option_repeat_once'),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
                   ),
+                  leadingWidgets: [
+                    MechanixRadio<RepeatType>(
+                      value: RepeatType.once,
+                      groupValue: _repeatType,
+                      onChanged: (val) {
+                        if (val != null) {
+                          setState(() => _repeatType = val);
+                        }
+                      },
+                    ),
+                  ],
+                  labelText: l10n.once,
+                  trailingText: l10n.default_label,
+                  onTap: () {
+                    setState(() => _repeatType = RepeatType.once);
+                  },
                 ),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(height: 8),
+
+              // Daily option
+              KeyboardListItem(
+                index: 1,
+                onActivate: () =>
+                    setState(() => _repeatType = RepeatType.daily),
+                child: MechanixListTile(
+                  key: const Key('option_repeat_daily'),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  leadingWidgets: [
+                    MechanixRadio<RepeatType>(
+                      value: RepeatType.daily,
+                      groupValue: _repeatType,
+                      onChanged: (val) {
+                        if (val != null) {
+                          setState(() => _repeatType = val);
+                        }
+                      },
+                    ),
+                  ],
+                  labelText: l10n.daily,
+                  onTap: () {
+                    setState(() => _repeatType = RepeatType.daily);
+                  },
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Custom option
+              KeyboardListItem(
+                index: 2,
+                onActivate: () =>
+                    setState(() => _repeatType = RepeatType.custom),
+                child: MechanixListTile(
+                  key: const Key('option_repeat_custom'),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  leadingWidgets: [
+                    MechanixRadio<RepeatType>(
+                      value: RepeatType.custom,
+                      groupValue: _repeatType,
+                      onChanged: (val) {
+                        if (val != null) {
+                          setState(() => _repeatType = val);
+                        }
+                      },
+                    ),
+                  ],
+                  labelText: l10n.custom,
+                  onTap: () {
+                    setState(() => _repeatType = RepeatType.custom);
+                  },
+                  trailingWidgets: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Wrap(
+                        spacing: 8, // Gap between bubbles
+                        children: List.generate(7, (index) {
+                          final isSelected =
+                              _repeatType == RepeatType.custom &&
+                              _customDays.contains(index);
+
+                          return DayBubble(
+                            key: Key('day_$index'),
+                            size: 40,
+                            label: days[index],
+                            isSelected: isSelected,
+                            onTap: () {
+                              setState(() {
+                                _repeatType = RepeatType.custom;
+
+                                if (_customDays.contains(index)) {
+                                  _customDays.remove(index);
+                                } else {
+                                  _customDays.add(index);
+                                  _customDays.sort();
+                                }
+                              });
+                            },
+                          );
+                        }),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

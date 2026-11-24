@@ -10,4 +10,7 @@ class ClockIcons {
   static const String stopwatch = 'assets/icons/stopwatch.png';
   static const String worldClock = 'assets/icons/world_clock.png';
   static const String timer = 'assets/icons/timer.png';
+  static const String edit = 'assets/icons/edit.png';
+  static const String back = 'assets/icons/back.png';
+  static const String check = 'assets/icons/check.png';
 }

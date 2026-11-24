@@ -106,46 +106,5 @@ void main() {
       act: (bloc) => bloc.add(const DeleteWorldClock('1')),
       expect: () => [const WorldClockLoaded([])],
     );
-
-    blocTest<WorldClockBloc, WorldClockState>(
-      'reorders clocks and emits [WorldClockLoaded] when ReorderWorldClocks is added',
-      build: () {
-        when(
-          () => repository.saveWorldClocks(any()),
-        ).thenAnswer((_) async => {});
-        return bloc;
-      },
-      seed: () => const WorldClockLoaded([
-        WorldClock(
-          id: '1',
-          cityName: 'London',
-          country: 'UK',
-          timezoneId: 'Europe/London',
-        ),
-        WorldClock(
-          id: '2',
-          cityName: 'New York',
-          country: 'USA',
-          timezoneId: 'America/New_York',
-        ),
-      ]),
-      act: (bloc) => bloc.add(const ReorderWorldClocks(0, 2)),
-      expect: () => [
-        const WorldClockLoaded([
-          WorldClock(
-            id: '2',
-            cityName: 'New York',
-            country: 'USA',
-            timezoneId: 'America/New_York',
-          ),
-          WorldClock(
-            id: '1',
-            cityName: 'London',
-            country: 'UK',
-            timezoneId: 'Europe/London',
-          ),
-        ]),
-      ],
-    );
   });
 }

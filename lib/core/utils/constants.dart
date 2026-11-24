@@ -6,10 +6,3 @@ const List<TimerPreset> defaultTimerPresets = [
   TimerPreset(id: '3', duration: Duration(minutes: 10)),
   TimerPreset(id: '4', duration: Duration(minutes: 30)),
 ];
-
-const List<String> sounds = [
-  'Dancing Flames',
-  'Comet on the go',
-  'Phoenix song',
-  'Wake up and party',
-];

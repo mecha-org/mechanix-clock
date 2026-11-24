@@ -32,13 +32,3 @@ class DeleteWorldClock extends WorldClockEvent {
   @override
   List<Object?> get props => [id];
 }
-
-class ReorderWorldClocks extends WorldClockEvent {
-  final int oldIndex;
-  final int newIndex;
-
-  const ReorderWorldClocks(this.oldIndex, this.newIndex);
-
-  @override
-  List<Object?> get props => [oldIndex, newIndex];
-}

@@ -1,147 +1,210 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mechanix_clock/core/services/clockd_client.dart';
 import 'package:mechanix_clock/core/utils/app_logger.dart';
-import 'alarm_event.dart';
-import 'alarm_state.dart';
+import 'package:mechanix_clock/core/utils/in_order.dart';
+
 import '../data/models/alarm_model.dart';
 import '../data/repository/alarm_repository.dart';
-import '../../../core/utils/system_alarm_service.dart';
+import 'alarm_event.dart';
+import 'alarm_state.dart';
 
+/// The alarm list as mxclockd keeps it; reloaded on `AlarmsChanged` and when
+/// the daemon (re)starts. Failures are reported: save via [AlarmSaveResult],
+/// toggle/delete via [AlarmLoaded.failure], load via [AlarmError].
 class AlarmBloc extends Bloc<AlarmEvent, AlarmState> {
   final AlarmRepository repository;
-  final SystemAlarmService systemAlarmService;
+  final _subscriptions = <StreamSubscription<void>>[];
+  int _failureSeq = 0;
+  final _inOrder = InOrder();
 
-  AlarmBloc({required this.repository, SystemAlarmService? systemAlarmService})
-    : systemAlarmService = systemAlarmService ?? SystemAlarmService(),
-      super(AlarmInitial()) {
-    on<LoadAlarms>(_onLoadAlarms);
-    on<AddAlarm>(_onAddAlarm);
-    on<UpdateAlarm>(_onUpdateAlarm);
-    on<DeleteAlarm>(_onDeleteAlarm);
-    on<ToggleAlarm>(_onToggleAlarm);
+  AlarmBloc({required this.repository}) : super(AlarmInitial()) {
+    // One at a time, in order: each handler reads the list the previous one
+    // left.
+    on<LoadAlarms>((_, emit) => _onLoadAlarms(emit), transformer: _inOrder());
+    on<RefreshAlarms>((_, emit) => _refresh(emit), transformer: _inOrder());
+    on<AddAlarm>(
+      (event, emit) => _onAddAlarm(event.alarm, event.result, emit),
+      transformer: _inOrder(),
+    );
+    on<UpdateAlarm>(
+      (event, emit) => _onUpdateAlarm(event.alarm, event.result, emit),
+      transformer: _inOrder(),
+    );
+    on<DeleteAlarm>(
+      (event, emit) => _onDeleteAlarm(event.alarmId, emit),
+      transformer: _inOrder(),
+    );
+    on<ToggleAlarm>(
+      (event, emit) => _onToggleAlarm(event.alarmId, emit),
+      transformer: _inOrder(),
+    );
+    _subscriptions
+      ..add(repository.changes.listen((_) => add(const RefreshAlarms())))
+      ..add(
+        repository.serviceStarted.listen((_) => add(const RefreshAlarms())),
+      );
   }
 
-  Future<void> _onLoadAlarms(LoadAlarms event, Emitter<AlarmState> emit) async {
+  Future<void> _onLoadAlarms(Emitter<AlarmState> emit) async {
     emit(AlarmLoading());
+    await _load(emit);
+  }
+
+  Future<void> _load(Emitter<AlarmState> emit) async {
     try {
-      final alarms = await repository.getAlarms();
-      emit(AlarmLoaded(alarms));
-    } catch (e) {
-      AppLogger.e('Failed to load alarms: $e');
-      emit(const AlarmError('Failed to load alarms'));
+      emit(AlarmLoaded(_byTime(await repository.getAlarms())));
+    } on ClockdException catch (e) {
+      AppLogger.e('Failed to load alarms from mxclockd: $e');
+      emit(AlarmError(e));
     }
   }
 
-  Future<void> _onAddAlarm(AddAlarm event, Emitter<AlarmState> emit) async {
-    if (state is AlarmLoaded) {
-      final currentAlarms = (state as AlarmLoaded).alarms;
-      final updatedAlarms = List<Alarm>.from(currentAlarms)..add(event.alarm);
-      try {
-        await repository.saveAlarms(updatedAlarms);
-        if (event.alarm.isActive) {
-          await _scheduleSystemAlarm(event.alarm);
-        }
-        emit(AlarmLoaded(updatedAlarms));
-      } catch (e) {
-        AppLogger.e('Failed to save alarms: $e');
+  /// Re-reads the list without the loading state. After a failed load it
+  /// loads again (the daemon may be back).
+  Future<void> _refresh(
+    Emitter<AlarmState> emit, {
+    AlarmFailure? failure,
+  }) async {
+    if (state is! AlarmLoaded) {
+      await _load(emit);
+      return;
+    }
+    try {
+      emit(
+        AlarmLoaded(_byTime(await repository.getAlarms()), failure: failure),
+      );
+    } on ClockdException catch (e) {
+      AppLogger.e('Failed to reload alarms: $e');
+      // Keep what is shown; still report the change that failed.
+      if (failure != null) {
+        emit(AlarmLoaded(_alarms ?? const [], failure: failure));
       }
+    }
+  }
+
+  /// Alarms in time-of-day order (00:00 first), like other clock apps. Ties
+  /// keep the order they came in.
+  static List<Alarm> _byTime(List<Alarm> alarms) {
+    int minuteOfDay(Alarm a) => AlarmRepository.hour24(a) * 60 + a.minute;
+    final indexed = alarms.indexed.toList()
+      ..sort((x, y) {
+        final byTime = minuteOfDay(x.$2).compareTo(minuteOfDay(y.$2));
+        return byTime != 0 ? byTime : x.$1.compareTo(y.$1);
+      });
+    return [for (final (_, a) in indexed) a];
+  }
+
+  List<Alarm>? get _alarms {
+    final current = state;
+    return current is AlarmLoaded ? current.alarms : null;
+  }
+
+  AlarmFailure _failure(AlarmChange change, ClockdException error) =>
+      AlarmFailure(change, error, ++_failureSeq);
+
+  Future<void> _onAddAlarm(
+    Alarm alarm,
+    AlarmSaveResult? result,
+    Emitter<AlarmState> emit,
+  ) async {
+    try {
+      final added = await repository.addAlarm(alarm);
+      final alarms = _alarms;
+      if (alarms != null) {
+        emit(AlarmLoaded(_byTime([...alarms, added])));
+      } else {
+        // The list wasn't loaded (daemon was down): read it now.
+        await _load(emit);
+      }
+      result?.complete(null);
+    } on ClockdException catch (e) {
+      AppLogger.e('Failed to add alarm: $e');
+      await _reportSaveFailure(e, result, emit);
     }
   }
 
   Future<void> _onUpdateAlarm(
-    UpdateAlarm event,
+    Alarm alarm,
+    AlarmSaveResult? result,
     Emitter<AlarmState> emit,
   ) async {
-    if (state is! AlarmLoaded) return;
-
-    final currentAlarms = (state as AlarmLoaded).alarms;
-
-    final updatedAlarms = currentAlarms.map((alarm) {
-      return alarm.id == event.alarm.id ? event.alarm : alarm;
-    }).toList();
-
     try {
-      await repository.saveAlarms(updatedAlarms);
-
-      // Remove the previous system schedule before replacing it.
-      await systemAlarmService.cancelAlarm(event.alarm.id);
-
-      if (event.alarm.isActive) {
-        await _scheduleSystemAlarm(event.alarm);
+      await repository.updateAlarm(alarm);
+      final alarms = _alarms;
+      if (alarms != null) {
+        emit(
+          AlarmLoaded(
+            // UpdateAlarm switches it on.
+            _byTime([
+              for (final a in alarms)
+                a.id == alarm.id ? alarm.copyWith(isActive: true) : a,
+            ]),
+          ),
+        );
+      } else {
+        await _load(emit);
       }
-
-      emit(AlarmLoaded(updatedAlarms));
-    } catch (e) {
+      result?.complete(null);
+    } on ClockdException catch (e) {
       AppLogger.e('Failed to update alarm: $e');
+      await _reportSaveFailure(e, result, emit);
     }
   }
 
-  Future<void> _onDeleteAlarm(
-    DeleteAlarm event,
+  /// The editor shows a save failure itself when it waits for [result];
+  /// otherwise the list does.
+  Future<void> _reportSaveFailure(
+    ClockdException error,
+    AlarmSaveResult? result,
     Emitter<AlarmState> emit,
   ) async {
-    if (state is AlarmLoaded) {
-      final currentAlarms = (state as AlarmLoaded).alarms;
-      final updatedAlarms = currentAlarms
-          .where((a) => a.id != event.alarmId)
-          .toList();
-      await repository.saveAlarms(updatedAlarms);
-      await systemAlarmService.cancelAlarm(event.alarmId);
-      emit(AlarmLoaded(updatedAlarms));
+    if (result != null) {
+      result.complete(error);
+      await _refresh(emit);
+    } else {
+      await _refresh(emit, failure: _failure(AlarmChange.save, error));
     }
   }
 
-  Future<void> _onToggleAlarm(
-    ToggleAlarm event,
-    Emitter<AlarmState> emit,
-  ) async {
-    if (state is AlarmLoaded) {
-      final currentAlarms = (state as AlarmLoaded).alarms;
-      Alarm? toggledAlarm;
-      final updatedAlarms = currentAlarms.map((a) {
-        if (a.id == event.alarmId) {
-          toggledAlarm = a.copyWith(isActive: !a.isActive);
-          return toggledAlarm!;
-        }
-        return a;
-      }).toList();
-
-      await repository.saveAlarms(updatedAlarms);
-
-      if (toggledAlarm != null) {
-        if (toggledAlarm!.isActive) {
-          await _scheduleSystemAlarm(toggledAlarm!);
-        } else {
-          await systemAlarmService.cancelAlarm(toggledAlarm!.id);
-        }
+  Future<void> _onDeleteAlarm(String id, Emitter<AlarmState> emit) async {
+    try {
+      await repository.deleteAlarm(id);
+      final alarms = _alarms;
+      if (alarms != null) {
+        emit(
+          AlarmLoaded([
+            for (final a in alarms)
+              if (a.id != id) a,
+          ]),
+        );
       }
-
-      emit(AlarmLoaded(updatedAlarms));
+    } on ClockdException catch (e) {
+      AppLogger.e('Failed to delete alarm: $e');
+      await _refresh(emit, failure: _failure(AlarmChange.delete, e));
     }
   }
 
-  Future<void> _scheduleSystemAlarm(Alarm alarm) async {
-    final now = DateTime.now();
-    int hour = alarm.hour;
-    if (!alarm.isAm && hour < 12) hour += 12;
-    if (alarm.isAm && hour == 12) hour = 0;
-
-    DateTime scheduledTime = DateTime(
-      now.year,
-      now.month,
-      now.day,
-      hour,
-      alarm.minute,
-    );
-
-    if (scheduledTime.isBefore(now)) {
-      scheduledTime = scheduledTime.add(const Duration(days: 1));
+  Future<void> _onToggleAlarm(String id, Emitter<AlarmState> emit) async {
+    final alarms = _alarms;
+    final alarm = alarms?.where((a) => a.id == id).firstOrNull;
+    if (alarms == null || alarm == null) return;
+    final toggled = alarm.copyWith(isActive: !alarm.isActive);
+    try {
+      await repository.setAlarmEnabled(id, toggled.isActive);
+      emit(AlarmLoaded([for (final a in alarms) a.id == id ? toggled : a]));
+    } on ClockdException catch (e) {
+      AppLogger.e('Failed to toggle alarm: $e');
+      await _refresh(emit, failure: _failure(AlarmChange.toggle, e));
     }
+  }
 
-    await systemAlarmService.setAlarm(
-      alarm.id,
-      scheduledTime,
-      alarm.repeatDays,
-      alarm.isSnoozeEnabled,
-    );
+  @override
+  Future<void> close() async {
+    for (final subscription in _subscriptions) {
+      await subscription.cancel();
+    }
+    return super.close();
   }
 }

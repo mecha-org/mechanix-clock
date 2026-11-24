@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mechanix_clock/core/services/clockd_client.dart';
 import 'package:mechanix_clock/core/utils/system_alarm_service.dart';
 import 'package:mechanix_clock/features/timer/bloc/timer_bloc.dart';
 import 'package:mechanix_clock/features/timer/bloc/timer_event.dart';
@@ -17,12 +20,14 @@ void main() {
   late TimerRepository repository;
   late SystemAlarmService systemAlarmService;
   late TimerBloc timerBloc;
+  late StreamController<void> daemonStarted;
 
   const testPreset = TimerPreset(id: '1', duration: Duration(minutes: 5));
 
   setUpAll(() {
     registerFallbackValue(testPreset);
     registerFallbackValue(const Duration(minutes: 5));
+    registerFallbackValue(<String, PausedTimer>{});
   });
 
   setUp(() {
@@ -31,14 +36,28 @@ void main() {
 
     // Stub platform timer channel calls
     when(
-      () => systemAlarmService.setTimer(any(), any()),
+      () => systemAlarmService.setTimer(
+        any(),
+        any(),
+        label: any(named: 'label'),
+      ),
     ).thenAnswer((_) async => {});
     when(
       () => systemAlarmService.cancelTimer(any()),
     ).thenAnswer((_) async => {});
     when(
-      () => systemAlarmService.playCompletionSound(),
+      () => systemAlarmService.forgetTimer(any()),
     ).thenAnswer((_) async => {});
+    when(
+      () => systemAlarmService.restoreTimers(),
+    ).thenAnswer((_) async => RestoredTimers.none);
+    daemonStarted = StreamController<void>.broadcast();
+    when(
+      () => systemAlarmService.daemonStarted,
+    ).thenAnswer((_) => daemonStarted.stream);
+
+    when(() => repository.getPausedTimers()).thenAnswer((_) async => {});
+    when(() => repository.savePausedTimers(any())).thenAnswer((_) async {});
 
     timerBloc = TimerBloc(
       repository: repository,
@@ -48,6 +67,7 @@ void main() {
 
   tearDown(() {
     timerBloc.close();
+    daemonStarted.close();
   });
 
   group('TimerBloc', () {
@@ -55,7 +75,6 @@ void main() {
       expect(timerBloc.state.status, TimerStatus.initial);
       expect(timerBloc.state.duration, Duration.zero);
       expect(timerBloc.state.remaining, Duration.zero);
-      expect(timerBloc.state.isEditingPresets, false);
     });
 
     blocTest<TimerBloc, TimerState>(
@@ -64,9 +83,6 @@ void main() {
         when(
           () => repository.getPresets(),
         ).thenAnswer((_) async => [testPreset]);
-        when(
-          () => repository.getSelectedSound(),
-        ).thenAnswer((_) async => 'Wakeup');
         return timerBloc;
       },
       act: (bloc) => bloc.add(LoadTimerPresets()),
@@ -74,75 +90,186 @@ void main() {
         const TimerState(
           status: TimerStatus.idle,
           presets: [testPreset],
-          sound: 'Wakeup',
         ),
       ],
     );
 
-    blocTest<TimerBloc, TimerState>(
-      'adds preset and emits new state when AddTimerPreset is added',
-      build: () {
-        when(() => repository.savePresets(any())).thenAnswer((_) async => {});
-        return timerBloc;
+    const running = TimerState(
+      status: TimerStatus.running,
+      duration: Duration(seconds: 10),
+      remaining: Duration(seconds: 8),
+      activePresetId: 'active_123',
+      activeTimers: {
+        'active_123': ActiveTimerData(
+          id: 'active_123',
+          duration: Duration(seconds: 10),
+          remaining: Duration(seconds: 8),
+          status: TimerStatus.running,
+        ),
       },
-      seed: () => const TimerState(presets: []),
-      act: (bloc) => bloc.add(const AddTimerPreset(Duration(minutes: 5))),
-      expect: () {
-        return [
-          isA<TimerState>()
-              .having((s) => s.presets.length, 'presets count', 1)
-              .having(
-                (s) => s.presets.first.duration,
-                'preset duration',
-                const Duration(minutes: 5),
-              ),
-        ];
-      },
+    );
+    const gone = ClockdUnavailable(
+      'org.freedesktop.DBus.Error.ServiceUnknown',
+      'not running',
     );
 
     blocTest<TimerBloc, TimerState>(
-      'adds preset with name and emits new state when AddTimerPreset with name is added',
+      'a pause mxclockd cannot do is reported and the timer keeps running',
       build: () {
-        when(() => repository.savePresets(any())).thenAnswer((_) async => {});
+        when(() => systemAlarmService.cancelTimer(any())).thenThrow(gone);
         return timerBloc;
       },
-      seed: () => const TimerState(presets: []),
-      act: (bloc) =>
-          bloc.add(const AddTimerPreset(Duration(minutes: 5), name: 'Tea')),
-      expect: () {
-        return [
-          isA<TimerState>()
-              .having((s) => s.presets.length, 'presets count', 1)
-              .having((s) => s.presets.first.name, 'preset name', 'Tea'),
-        ];
-      },
-    );
-
-    blocTest<TimerBloc, TimerState>(
-      'renames preset and emits new state when UpdateTimerPreset is added',
-      build: () {
-        when(() => repository.savePresets(any())).thenAnswer((_) async => {});
-        return timerBloc;
-      },
-      seed: () => const TimerState(
-        presets: [
-          TimerPreset(id: '1', duration: Duration(minutes: 5), name: 'Tea'),
-        ],
-      ),
-      act: (bloc) =>
-          bloc.add(const UpdateTimerPreset(id: '1', name: 'Green Tea')),
+      seed: () => running,
+      act: (bloc) => bloc.add(const PauseTimer(presetId: 'active_123')),
       expect: () => [
-        const TimerState(
-          presets: [
-            TimerPreset(
-              id: '1',
-              duration: Duration(minutes: 5),
-              name: 'Green Tea',
+        isA<TimerState>()
+            .having((s) => s.failure?.change, 'failure', TimerChange.pause)
+            .having(
+              (s) => s.activeTimers['active_123']?.status,
+              'status',
+              TimerStatus.running,
             ),
-          ],
-        ),
       ],
     );
+
+    blocTest<TimerBloc, TimerState>(
+      'a cancel mxclockd cannot do is reported and the timer stays',
+      build: () {
+        when(() => systemAlarmService.cancelTimer(any())).thenThrow(gone);
+        return timerBloc;
+      },
+      seed: () => running,
+      act: (bloc) => bloc.add(const CancelTimer(presetId: 'active_123')),
+      expect: () => [
+        isA<TimerState>()
+            .having((s) => s.failure?.change, 'failure', TimerChange.cancel)
+            .having(
+              (s) => s.activeTimers.containsKey('active_123'),
+              'kept',
+              isTrue,
+            ),
+      ],
+    );
+
+    blocTest<TimerBloc, TimerState>(
+      'a timer mxclockd cannot start is reported and stays stopped',
+      build: () {
+        when(
+          () => systemAlarmService.setTimer(
+            any(),
+            any(),
+            label: any(named: 'label'),
+          ),
+        ).thenThrow(
+          const ClockdUnavailable(
+            'org.freedesktop.DBus.Error.ServiceUnknown',
+            'not running',
+          ),
+        );
+        when(() => repository.savePresets(any())).thenAnswer((_) async {});
+        return timerBloc;
+      },
+      act: (bloc) =>
+          bloc.add(const StartTimer(Duration(seconds: 30), presetId: '1')),
+      expect: () => [
+        isA<TimerState>()
+            .having((s) => s.status, 'status', TimerStatus.idle)
+            .having(
+              (s) => s.failure?.error,
+              'failure',
+              isA<ClockdUnavailable>(),
+            ),
+      ],
+    );
+
+    blocTest<TimerBloc, TimerState>(
+      'LoadTimerPresets restores timers mxclockd is still running',
+      build: () {
+        when(
+          () => repository.getPresets(),
+        ).thenAnswer((_) async => [testPreset]);
+        when(() => systemAlarmService.restoreTimers()).thenAnswer(
+          (_) async => RestoredTimers(
+            running: [
+              ScheduledTimer(
+                testPreset.id,
+                DateTime.now().add(const Duration(minutes: 2)),
+              ),
+            ],
+          ),
+        );
+        return timerBloc;
+      },
+      act: (bloc) => bloc.add(LoadTimerPresets()),
+      skip: 1,
+      expect: () => [
+        isA<TimerState>()
+            .having((s) => s.status, 'status', TimerStatus.running)
+            .having((s) => s.activePresetId, 'activePresetId', testPreset.id)
+            .having(
+              (s) => s.activeTimers[testPreset.id]?.duration,
+              'duration',
+              testPreset.duration,
+            ),
+      ],
+    );
+
+    group('timers that ended while the device was off (missed)', () {
+      final missed = MissedTimer(
+        daemonId: 'd1',
+        appId: testPreset.id,
+        label: '5 min',
+        endedAt: DateTime(2026, 11, 23, 16, 27),
+      );
+
+      blocTest<TimerBloc, TimerState>(
+        'are not restored on load',
+        build: () {
+          when(
+            () => repository.getPresets(),
+          ).thenAnswer((_) async => [testPreset]);
+          when(
+            () => systemAlarmService.restoreTimers(),
+          ).thenAnswer((_) async => RestoredTimers(missed: [missed]));
+          return timerBloc;
+        },
+        act: (bloc) => bloc.add(LoadTimerPresets()),
+        expect: () => [
+          const TimerState(status: TimerStatus.idle, presets: [testPreset]),
+        ],
+      );
+
+      blocTest<TimerBloc, TimerState>(
+        'when mxclockd restarts, a timer shown running that ended goes idle',
+        build: () {
+          when(
+            () => systemAlarmService.restoreTimers(),
+          ).thenAnswer((_) async => RestoredTimers(missed: [missed]));
+          return timerBloc;
+        },
+        seed: () => TimerState(
+          status: TimerStatus.running,
+          activePresetId: testPreset.id,
+          remaining: const Duration(seconds: 5),
+          activeTimers: {
+            testPreset.id: ActiveTimerData(
+              id: testPreset.id,
+              duration: testPreset.duration,
+              remaining: const Duration(seconds: 5),
+              status: TimerStatus.running,
+              endTime: DateTime.now().add(const Duration(seconds: 5)),
+            ),
+          },
+        ),
+        act: (_) => daemonStarted.add(null),
+        expect: () => [
+          isA<TimerState>()
+              .having((s) => s.activeTimers, 'active', isEmpty)
+              .having((s) => s.status, 'status', TimerStatus.idle)
+              .having((s) => s.activePresetId, 'shown', ''),
+        ],
+      );
+    });
 
     blocTest<TimerBloc, TimerState>(
       'deletes preset and emits new state when DeleteTimerPreset is added',
@@ -150,58 +277,10 @@ void main() {
         when(() => repository.savePresets(any())).thenAnswer((_) async => {});
         return timerBloc;
       },
-      seed: () => const TimerState(
-        status: TimerStatus.idle,
-        presets: [testPreset],
-      ),
+      seed: () =>
+          const TimerState(status: TimerStatus.idle, presets: [testPreset]),
       act: (bloc) => bloc.add(const DeleteTimerPreset('1')),
-      expect: () => [
-        const TimerState(
-          status: TimerStatus.idle,
-          presets: [],
-        ),
-      ],
-    );
-
-    blocTest<TimerBloc, TimerState>(
-      'toggles edit mode when ToggleEditPresetsMode is added',
-      build: () => timerBloc,
-      act: (bloc) => bloc.add(ToggleEditPresetsMode()),
-      expect: () => [const TimerState(isEditingPresets: true)],
-    );
-
-    blocTest<TimerBloc, TimerState>(
-      'reorders presets and saves to repository',
-      build: () {
-        when(() => repository.savePresets(any())).thenAnswer((_) async => {});
-        return timerBloc;
-      },
-      seed: () => const TimerState(
-        presets: [
-          TimerPreset(id: '1', duration: Duration(minutes: 1)),
-          TimerPreset(id: '2', duration: Duration(minutes: 2)),
-          TimerPreset(id: '3', duration: Duration(minutes: 3)),
-        ],
-      ),
-      act: (bloc) => bloc.add(const ReorderTimerPresets(0, 1)),
-      expect: () => [
-        const TimerState(
-          presets: [
-            TimerPreset(id: '2', duration: Duration(minutes: 2)),
-            TimerPreset(id: '1', duration: Duration(minutes: 1)),
-            TimerPreset(id: '3', duration: Duration(minutes: 3)),
-          ],
-        ),
-      ],
-      verify: (_) {
-        verify(
-          () => repository.savePresets(const [
-            TimerPreset(id: '2', duration: Duration(minutes: 2)),
-            TimerPreset(id: '1', duration: Duration(minutes: 1)),
-            TimerPreset(id: '3', duration: Duration(minutes: 3)),
-          ]),
-        ).called(1);
-      },
+      expect: () => [const TimerState(status: TimerStatus.idle, presets: [])],
     );
 
     blocTest<TimerBloc, TimerState>(
@@ -233,7 +312,11 @@ void main() {
       ],
       verify: (_) {
         verify(
-          () => systemAlarmService.setTimer(any(), const Duration(seconds: 10)),
+          () => systemAlarmService.setTimer(
+            any(),
+            const Duration(seconds: 10),
+            label: any(named: 'label'),
+          ),
         ).called(1);
         verify(() => repository.savePresets(any())).called(1);
       },
@@ -271,10 +354,140 @@ void main() {
           () => systemAlarmService.setTimer(
             'existing_1',
             const Duration(minutes: 5),
+            label: any(named: 'label'),
           ),
         ).called(1);
         verifyNever(() => repository.savePresets(any()));
       },
+    );
+
+    blocTest<TimerBloc, TimerState>(
+      'a start that fails after stopping the running timer shows that one paused',
+      build: () {
+        when(
+          () => systemAlarmService.setTimer(
+            any(),
+            any(),
+            label: any(named: 'label'),
+          ),
+        ).thenThrow(gone);
+        when(() => repository.savePresets(any())).thenAnswer((_) async {});
+        return timerBloc;
+      },
+      seed: () => running,
+      act: (bloc) =>
+          bloc.add(const StartTimer(Duration(minutes: 3), presetId: 'new')),
+      expect: () => [
+        isA<TimerState>()
+            .having((s) => s.failure?.change, 'failure', TimerChange.start)
+            .having((s) => s.status, 'status', TimerStatus.paused)
+            .having((s) => s.activePresetId, 'shown', 'active_123')
+            .having(
+              (s) => s.activeTimers['active_123']?.status,
+              'stopped timer',
+              TimerStatus.paused,
+            )
+            .having(
+              (s) => s.activeTimers.containsKey('new'),
+              'new timer listed',
+              isFalse,
+            )
+            .having(
+              (s) => s.presets.any((p) => p.id == 'new'),
+              'new preset kept',
+              isTrue,
+            ),
+      ],
+      verify: (_) {
+        verify(() => systemAlarmService.cancelTimer('active_123')).called(1);
+      },
+    );
+
+    blocTest<TimerBloc, TimerState>(
+      'a resume that fails leaves both timers paused',
+      build: () {
+        when(
+          () => systemAlarmService.setTimer(
+            any(),
+            any(),
+            label: any(named: 'label'),
+          ),
+        ).thenThrow(gone);
+        return timerBloc;
+      },
+      seed: () => TimerState(
+        status: TimerStatus.running,
+        activePresetId: 'active_123',
+        activeTimers: {
+          ...running.activeTimers,
+          'other': const ActiveTimerData(
+            id: 'other',
+            duration: Duration(minutes: 2),
+            remaining: Duration(minutes: 1),
+            status: TimerStatus.paused,
+          ),
+        },
+      ),
+      act: (bloc) => bloc.add(const ResumeTimer(presetId: 'other')),
+      expect: () => [
+        isA<TimerState>()
+            .having((s) => s.failure?.change, 'failure', TimerChange.start)
+            .having((s) => s.status, 'status', TimerStatus.paused)
+            .having(
+              (s) => s.activeTimers.values.map((t) => t.status).toSet(),
+              'statuses',
+              {TimerStatus.paused},
+            )
+            .having(
+              (s) => s.activeTimers['other']?.remaining,
+              'other unchanged',
+              const Duration(minutes: 1),
+            ),
+      ],
+    );
+
+    blocTest<TimerBloc, TimerState>(
+      'pausing saves the paused timer',
+      build: () => timerBloc,
+      seed: () => running,
+      act: (bloc) => bloc.add(const PauseTimer(presetId: 'active_123')),
+      verify: (_) {
+        final saved =
+            verify(
+                  () => repository.savePausedTimers(captureAny()),
+                ).captured.single
+                as Map<String, PausedTimer>;
+        expect(saved.keys, ['active_123']);
+      },
+    );
+
+    blocTest<TimerBloc, TimerState>(
+      'paused timers come back on load',
+      build: () {
+        when(() => repository.getPresets()).thenAnswer((_) async => []);
+        when(() => repository.getPausedTimers()).thenAnswer(
+          (_) async => {
+            'p1': const PausedTimer(
+              duration: Duration(minutes: 5),
+              remaining: Duration(minutes: 2),
+            ),
+          },
+        );
+        return timerBloc;
+      },
+      act: (bloc) => bloc.add(LoadTimerPresets()),
+      skip: 1,
+      expect: () => [
+        isA<TimerState>()
+            .having((s) => s.status, 'status', TimerStatus.paused)
+            .having((s) => s.activePresetId, 'shown', 'p1')
+            .having((s) => s.remaining, 'remaining', const Duration(minutes: 2))
+            .having(
+              (s) => s.activeTimers['p1']?.status,
+              'p1',
+              TimerStatus.paused,
+            ),
+      ],
     );
 
     blocTest<TimerBloc, TimerState>(
@@ -320,7 +533,11 @@ void main() {
       verify: (_) {
         verify(() => systemAlarmService.cancelTimer('t1')).called(1);
         verify(
-          () => systemAlarmService.setTimer('t2', const Duration(minutes: 5)),
+          () => systemAlarmService.setTimer(
+            't2',
+            const Duration(minutes: 5),
+            label: any(named: 'label'),
+          ),
         ).called(1);
       },
     );
@@ -374,7 +591,11 @@ void main() {
       verify: (_) {
         verify(() => systemAlarmService.cancelTimer('t1')).called(1);
         verify(
-          () => systemAlarmService.setTimer('t2', const Duration(minutes: 5)),
+          () => systemAlarmService.setTimer(
+            't2',
+            const Duration(minutes: 5),
+            label: any(named: 'label'),
+          ),
         ).called(1);
       },
     );
@@ -460,6 +681,7 @@ void main() {
           () => systemAlarmService.setTimer(
             'active_123',
             const Duration(seconds: 10),
+            label: any(named: 'label'),
           ),
         ).called(1);
       },
@@ -555,42 +777,11 @@ void main() {
             .having((s) => s.activePresetId, 'activePresetId', 'active_123'),
       ],
       verify: (_) {
-        verify(() => systemAlarmService.cancelTimer('active_123')).called(1);
-        verify(() => systemAlarmService.playCompletionSound()).called(1);
+        // mxclockd rings it; the app must not remove the daemon timer.
+        verify(() => systemAlarmService.forgetTimer('active_123')).called(1);
+        verifyNever(() => systemAlarmService.cancelTimer(any()));
       },
     );
 
-    blocTest<TimerBloc, TimerState>(
-      'saves and sets sound when SetTimerSound is added',
-      build: () {
-        when(
-          () => repository.saveSelectedSound(any()),
-        ).thenAnswer((_) async => {});
-        return timerBloc;
-      },
-      act: (bloc) => bloc.add(const SetTimerSound('Wakeup')),
-      expect: () => [const TimerState(sound: 'Wakeup')],
-      verify: (_) {
-        verify(() => repository.saveSelectedSound('Wakeup')).called(1);
-      },
-    );
-
-    blocTest<TimerBloc, TimerState>(
-      'resets finished timer back to idle when ResetTimerToIdle is added',
-      build: () => timerBloc,
-      seed: () => const TimerState(
-        status: TimerStatus.finished,
-        duration: Duration(seconds: 10),
-        remaining: Duration.zero,
-      ),
-      act: (bloc) => bloc.add(ResetTimerToIdle()),
-      expect: () => [
-        const TimerState(
-          status: TimerStatus.idle,
-          duration: Duration.zero,
-          remaining: Duration.zero,
-        ),
-      ],
-    );
   });
 }

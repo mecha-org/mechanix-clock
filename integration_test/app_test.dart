@@ -1,27 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:mechanix_clock/core/utils/constants.dart';
+import 'package:mechanix_clock/core/utils/alarm_sounds.dart';
 import 'package:mechanix_clock/core/utils/icons.dart';
+import 'package:mechanix_clock/features/alarm/bloc/alarm_bloc.dart';
+import 'package:mechanix_clock/features/alarm/bloc/alarm_state.dart';
+import 'package:mechanix_clock/features/navigation/presentation/screens/main_navigation_container.dart';
 import 'package:mechanix_clock/features/stopwatch/presentation/widgets/lap_list_item.dart';
 import 'package:mechanix_clock/main.dart' as app;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:widgets/widgets.dart';
 
+/// Needs mxclockd on the session bus. To keep your own alarms safe, run a
+/// throwaway one first: `systemctl --user stop mxclockd;`
+/// `XDG_DATA_HOME=$(mktemp -d) mxclockd &`
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('Alarm Integration Test', () {
     setUpAll(() async {
       SharedPreferences.setMockInitialValues({});
-
-      // Mock the method channel for SystemAlarmService
-      const MethodChannel('com.example.clock/alarm').setMockMethodCallHandler((
-        MethodCall methodCall,
-      ) async {
-        return null;
-      });
     });
 
     testWidgets('Full alarm lifecycle: create, edit, and delete', (
@@ -29,6 +28,16 @@ void main() {
     ) async {
       app.main();
       await tester.pumpAndSettle();
+
+      // mxclockd may already hold alarms: track the new one by its id.
+      await pumpUntil(
+        tester,
+        () => tester
+            .element(find.byType(MainNavigationContainer))
+            .read<AlarmBloc>()
+            .state is AlarmLoaded,
+      );
+      final before = alarmIds(tester);
 
       // 1. Create a new alarm.
       final addAlarmButton = find.byKey(const Key('add_alarm_button'));
@@ -75,7 +84,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Select the first sound.
-      final soundItem = find.byKey(Key('sound_${sounds[0]}'));
+      final soundItem = find.byKey(Key('sound_${alarmSounds[0].id}'));
 
       expect(soundItem, findsOneWidget);
       await tester.ensureVisible(soundItem);
@@ -105,15 +114,20 @@ void main() {
       await tester.tap(saveAlarmButton);
       await tester.pumpAndSettle();
 
-      // 2. Verify the alarm list is displayed.
+      // 2. Verify the new alarm is listed (and only one was added).
       expect(find.byKey(const Key('alarm_item_tap')), findsOneWidget);
 
-      final alarmItems = find.byType(MechanixSwipableListTile);
-      expect(alarmItems, findsOneWidget);
+      // Saving goes to mxclockd over D-Bus; wait for the list to update.
+      await pumpUntil(tester, () => alarmIds(tester).length > before.length);
+      final added = alarmIds(tester).difference(before);
+      expect(added, hasLength(1));
+      // The "Alarm set for …" snackbar covers the top buttons; let it go.
+      await waitForSnackbarToClose(tester);
+      final alarmItem = await showAlarm(tester, added.single);
 
       // Open the alarm for editing.
-      await tester.ensureVisible(alarmItems.first);
-      await tester.tap(alarmItems.first);
+      await tester.ensureVisible(alarmItem);
+      await tester.tap(alarmItem);
       await tester.pumpAndSettle();
 
       // Verify the editor is open in edit mode.
@@ -149,14 +163,25 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify the alarm now repeats Once.
-      expect(find.text('Once'), findsOneWidget);
+      await pumpUntil(
+        tester,
+        () =>
+            find
+                .descendant(of: alarmItem, matching: find.text('Once'))
+                .evaluate()
+                .isNotEmpty,
+      );
+      await showAlarm(tester, added.single);
+      expect(
+        find.descendant(of: alarmItem, matching: find.text('Once')),
+        findsOneWidget,
+      );
+      await waitForSnackbarToClose(tester);
 
       // 4. Reopen the alarm for deletion.
-      final alarmTile = find.byType(MechanixSwipableListTile);
-
-      expect(alarmTile, findsOneWidget);
-      await tester.ensureVisible(alarmTile.first);
-      await tester.tap(alarmTile.first);
+      await showAlarm(tester, added.single);
+      await tester.ensureVisible(alarmItem);
+      await tester.tap(alarmItem);
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('delete_alarm_button')), findsOneWidget);
@@ -178,20 +203,16 @@ void main() {
       await tester.tap(confirmDeleteButton);
       await tester.pumpAndSettle();
 
-      // 5. Verify the alarm has been removed.
-      expect(find.text('Once'), findsNothing);
+      // 5. Verify the alarm has been removed; the others are untouched.
+      await pumpUntil(tester, () => !alarmIds(tester).contains(added.single));
+      expect(alarmItem, findsNothing);
+      expect(alarmIds(tester), before);
     });
   });
 
   group('Stopwatch Integration Test', () {
     setUpAll(() async {
       SharedPreferences.setMockInitialValues({});
-
-      const MethodChannel('com.example.clock/alarm').setMockMethodCallHandler((
-        MethodCall methodCall,
-      ) async {
-        return null;
-      });
     });
 
     testWidgets(
@@ -269,12 +290,6 @@ void main() {
   group('World Clock Integration Test', () {
     setUpAll(() async {
       SharedPreferences.setMockInitialValues({});
-
-      const MethodChannel('com.example.clock/alarm').setMockMethodCallHandler((
-        MethodCall methodCall,
-      ) async {
-        return null;
-      });
     });
 
     testWidgets(
@@ -307,7 +322,16 @@ void main() {
         await tester.tap(addCityButton);
         await tester.pumpAndSettle();
 
-        // 4. Select Kolkata.
+        // 4. Search for Kolkata (the full list is built lazily, so a city
+        // further down isn't on screen) and select it.
+        await tester.enterText(
+          find.descendant(
+            of: find.byKey(const Key('add_city_search_field')),
+            matching: find.byType(EditableText),
+          ),
+          'Kolkata',
+        );
+        await tester.pumpAndSettle();
         final kolkataTile = find.byKey(const Key('add_city_tile_Kolkata'));
         expect(kolkataTile, findsOneWidget);
 
@@ -360,12 +384,6 @@ void main() {
   group('Timer Integration Test', () {
     setUpAll(() async {
       SharedPreferences.setMockInitialValues({});
-
-      const MethodChannel('com.example.clock/alarm').setMockMethodCallHandler((
-        MethodCall methodCall,
-      ) async {
-        return null;
-      });
     });
 
     testWidgets('Timer lifecycle: start, pause, cancel, and preset handling', (
@@ -464,3 +482,51 @@ void main() {
     });
   });
 }
+
+/// Ids of the alarms the app has loaded (from the bloc, so rows that are
+/// scrolled out of view count too).
+Set<String> alarmIds(WidgetTester tester) {
+  final state = tester
+      .element(find.byType(MainNavigationContainer))
+      .read<AlarmBloc>()
+      .state;
+  return {if (state is AlarmLoaded) ...state.alarms.map((a) => a.id)};
+}
+
+/// Scrolls the alarm list until the row of alarm [id] is built and visible.
+Future<Finder> showAlarm(WidgetTester tester, String id) async {
+  final row = find.byKey(ValueKey(id));
+  await tester.scrollUntilVisible(
+    row,
+    200,
+    scrollable: find
+        .descendant(
+          of: find.byKey(const Key('alarm_item_tap')),
+          matching: find.byType(Scrollable),
+        )
+        .first,
+  );
+  return row;
+}
+
+/// Pumps until [done] (D-Bus replies arrive outside the frame clock), for up
+/// to [timeout].
+Future<void> pumpUntil(
+  WidgetTester tester,
+  bool Function() done, {
+  Duration timeout = const Duration(seconds: 5),
+}) async {
+  final end = DateTime.now().add(timeout);
+  while (!done() && DateTime.now().isBefore(end)) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+  await tester.pumpAndSettle();
+}
+
+/// Waits until the "Alarm set for …" snackbar shown at the top after a save
+/// has gone, as it sits over the editor's top-bar buttons.
+Future<void> waitForSnackbarToClose(WidgetTester tester) => pumpUntil(
+  tester,
+  () => find.textContaining('Alarm set for').evaluate().isEmpty,
+  timeout: const Duration(seconds: 10),
+);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mechanix_clock/core/services/clockd_client.dart';
 import 'package:mechanix_clock/core/utils/system_alarm_service.dart';
 import 'package:mechanix_clock/features/alarm/data/repository/alarm_repository.dart';
 import 'package:mechanix_clock/features/world_clock/bloc/world_clock_bloc.dart';
@@ -13,6 +14,7 @@ import 'features/alarm/bloc/alarm_bloc.dart';
 import 'features/alarm/bloc/alarm_event.dart';
 import 'features/navigation/presentation/screens/main_navigation_container.dart';
 import 'features/stopwatch/bloc/stopwatch_bloc.dart';
+import 'features/stopwatch/bloc/stopwatch_event.dart';
 import 'features/timer/bloc/timer_bloc.dart';
 import 'features/timer/bloc/timer_event.dart';
 import 'features/timer/data/repository/timer_repository.dart';
@@ -22,10 +24,13 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   tz_data.initializeTimeZones();
 
-  final alarmRepository = AlarmRepository();
+  // mxclockd stores, schedules and rings alarms and timers (started by D-Bus
+  // activation); the app has no ringing UI of its own.
+  final clockd = ClockdClient()..start();
+  final alarmRepository = AlarmRepository(client: clockd);
   final timerRepository = TimerRepository();
   final worldClockRepository = WorldClockRepository();
-  final systemAlarmService = SystemAlarmService();
+  final systemAlarmService = SystemAlarmService(client: clockd);
 
   _configureLocalTimezone(systemAlarmService);
 
@@ -71,12 +76,12 @@ class MechanixClockApp extends StatelessWidget {
         return MultiBlocProvider(
           providers: [
             BlocProvider(
-              create: (context) => AlarmBloc(
-                repository: repository,
-                systemAlarmService: systemAlarmService,
-              )..add(LoadAlarms()),
+              create: (context) =>
+                  AlarmBloc(repository: repository)..add(const LoadAlarms()),
             ),
-            BlocProvider(create: (context) => StopwatchBloc()),
+            BlocProvider(
+              create: (context) => StopwatchBloc()..add(const LoadStopwatch()),
+            ),
             BlocProvider(
               create: (context) => TimerBloc(
                 repository: timerRepository,

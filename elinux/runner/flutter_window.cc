@@ -1,18 +1,18 @@
 // Copyright 2021 Sony Corporation. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+//
+// Alarms and timers are scheduled, rung and persisted by mxclockd
+// (org.mechanix.services.Clock on the session bus); the app talks to it over
+// D-Bus from Dart (lib/core/services/clockd_client.dart), so the runner no
+// longer has an alarm method channel.
 
 #include "flutter_window.h"
 
+#include <algorithm>
 #include <chrono>
 #include <cmath>
-#include <iostream>
 #include <thread>
-
-#include <flutter/method_channel.h>
-#include <flutter/standard_method_codec.h>
-#include <iomanip>
-#include <sstream>
 
 #include "flutter/generated_plugin_registrant.h"
 
@@ -36,168 +36,7 @@ bool FlutterWindow::OnCreate()
   // Register Flutter plugins.
   RegisterPlugins(flutter_view_controller_->engine());
 
-  SetupAlarmChannel(flutter_view_controller_->engine()->messenger());
-
   return true;
-}
-
-void FlutterWindow::SetupAlarmChannel(flutter::BinaryMessenger *messenger)
-{
-  auto channel = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
-      messenger, "com.example.clock/alarm",
-      &flutter::StandardMethodCodec::GetInstance());
-
-  channel->SetMethodCallHandler([](const auto &call, auto result)
-                                {
-    if (call.method_name() == "setAlarm") {
-      const auto *arguments = std::get_if<flutter::EncodableMap>(call.arguments());
-      if (!arguments)
-      {
-        result->Error("bad_args", "Expected map");
-        return;
-      }
-
-      auto id_it = arguments->find(flutter::EncodableValue("id"));
-      auto ts_it = arguments->find(flutter::EncodableValue("timestamp"));
-      auto rd_it = arguments->find(flutter::EncodableValue("repeatDays"));
-      auto snooze_it = arguments->find(flutter::EncodableValue("isSnoozeEnabled"));
-      bool is_snooze_enabled = std::get<bool>(snooze_it->second);
-
-      std::cout << "IS SNOOZE ENABLED: " << is_snooze_enabled << std::endl;
-
-      if (id_it == arguments->end() || ts_it == arguments->end() || rd_it == arguments->end())
-      {
-        result->Error("missing_args", "Missing required arguments");
-        return;
-      }
-
-      std::string id = std::get<std::string>(id_it->second);
-      int64_t timestamp = std::get<int64_t>(ts_it->second);
-
-      // Correct way to handle EncodableList
-      std::vector<int> repeat_days;
-      if (const auto *list = std::get_if<flutter::EncodableList>(&rd_it->second))
-      {
-        for (const auto &item : *list)
-        {
-          if (const auto *val = std::get_if<int32_t>(&item))
-          {
-            repeat_days.push_back(*val);
-          }
-          else if (const auto *val_int64 = std::get_if<int64_t>(&item))
-          {
-            repeat_days.push_back(static_cast<int>(*val_int64));
-          }
-        }
-      }
-
-      // Convert timestamp to time parts
-      std::time_t t = timestamp / 1000;
-      std::tm *tm = std::localtime(&t);
-      char time_buf[10];
-      std::strftime(time_buf, sizeof(time_buf), "%H:%M:%S", tm);
-      std::string hms = time_buf;
-      std::string calendar_spec;
-      if (repeat_days.empty())
-      {
-        char date_buf[20];
-        std::strftime(date_buf, sizeof(date_buf), "%Y-%m-%d %H:%M:%S", tm);
-        calendar_spec = date_buf;
-      }
-      else
-      {
-        std::string days_str = "";
-        const char *day_names[] = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
-        for (size_t i = 0; i < repeat_days.size(); ++i)
-        {
-          int day_idx = repeat_days[i];
-          if (day_idx >= 0 && day_idx < 7)
-          {
-            if (!days_str.empty())
-              days_str += ",";
-            days_str += day_names[day_idx];
-          }
-        }
-        calendar_spec = days_str + " *-*-* " + hms;
-      }
-
-      std::string alarm_command =
-          "systemd-run --user --unit=alarm-" + id + " --on-calendar=\"" + calendar_spec +
-          "\" /bin/bash -c \"/usr/bin/notify-send 'Alarm' 'Time to wake up!' --icon=alarm-clock && /usr/bin/aplay /usr/share/sounds/alsa/Front_Center.wav\"";
-
-      std::cout << "Executing: " << alarm_command << std::endl;
-      int status = system(alarm_command.c_str());
-
-      if (status == 0) {
-        result->Success();
-      } else {
-        result->Error("failed_to_set", "Failed to execute systemd-run");
-      }
-    } else if (call.method_name() == "cancelAlarm") {
-      const auto* arguments =
-          std::get_if<flutter::EncodableMap>(call.arguments());
-      auto id = std::get<std::string>(
-          arguments->at(flutter::EncodableValue("id")));
-
-      std::string command = "systemctl --user stop alarm-" + id + ".timer || true";
-      std::cout << "Executing: " << command << std::endl;
-      system(command.c_str());
-      result->Success();
-    } else if (call.method_name() == "setTimer") {
-      const auto *arguments = std::get_if<flutter::EncodableMap>(call.arguments());
-      if (!arguments) {
-        result->Error("bad_args", "Expected map");
-        return;
-      }
-      auto id_it = arguments->find(flutter::EncodableValue("id"));
-      auto dur_it = arguments->find(flutter::EncodableValue("durationSec"));
-      if (id_it == arguments->end() || dur_it == arguments->end()) {
-        result->Error("missing_args", "Missing required arguments");
-        return;
-      }
-      std::string id = std::get<std::string>(id_it->second);
-      int64_t dur_val = 0;
-      if (const auto *val_int32 = std::get_if<int32_t>(&dur_it->second)) {
-        dur_val = *val_int32;
-      } else if (const auto *val_int64 = std::get_if<int64_t>(&dur_it->second)) {
-        dur_val = *val_int64;
-      }
-
-      std::string timer_command =
-          "systemd-run --user --unit=timer-" + id + " --on-active=" + std::to_string(dur_val) +
-          " /bin/bash -c \"/usr/bin/notify-send 'Timer' 'Timer finished!' --icon=alarm-clock && /usr/bin/aplay /usr/share/sounds/alsa/Front_Center.wav\"";
-
-      std::cout << "Executing: " << timer_command << std::endl;
-      int status = system(timer_command.c_str());
-      if (status == 0) {
-        result->Success();
-      } else {
-        result->Error("failed_to_set", "Failed to execute systemd-run");
-      }
-    } else if (call.method_name() == "cancelTimer") {
-      const auto *arguments = std::get_if<flutter::EncodableMap>(call.arguments());
-      if (!arguments) {
-        result->Error("bad_args", "Expected map");
-        return;
-      }
-      auto id_it = arguments->find(flutter::EncodableValue("id"));
-      if (id_it == arguments->end()) {
-        result->Error("missing_args", "Missing required arguments");
-        return;
-      }
-      std::string id = std::get<std::string>(id_it->second);
-      std::string command = "systemctl --user stop timer-" + id + ".timer || true";
-      std::cout << "Executing: " << command << std::endl;
-      system(command.c_str());
-      result->Success();
-    } else if (call.method_name() == "playCompletionSound") {
-      std::string command = "/usr/bin/aplay /usr/share/sounds/alsa/Front_Center.wav &";
-      system(command.c_str());
-      result->Success();
-    } else {
-      result->NotImplemented();
-    } 
-  });
 }
 
 void FlutterWindow::OnDestroy()

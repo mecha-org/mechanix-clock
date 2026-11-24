@@ -8,8 +8,8 @@ void main() {
   const surfaceContainerLow = Color(0xFF141415);
   const outline = Color(0xFF373739);
   const onSurface = Color(0xFFEEEEEE);
-  const onSurfaceVariant = Color(0xFF717171);
-  const onPrimaryFixed = Color(0xFFE2662C);
+  const primary = Color(0xFFE2662C);
+  const onSecondaryFixed = Color(0xFF717171);
 
   Widget buildTestWidget({
     required bool isAm,
@@ -21,8 +21,8 @@ void main() {
           surfaceContainerLow: surfaceContainerLow,
           outline: outline,
           onSurface: onSurface,
-          onSurfaceVariant: onSurfaceVariant,
-          onPrimaryFixed: onPrimaryFixed,
+          primary: primary,
+          onSecondaryFixed: onSecondaryFixed,
         ),
       ),
       localizationsDelegates: const [
@@ -76,7 +76,7 @@ void main() {
           matching: find.byType(AnimatedDefaultTextStyle),
         ),
       );
-      expect(amText.style.color, onPrimaryFixed);
+      expect(amText.style.color, primary);
 
       final pmContainer = tester.widget<AnimatedContainer>(
         find.descendant(
@@ -94,7 +94,7 @@ void main() {
           matching: find.byType(AnimatedDefaultTextStyle),
         ),
       );
-      expect(pmText.style.color, onSurfaceVariant);
+      expect(pmText.style.color, onSecondaryFixed);
     });
 
     testWidgets('has correct styling when PM is selected', (tester) async {
@@ -119,7 +119,7 @@ void main() {
           matching: find.byType(AnimatedDefaultTextStyle),
         ),
       );
-      expect(amText.style.color, onSurfaceVariant);
+      expect(amText.style.color, onSecondaryFixed);
 
       final pmContainer = tester.widget<AnimatedContainer>(
         find.descendant(
@@ -137,7 +137,7 @@ void main() {
           matching: find.byType(AnimatedDefaultTextStyle),
         ),
       );
-      expect(pmText.style.color, onPrimaryFixed);
+      expect(pmText.style.color, primary);
     });
 
     testWidgets('tapping PM invokes onChanged with false', (tester) async {

@@ -14,7 +14,6 @@ class WorldClockBloc extends Bloc<WorldClockEvent, WorldClockState> {
     on<LoadWorldClocks>(_onLoadWorldClocks);
     on<AddWorldClock>(_onAddWorldClock);
     on<DeleteWorldClock>(_onDeleteWorldClock);
-    on<ReorderWorldClocks>(_onReorderWorldClocks);
   }
 
   Future<void> _onLoadWorldClocks(
@@ -77,34 +76,6 @@ class WorldClockBloc extends Bloc<WorldClockEvent, WorldClockState> {
       final updated = currentState.clocks
           .where((c) => c.id != event.id)
           .toList();
-      try {
-        await repository.saveWorldClocks(updated);
-        emit(WorldClockLoaded(updated));
-      } catch (e) {
-        emit(WorldClockError('Failed to save world clocks: $e'));
-      }
-    }
-  }
-
-  Future<void> _onReorderWorldClocks(
-    ReorderWorldClocks event,
-    Emitter<WorldClockState> emit,
-  ) async {
-    final currentState = state;
-    if (currentState is WorldClockLoaded) {
-      int newIndex = event.newIndex;
-      if (event.oldIndex < newIndex) {
-        newIndex -= 1;
-      }
-      final updated = List<WorldClock>.from(currentState.clocks);
-      if (event.oldIndex >= 0 &&
-          event.oldIndex < updated.length &&
-          newIndex >= 0 &&
-          newIndex <= updated.length) {
-        final item = updated.removeAt(event.oldIndex);
-        updated.insert(newIndex, item);
-      }
-
       try {
         await repository.saveWorldClocks(updated);
         emit(WorldClockLoaded(updated));

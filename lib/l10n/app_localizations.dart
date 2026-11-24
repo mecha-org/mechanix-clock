@@ -118,18 +118,6 @@ abstract class AppLocalizations {
   /// **'Reset'**
   String get reset;
 
-  /// Application name
-  ///
-  /// In en, this message translates to:
-  /// **'Mechanix Clock'**
-  String get mechanix_clock;
-
-  /// Title for editing alarms
-  ///
-  /// In en, this message translates to:
-  /// **'Edit Alarms'**
-  String get edit_alarms;
-
   /// Message displayed when there are no alarms
   ///
   /// In en, this message translates to:
@@ -178,18 +166,6 @@ abstract class AppLocalizations {
   /// **'PM'**
   String get pm;
 
-  /// Title for creating a new alarm
-  ///
-  /// In en, this message translates to:
-  /// **'Set alarm'**
-  String get set_alarm;
-
-  /// Title for editing an existing alarm
-  ///
-  /// In en, this message translates to:
-  /// **'Edit alarm'**
-  String get edit_alarm;
-
   /// Label for alarm repeat settings
   ///
   /// In en, this message translates to:
@@ -207,48 +183,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Snooze'**
   String get snooze;
-
-  /// Full name of Monday
-  ///
-  /// In en, this message translates to:
-  /// **'Monday'**
-  String get monday;
-
-  /// Full name of Tuesday
-  ///
-  /// In en, this message translates to:
-  /// **'Tuesday'**
-  String get tuesday;
-
-  /// Full name of Wednesday
-  ///
-  /// In en, this message translates to:
-  /// **'Wednesday'**
-  String get wednesday;
-
-  /// Full name of Thursday
-  ///
-  /// In en, this message translates to:
-  /// **'Thursday'**
-  String get thursday;
-
-  /// Full name of Friday
-  ///
-  /// In en, this message translates to:
-  /// **'Friday'**
-  String get friday;
-
-  /// Full name of Saturday
-  ///
-  /// In en, this message translates to:
-  /// **'Saturday'**
-  String get saturday;
-
-  /// Full name of Sunday
-  ///
-  /// In en, this message translates to:
-  /// **'Sunday'**
-  String get sunday;
 
   /// Abbreviated label for Monday
   ///
@@ -292,41 +226,17 @@ abstract class AppLocalizations {
   /// **'S'**
   String get sunday_abbr;
 
-  /// Label for a stopwatch lap with its sequence number
-  ///
-  /// In en, this message translates to:
-  /// **'Lap {number}'**
-  String lap_number(int number);
-
   /// Uppercase label for a stopwatch lap with padded number
   ///
   /// In en, this message translates to:
   /// **'LAP {number}'**
   String lap_padded(String number);
 
-  /// Button text to stop the stopwatch
-  ///
-  /// In en, this message translates to:
-  /// **'Stop'**
-  String get stop;
-
   /// Button text to start the stopwatch
   ///
   /// In en, this message translates to:
   /// **'Start'**
   String get start;
-
-  /// Placeholder message indicating the timer feature is not yet available
-  ///
-  /// In en, this message translates to:
-  /// **'Timer - Coming Soon'**
-  String get timer_coming_soon;
-
-  /// Placeholder message indicating the world clock feature is not yet available
-  ///
-  /// In en, this message translates to:
-  /// **'World Clock - Coming Soon'**
-  String get world_clock_coming_soon;
 
   /// Title for the timers screen
   ///
@@ -346,71 +256,17 @@ abstract class AppLocalizations {
   /// **'Pause'**
   String get pause;
 
-  /// Button text to resume the timer
-  ///
-  /// In en, this message translates to:
-  /// **'Resume'**
-  String get resume;
-
-  /// Button text to dismiss the finished timer alert
-  ///
-  /// In en, this message translates to:
-  /// **'Dismiss'**
-  String get dismiss;
-
-  /// Title for the finished timer alert
-  ///
-  /// In en, this message translates to:
-  /// **'Timer Finished'**
-  String get timer_finished;
-
-  /// SnackBar message when the selected timer duration is already saved as a preset
-  ///
-  /// In en, this message translates to:
-  /// **'Preset already exists'**
-  String get timer_preset_exists;
-
-  /// SnackBar message when trying to save a 0 duration preset
-  ///
-  /// In en, this message translates to:
-  /// **'Please select a duration greater than 0'**
-  String get timer_preset_invalid_duration;
-
   /// Button text to delete/cancel the running timer
   ///
   /// In en, this message translates to:
   /// **'Delete'**
   String get delete;
 
-  /// Label for naming a timer preset
-  ///
-  /// In en, this message translates to:
-  /// **'Preset Name'**
-  String get timer_preset_name;
-
-  /// Hint text for timer preset name field
-  ///
-  /// In en, this message translates to:
-  /// **'e.g. Tea, Workout, Study'**
-  String get timer_preset_name_hint;
-
   /// Generic save button text
   ///
   /// In en, this message translates to:
   /// **'Save'**
   String get save;
-
-  /// Title for editing a preset
-  ///
-  /// In en, this message translates to:
-  /// **'Edit Preset'**
-  String get edit_preset;
-
-  /// Title for adding a preset
-  ///
-  /// In en, this message translates to:
-  /// **'Add Preset'**
-  String get add_preset;
 
   /// Abbreviated label for single hour with a leading space
   ///
@@ -453,60 +309,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'0 min'**
   String get zero_min;
-
-  /// Button text to restart the timer
-  ///
-  /// In en, this message translates to:
-  /// **'Restart'**
-  String get restart;
-
-  /// Label for the Timezone ID row in details screen
-  ///
-  /// In en, this message translates to:
-  /// **'Timezone'**
-  String get timezone_id;
-
-  /// Label for the Time Difference row in details screen
-  ///
-  /// In en, this message translates to:
-  /// **'Time Difference'**
-  String get time_difference;
-
-  /// Label for the Day/Night Status row in details screen
-  ///
-  /// In en, this message translates to:
-  /// **'Day/Night Status'**
-  String get day_night_status;
-
-  /// Status indicating it is daytime
-  ///
-  /// In en, this message translates to:
-  /// **'Daytime'**
-  String get daytime;
-
-  /// Status indicating it is nighttime
-  ///
-  /// In en, this message translates to:
-  /// **'Nighttime'**
-  String get nighttime;
-
-  /// Indicates target timezone is same as local time
-  ///
-  /// In en, this message translates to:
-  /// **'Same time as local'**
-  String get same_as_local;
-
-  /// Indicates target timezone is ahead of local time
-  ///
-  /// In en, this message translates to:
-  /// **'{hours} hours ahead of local'**
-  String hours_ahead(String hours);
-
-  /// Indicates target timezone is behind of local time
-  ///
-  /// In en, this message translates to:
-  /// **'{hours} hours behind local'**
-  String hours_behind(String hours);
 
   /// Title for the world clock screen
   ///
@@ -568,11 +370,161 @@ abstract class AppLocalizations {
   /// **'CANCEL'**
   String get cancel_uppercase;
 
-  /// Uppercase trash button text
+  /// Label for the alarm name row
   ///
   /// In en, this message translates to:
-  /// **'TRASH'**
-  String get trash_uppercase;
+  /// **'Label'**
+  String get alarm_label;
+
+  /// Shown for an alarm without a label, and as the hint of the label field
+  ///
+  /// In en, this message translates to:
+  /// **'Enter label'**
+  String get enter_label;
+
+  /// Shown in the alarm editor when another alarm has the same time and repeat days; saving is disabled
+  ///
+  /// In en, this message translates to:
+  /// **'An alarm already exists for this time'**
+  String get alarm_already_exists;
+
+  /// Title of the bottom sheet for entering an alarm label
+  ///
+  /// In en, this message translates to:
+  /// **'Edit label'**
+  String get edit_label;
+
+  /// Error when an alarm label is too long
+  ///
+  /// In en, this message translates to:
+  /// **'Label can be at most {max} characters'**
+  String alarm_label_limit(int max);
+
+  /// Label for the alarm snooze duration row
+  ///
+  /// In en, this message translates to:
+  /// **'Snooze duration'**
+  String get snooze_duration;
+
+  /// A duration in minutes, e.g. 10 min
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String minutes_value(int minutes);
+
+  /// Snackbar after saving an alarm, e.g. Alarm set for 3 days and 5 minutes from now
+  ///
+  /// In en, this message translates to:
+  /// **'Alarm set for {duration} from now'**
+  String alarm_set_for(String duration);
+
+  /// Snackbar after saving an alarm that rings within a minute
+  ///
+  /// In en, this message translates to:
+  /// **'Alarm set for less than a minute from now'**
+  String get alarm_set_less_than_minute;
+
+  /// Number of days in a duration
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day} other{{count} days}}'**
+  String duration_days(int count);
+
+  /// Number of hours in a duration
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 hour} other{{count} hours}}'**
+  String duration_hours(int count);
+
+  /// Number of minutes in a duration
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 minute} other{{count} minutes}}'**
+  String duration_minutes(int count);
+
+  /// Two items joined, e.g. 3 days and 5 minutes
+  ///
+  /// In en, this message translates to:
+  /// **'{first} and {last}'**
+  String list_two(String first, String last);
+
+  /// Three items joined, e.g. 1 day, 2 hours and 5 minutes
+  ///
+  /// In en, this message translates to:
+  /// **'{first}, {second} and {last}'**
+  String list_three(String first, String second, String last);
+
+  /// Reason in an error message when mxclockd can't be reached
+  ///
+  /// In en, this message translates to:
+  /// **'clock service isn\'t running'**
+  String get clock_service_unavailable;
+
+  /// Reason in an error message when mxclockd answers in a format this app version doesn't know
+  ///
+  /// In en, this message translates to:
+  /// **'clock service version doesn\'t match the app'**
+  String get clock_service_mismatch;
+
+  /// Snackbar when saving an alarm failed
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save alarm: {reason}'**
+  String alarm_save_failed(String reason);
+
+  /// Snackbar when switching an alarm on or off failed
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t change alarm: {reason}'**
+  String alarm_toggle_failed(String reason);
+
+  /// Snackbar when deleting an alarm failed
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete alarm: {reason}'**
+  String alarm_delete_failed(String reason);
+
+  /// Snackbar when starting or resuming a timer failed
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start timer: {reason}'**
+  String timer_start_failed(String reason);
+
+  /// Snackbar when pausing a timer failed
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t pause timer: {reason}'**
+  String timer_pause_failed(String reason);
+
+  /// Snackbar when cancelling a timer or deleting its preset failed
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t cancel timer: {reason}'**
+  String timer_cancel_failed(String reason);
+
+  /// Alarm list title when mxclockd can't be reached
+  ///
+  /// In en, this message translates to:
+  /// **'Clock service isn\'t running'**
+  String get alarms_unavailable_title;
+
+  /// Alarm list text when mxclockd can't be reached
+  ///
+  /// In en, this message translates to:
+  /// **'Alarms can\'t be shown or changed until it starts.'**
+  String get alarms_unavailable_body;
+
+  /// Alarm list title when mxclockd refused to list alarms
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load alarms'**
+  String get alarms_load_failed_title;
+
+  /// Button to try loading again
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
 }
 
 class _AppLocalizationsDelegate

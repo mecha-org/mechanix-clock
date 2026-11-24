@@ -16,14 +16,6 @@
   "@reset": {
     "description": "Button text to reset the stopwatch"
   },
-  "mechanix_clock": "Mechanix Clock",
-  "@mechanix_clock": {
-    "description": "Application name"
-  },
-  "edit_alarms": "Edit Alarms",
-  "@edit_alarms": {
-    "description": "Title for editing alarms"
-  },
   "no_alarms": "NO ALARMS",
   "@no_alarms": {
     "description": "Message displayed when there are no alarms"
@@ -56,14 +48,6 @@
   "@pm": {
     "description": "Post meridiem time indicator"
   },
-  "set_alarm": "Set alarm",
-  "@set_alarm": {
-    "description": "Title for creating a new alarm"
-  },
-  "edit_alarm": "Edit alarm",
-  "@edit_alarm": {
-    "description": "Title for editing an existing alarm"
-  },
   "repeat": "Repeat",
   "@repeat": {
     "description": "Label for alarm repeat settings"
@@ -75,34 +59,6 @@
   "snooze": "Snooze",
   "@snooze": {
     "description": "Label for alarm snooze setting"
-  },
-  "monday": "Monday",
-  "@monday": {
-    "description": "Full name of Monday"
-  },
-  "tuesday": "Tuesday",
-  "@tuesday": {
-    "description": "Full name of Tuesday"
-  },
-  "wednesday": "Wednesday",
-  "@wednesday": {
-    "description": "Full name of Wednesday"
-  },
-  "thursday": "Thursday",
-  "@thursday": {
-    "description": "Full name of Thursday"
-  },
-  "friday": "Friday",
-  "@friday": {
-    "description": "Full name of Friday"
-  },
-  "saturday": "Saturday",
-  "@saturday": {
-    "description": "Full name of Saturday"
-  },
-  "sunday": "Sunday",
-  "@sunday": {
-    "description": "Full name of Sunday"
   },
   "monday_abbr": "M",
   "@monday_abbr": {
@@ -132,15 +88,6 @@
   "@sunday_abbr": {
     "description": "Abbreviated label for Sunday"
   },
-  "lap_number": "Lap {number}",
-  "@lap_number": {
-    "description": "Label for a stopwatch lap with its sequence number",
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
   "lap_padded": "LAP {number}",
   "@lap_padded": {
     "description": "Uppercase label for a stopwatch lap with padded number",
@@ -150,21 +97,9 @@
       }
     }
   },
-  "stop": "Stop",
-  "@stop": {
-    "description": "Button text to stop the stopwatch"
-  },
   "start": "Start",
   "@start": {
     "description": "Button text to start the stopwatch"
-  },
-  "timer_coming_soon": "Timer - Coming Soon",
-  "@timer_coming_soon": {
-    "description": "Placeholder message indicating the timer feature is not yet available"
-  },
-  "world_clock_coming_soon": "World Clock - Coming Soon",
-  "@world_clock_coming_soon": {
-    "description": "Placeholder message indicating the world clock feature is not yet available"
   },
   "timers": "Timer",
   "@timers": {
@@ -178,49 +113,13 @@
   "@pause": {
     "description": "Button text to pause the timer"
   },
-  "resume": "Resume",
-  "@resume": {
-    "description": "Button text to resume the timer"
-  },
-  "dismiss": "Dismiss",
-  "@dismiss": {
-    "description": "Button text to dismiss the finished timer alert"
-  },
-  "timer_finished": "Timer Finished",
-  "@timer_finished": {
-    "description": "Title for the finished timer alert"
-  },
-  "timer_preset_exists": "Preset already exists",
-  "@timer_preset_exists": {
-    "description": "SnackBar message when the selected timer duration is already saved as a preset"
-  },
-  "timer_preset_invalid_duration": "Please select a duration greater than 0",
-  "@timer_preset_invalid_duration": {
-    "description": "SnackBar message when trying to save a 0 duration preset"
-  },
   "delete": "Delete",
   "@delete": {
     "description": "Button text to delete/cancel the running timer"
   },
-  "timer_preset_name": "Preset Name",
-  "@timer_preset_name": {
-    "description": "Label for naming a timer preset"
-  },
-  "timer_preset_name_hint": "e.g. Tea, Workout, Study",
-  "@timer_preset_name_hint": {
-    "description": "Hint text for timer preset name field"
-  },
   "save": "Save",
   "@save": {
     "description": "Generic save button text"
-  },
-  "edit_preset": "Edit Preset",
-  "@edit_preset": {
-    "description": "Title for editing a preset"
-  },
-  "add_preset": "Add Preset",
-  "@add_preset": {
-    "description": "Title for adding a preset"
   },
   "hour_abbr": " hr",
   "@hour_abbr": {
@@ -249,52 +148,6 @@
   "zero_min": "0 min",
   "@zero_min": {
     "description": "Label for zero minute preset duration"
-  },
-  "restart": "Restart",
-  "@restart": {
-    "description": "Button text to restart the timer"
-  },
-  "timezone_id": "Timezone",
-  "@timezone_id": {
-    "description": "Label for the Timezone ID row in details screen"
-  },
-  "time_difference": "Time Difference",
-  "@time_difference": {
-    "description": "Label for the Time Difference row in details screen"
-  },
-  "day_night_status": "Day/Night Status",
-  "@day_night_status": {
-    "description": "Label for the Day/Night Status row in details screen"
-  },
-  "daytime": "Daytime",
-  "@daytime": {
-    "description": "Status indicating it is daytime"
-  },
-  "nighttime": "Nighttime",
-  "@nighttime": {
-    "description": "Status indicating it is nighttime"
-  },
-  "same_as_local": "Same time as local",
-  "@same_as_local": {
-    "description": "Indicates target timezone is same as local time"
-  },
-  "hours_ahead": "{hours} hours ahead of local",
-  "@hours_ahead": {
-    "description": "Indicates target timezone is ahead of local time",
-    "placeholders": {
-      "hours": {
-        "type": "String"
-      }
-    }
-  },
-  "hours_behind": "{hours} hours behind local",
-  "@hours_behind": {
-    "description": "Indicates target timezone is behind of local time",
-    "placeholders": {
-      "hours": {
-        "type": "String"
-      }
-    }
   },
   "world_clock": "World Clock",
   "@world_clock": {
@@ -336,8 +189,187 @@
   "@cancel_uppercase": {
     "description": "Uppercase cancel button text"
   },
-  "trash_uppercase": "TRASH",
-  "@trash_uppercase": {
-    "description": "Uppercase trash button text"
+  "alarm_label": "Label",
+  "@alarm_label": {
+    "description": "Label for the alarm name row"
+  },
+  "enter_label": "Enter label",
+  "@enter_label": {
+    "description": "Shown for an alarm without a label, and as the hint of the label field"
+  },
+  "alarm_already_exists": "An alarm already exists for this time",
+  "@alarm_already_exists": {
+    "description": "Shown in the alarm editor when another alarm has the same time and repeat days; saving is disabled"
+  },
+  "edit_label": "Edit label",
+  "@edit_label": {
+    "description": "Title of the bottom sheet for entering an alarm label"
+  },
+  "alarm_label_limit": "Label can be at most {max} characters",
+  "@alarm_label_limit": {
+    "description": "Error when an alarm label is too long",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "snooze_duration": "Snooze duration",
+  "@snooze_duration": {
+    "description": "Label for the alarm snooze duration row"
+  },
+  "minutes_value": "{minutes} min",
+  "@minutes_value": {
+    "description": "A duration in minutes, e.g. 10 min",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "alarm_set_for": "Alarm set for {duration} from now",
+  "@alarm_set_for": {
+    "description": "Snackbar after saving an alarm, e.g. Alarm set for 3 days and 5 minutes from now",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "alarm_set_less_than_minute": "Alarm set for less than a minute from now",
+  "@alarm_set_less_than_minute": {
+    "description": "Snackbar after saving an alarm that rings within a minute"
+  },
+  "duration_days": "{count, plural, =1{1 day} other{{count} days}}",
+  "@duration_days": {
+    "description": "Number of days in a duration",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "duration_hours": "{count, plural, =1{1 hour} other{{count} hours}}",
+  "@duration_hours": {
+    "description": "Number of hours in a duration",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "duration_minutes": "{count, plural, =1{1 minute} other{{count} minutes}}",
+  "@duration_minutes": {
+    "description": "Number of minutes in a duration",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "list_two": "{first} and {last}",
+  "@list_two": {
+    "description": "Two items joined, e.g. 3 days and 5 minutes",
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "last": {
+        "type": "String"
+      }
+    }
+  },
+  "list_three": "{first}, {second} and {last}",
+  "@list_three": {
+    "description": "Three items joined, e.g. 1 day, 2 hours and 5 minutes",
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "second": {
+        "type": "String"
+      },
+      "last": {
+        "type": "String"
+      }
+    }
+  },
+  "clock_service_unavailable": "clock service isn't running",
+  "@clock_service_unavailable": {
+    "description": "Reason in an error message when mxclockd can't be reached"
+  },
+  "clock_service_mismatch": "clock service version doesn't match the app",
+  "@clock_service_mismatch": {
+    "description": "Reason in an error message when mxclockd answers in a format this app version doesn't know"
+  },
+  "alarm_save_failed": "Couldn't save alarm: {reason}",
+  "@alarm_save_failed": {
+    "description": "Snackbar when saving an alarm failed",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "alarm_toggle_failed": "Couldn't change alarm: {reason}",
+  "@alarm_toggle_failed": {
+    "description": "Snackbar when switching an alarm on or off failed",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "alarm_delete_failed": "Couldn't delete alarm: {reason}",
+  "@alarm_delete_failed": {
+    "description": "Snackbar when deleting an alarm failed",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "timer_start_failed": "Couldn't start timer: {reason}",
+  "@timer_start_failed": {
+    "description": "Snackbar when starting or resuming a timer failed",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "timer_pause_failed": "Couldn't pause timer: {reason}",
+  "@timer_pause_failed": {
+    "description": "Snackbar when pausing a timer failed",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "timer_cancel_failed": "Couldn't cancel timer: {reason}",
+  "@timer_cancel_failed": {
+    "description": "Snackbar when cancelling a timer or deleting its preset failed",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "alarms_unavailable_title": "Clock service isn't running",
+  "@alarms_unavailable_title": {
+    "description": "Alarm list title when mxclockd can't be reached"
+  },
+  "alarms_unavailable_body": "Alarms can't be shown or changed until it starts.",
+  "@alarms_unavailable_body": {
+    "description": "Alarm list text when mxclockd can't be reached"
+  },
+  "alarms_load_failed_title": "Couldn't load alarms",
+  "@alarms_load_failed_title": {
+    "description": "Alarm list title when mxclockd refused to list alarms"
+  },
+  "retry": "Retry",
+  "@retry": {
+    "description": "Button to try loading again"
   }
 }

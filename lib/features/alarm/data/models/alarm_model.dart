@@ -1,6 +1,13 @@
 import 'package:equatable/equatable.dart';
 
 class Alarm extends Equatable {
+  /// The snooze lengths the user can pick, in minutes.
+  static const snoozeOptions = [1, 5, 10, 15, 20, 30];
+  static const defaultSnoozeMinutes = 10;
+
+  /// How long an unanswered alarm rings before it stops on its own.
+  static const defaultRingMinutes = 5;
+
   final String id;
   final int hour;
   final int minute;
@@ -9,6 +16,15 @@ class Alarm extends Equatable {
   final String sound;
   final bool isSnoozeEnabled;
   final bool isActive;
+
+  /// The user's name for the alarm ("Medicine"); empty when not set.
+  final String label;
+
+  /// How long Snooze waits before ringing again.
+  final int snoozeMinutes;
+
+  /// How long it rings when nobody stops it (kept as the daemon has it).
+  final int ringMinutes;
 
   const Alarm({
     required this.id,
@@ -19,7 +35,37 @@ class Alarm extends Equatable {
     required this.sound,
     required this.isSnoozeEnabled,
     this.isActive = true,
+    this.label = '',
+    this.snoozeMinutes = defaultSnoozeMinutes,
+    this.ringMinutes = defaultRingMinutes,
   });
+
+  /// The alarm time as shown to the user, e.g. "07:05 AM".
+  String get timeText =>
+      '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} '
+      '${isAm ? 'AM' : 'PM'}';
+
+  /// "07:05 AM · Medicine", or just the time when there is no label.
+  String get description =>
+      label.trim().isEmpty ? timeText : '$timeText · ${label.trim()}';
+
+  /// The next time this alarm rings after [now]. [repeatDays] are
+  /// Sunday-first (0 = Sunday … 6 = Saturday); without repeat days it rings
+  /// once, today or tomorrow.
+  DateTime nextRing(DateTime now) {
+    var hour24 = hour % 12;
+    if (!isAm) hour24 += 12;
+    for (var dayOffset = 0; dayOffset <= 7; dayOffset++) {
+      final day = DateTime(now.year, now.month, now.day + dayOffset);
+      final ring = DateTime(day.year, day.month, day.day, hour24, minute);
+      if (!ring.isAfter(now)) continue;
+      if (repeatDays.isEmpty || repeatDays.contains(ring.weekday % 7)) {
+        return ring;
+      }
+    }
+    // Unreachable for valid repeat days; ring a week from now.
+    return now.add(const Duration(days: 7));
+  }
 
   Alarm copyWith({
     String? id,
@@ -30,6 +76,9 @@ class Alarm extends Equatable {
     String? sound,
     bool? isSnoozeEnabled,
     bool? isActive,
+    String? label,
+    int? snoozeMinutes,
+    int? ringMinutes,
   }) {
     return Alarm(
       id: id ?? this.id,
@@ -40,32 +89,9 @@ class Alarm extends Equatable {
       sound: sound ?? this.sound,
       isSnoozeEnabled: isSnoozeEnabled ?? this.isSnoozeEnabled,
       isActive: isActive ?? this.isActive,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'hour': hour,
-      'minute': minute,
-      'isAm': isAm,
-      'repeatDays': repeatDays,
-      'sound': sound,
-      'isSnoozeEnabled': isSnoozeEnabled,
-      'isActive': isActive,
-    };
-  }
-
-  factory Alarm.fromJson(Map<String, dynamic> json) {
-    return Alarm(
-      id: json['id'],
-      hour: json['hour'],
-      minute: json['minute'],
-      isAm: json['isAm'],
-      repeatDays: List<int>.from(json['repeatDays']),
-      sound: json['sound'],
-      isSnoozeEnabled: json['isSnoozeEnabled'],
-      isActive: json['isActive'] ?? true,
+      label: label ?? this.label,
+      snoozeMinutes: snoozeMinutes ?? this.snoozeMinutes,
+      ringMinutes: ringMinutes ?? this.ringMinutes,
     );
   }
 
@@ -79,5 +105,25 @@ class Alarm extends Equatable {
     sound,
     isSnoozeEnabled,
     isActive,
+    label,
+    snoozeMinutes,
+    ringMinutes,
   ];
 }
+
+/// Whether another alarm that is on (not [exceptId]) has this time, whatever
+/// its days. One alarm per time, as in Ubuntu's Clocks.
+bool alarmTimeTaken(
+  List<Alarm> alarms, {
+  required int hour,
+  required int minute,
+  required bool isAm,
+  String? exceptId,
+}) => alarms.any(
+  (a) =>
+      a.id != exceptId &&
+      a.isActive &&
+      a.hour == hour &&
+      a.minute == minute &&
+      a.isAm == isAm,
+);

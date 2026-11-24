@@ -6,9 +6,27 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/timer_preset.dart';
 
+/// A paused timer: mxclockd has no pause, so a paused timer exists only in
+/// the app and is saved here to survive a restart.
+class PausedTimer {
+  final Duration duration;
+  final Duration remaining;
+
+  const PausedTimer({required this.duration, required this.remaining});
+
+  @override
+  bool operator ==(Object other) =>
+      other is PausedTimer &&
+      other.duration == duration &&
+      other.remaining == remaining;
+
+  @override
+  int get hashCode => Object.hash(duration, remaining);
+}
+
 class TimerRepository {
   static const String _storageKey = 'timer_presets_list';
-  static const String _soundKey = 'timer_selected_sound';
+  static const String _pausedKey = 'timer_paused';
 
   Future<List<TimerPreset>> getPresets() async {
     try {
@@ -42,24 +60,46 @@ class TimerRepository {
     }
   }
 
-  Future<String> getSelectedSound() async {
+  /// Paused timers by timer id (see [PausedTimer]).
+  Future<Map<String, PausedTimer>> getPausedTimers() async {
     try {
-      final SharedPreferences preferences =
-          await SharedPreferences.getInstance();
+      final preferences = await SharedPreferences.getInstance();
       await preferences.reload();
-      return preferences.getString(_soundKey) ?? sounds[0];
+      final json = preferences.getString(_pausedKey);
+      if (json == null || json.isEmpty) return {};
+      final decoded = jsonDecode(json) as Map<String, dynamic>;
+      return {
+        for (final MapEntry(:key, :value) in decoded.entries)
+          key: PausedTimer(
+            duration: Duration(milliseconds: value['durationMs'] as int),
+            remaining: Duration(milliseconds: value['remainingMs'] as int),
+          ),
+      };
     } catch (e) {
-      return sounds[0];
+      AppLogger.e('Failed to load paused timers: $e');
+      return {};
     }
   }
 
-  Future<void> saveSelectedSound(String sound) async {
+  Future<void> savePausedTimers(Map<String, PausedTimer> timers) async {
     try {
-      final SharedPreferences preferences =
-          await SharedPreferences.getInstance();
-      await preferences.setString(_soundKey, sound);
+      final preferences = await SharedPreferences.getInstance();
+      if (timers.isEmpty) {
+        await preferences.remove(_pausedKey);
+        return;
+      }
+      await preferences.setString(
+        _pausedKey,
+        jsonEncode({
+          for (final MapEntry(:key, :value) in timers.entries)
+            key: {
+              'durationMs': value.duration.inMilliseconds,
+              'remainingMs': value.remaining.inMilliseconds,
+            },
+        }),
+      );
     } catch (e) {
-      AppLogger.e('Failed to save timer selected sound: $e');
+      AppLogger.e('Failed to save paused timers: $e');
     }
   }
 }

@@ -21,12 +21,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reset => 'Reset';
 
   @override
-  String get mechanix_clock => 'Mechanix Clock';
-
-  @override
-  String get edit_alarms => 'Edit Alarms';
-
-  @override
   String get no_alarms => 'NO ALARMS';
 
   @override
@@ -51,12 +45,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pm => 'PM';
 
   @override
-  String get set_alarm => 'Set alarm';
-
-  @override
-  String get edit_alarm => 'Edit alarm';
-
-  @override
   String get repeat => 'Repeat';
 
   @override
@@ -64,27 +52,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get snooze => 'Snooze';
-
-  @override
-  String get monday => 'Monday';
-
-  @override
-  String get tuesday => 'Tuesday';
-
-  @override
-  String get wednesday => 'Wednesday';
-
-  @override
-  String get thursday => 'Thursday';
-
-  @override
-  String get friday => 'Friday';
-
-  @override
-  String get saturday => 'Saturday';
-
-  @override
-  String get sunday => 'Sunday';
 
   @override
   String get monday_abbr => 'M';
@@ -108,26 +75,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sunday_abbr => 'S';
 
   @override
-  String lap_number(int number) {
-    return 'Lap $number';
-  }
-
-  @override
   String lap_padded(String number) {
     return 'LAP $number';
   }
 
   @override
-  String get stop => 'Stop';
-
-  @override
   String get start => 'Start';
-
-  @override
-  String get timer_coming_soon => 'Timer - Coming Soon';
-
-  @override
-  String get world_clock_coming_soon => 'World Clock - Coming Soon';
 
   @override
   String get timers => 'Timer';
@@ -139,38 +92,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pause => 'Pause';
 
   @override
-  String get resume => 'Resume';
-
-  @override
-  String get dismiss => 'Dismiss';
-
-  @override
-  String get timer_finished => 'Timer Finished';
-
-  @override
-  String get timer_preset_exists => 'Preset already exists';
-
-  @override
-  String get timer_preset_invalid_duration =>
-      'Please select a duration greater than 0';
-
-  @override
   String get delete => 'Delete';
 
   @override
-  String get timer_preset_name => 'Preset Name';
-
-  @override
-  String get timer_preset_name_hint => 'e.g. Tea, Workout, Study';
-
-  @override
   String get save => 'Save';
-
-  @override
-  String get edit_preset => 'Edit Preset';
-
-  @override
-  String get add_preset => 'Add Preset';
 
   @override
   String get hour_abbr => ' hr';
@@ -192,37 +117,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get zero_min => '0 min';
-
-  @override
-  String get restart => 'Restart';
-
-  @override
-  String get timezone_id => 'Timezone';
-
-  @override
-  String get time_difference => 'Time Difference';
-
-  @override
-  String get day_night_status => 'Day/Night Status';
-
-  @override
-  String get daytime => 'Daytime';
-
-  @override
-  String get nighttime => 'Nighttime';
-
-  @override
-  String get same_as_local => 'Same time as local';
-
-  @override
-  String hours_ahead(String hours) {
-    return '$hours hours ahead of local';
-  }
-
-  @override
-  String hours_behind(String hours) {
-    return '$hours hours behind local';
-  }
 
   @override
   String get world_clock => 'World Clock';
@@ -255,5 +149,129 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancel_uppercase => 'CANCEL';
 
   @override
-  String get trash_uppercase => 'TRASH';
+  String get alarm_label => 'Label';
+
+  @override
+  String get enter_label => 'Enter label';
+
+  @override
+  String get alarm_already_exists => 'An alarm already exists for this time';
+
+  @override
+  String get edit_label => 'Edit label';
+
+  @override
+  String alarm_label_limit(int max) {
+    return 'Label can be at most $max characters';
+  }
+
+  @override
+  String get snooze_duration => 'Snooze duration';
+
+  @override
+  String minutes_value(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String alarm_set_for(String duration) {
+    return 'Alarm set for $duration from now';
+  }
+
+  @override
+  String get alarm_set_less_than_minute =>
+      'Alarm set for less than a minute from now';
+
+  @override
+  String duration_days(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String duration_hours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hours',
+      one: '1 hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String duration_minutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minutes',
+      one: '1 minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String list_two(String first, String last) {
+    return '$first and $last';
+  }
+
+  @override
+  String list_three(String first, String second, String last) {
+    return '$first, $second and $last';
+  }
+
+  @override
+  String get clock_service_unavailable => 'clock service isn\'t running';
+
+  @override
+  String get clock_service_mismatch =>
+      'clock service version doesn\'t match the app';
+
+  @override
+  String alarm_save_failed(String reason) {
+    return 'Couldn\'t save alarm: $reason';
+  }
+
+  @override
+  String alarm_toggle_failed(String reason) {
+    return 'Couldn\'t change alarm: $reason';
+  }
+
+  @override
+  String alarm_delete_failed(String reason) {
+    return 'Couldn\'t delete alarm: $reason';
+  }
+
+  @override
+  String timer_start_failed(String reason) {
+    return 'Couldn\'t start timer: $reason';
+  }
+
+  @override
+  String timer_pause_failed(String reason) {
+    return 'Couldn\'t pause timer: $reason';
+  }
+
+  @override
+  String timer_cancel_failed(String reason) {
+    return 'Couldn\'t cancel timer: $reason';
+  }
+
+  @override
+  String get alarms_unavailable_title => 'Clock service isn\'t running';
+
+  @override
+  String get alarms_unavailable_body =>
+      'Alarms can\'t be shown or changed until it starts.';
+
+  @override
+  String get alarms_load_failed_title => 'Couldn\'t load alarms';
+
+  @override
+  String get retry => 'Retry';
 }

@@ -46,11 +46,9 @@ void main() {
       buildTestWidget(
         child: TimerPresetItem(
           preset: preset,
-          isEditing: false,
           onSelect: () => selected = true,
           onPlay: () => played = true,
           onDelete: () {},
-          onEdit: () {},
           formatPresetDuration: formatDuration,
         ),
       ),
@@ -85,11 +83,9 @@ void main() {
       buildTestWidget(
         child: TimerPresetItem(
           preset: preset,
-          isEditing: false,
           onSelect: () {},
           onPlay: () {},
           onDelete: () {},
-          onEdit: () {},
           formatPresetDuration: (d) => '01:02:03',
         ),
       ),
@@ -110,11 +106,9 @@ void main() {
       buildTestWidget(
         child: TimerPresetItem(
           preset: preset,
-          isEditing: false,
           onSelect: () {},
           onPlay: () {},
           onDelete: () {},
-          onEdit: () {},
           formatPresetDuration: (d) => '00:00',
         ),
       ),
