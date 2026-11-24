@@ -6,21 +6,17 @@ import 'package:widgets/widgets.dart';
 
 class TimerPresetItem extends StatelessWidget {
   final TimerPreset preset;
-  final bool isEditing;
   final VoidCallback onSelect;
   final VoidCallback onPlay;
   final VoidCallback onDelete;
-  final VoidCallback onEdit;
   final String Function(Duration) formatPresetDuration;
 
   const TimerPresetItem({
     super.key,
     required this.preset,
-    required this.isEditing,
     required this.onSelect,
     required this.onPlay,
     required this.onDelete,
-    required this.onEdit,
     required this.formatPresetDuration,
   });
 
@@ -60,8 +56,8 @@ class TimerPresetItem extends StatelessWidget {
       labelSupportingGap: 8.0,
       minHeight: 72.0,
       extentRatio: 0.16,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      onTap: isEditing ? onEdit : onSelect,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      onTap: onSelect,
       actions: [
         MechanixIconButton.filled(
           key: Key('timer_preset_delete_button_${preset.id}'),
@@ -102,16 +98,15 @@ class TimerPresetItem extends StatelessWidget {
         ],
       ),
       trailingWidgets: [
-        if (!isEditing)
-          MechanixIconButton.filled(
-            key: Key('timer_preset_play_button_${preset.id}'),
-            type: ButtonType.rounded,
-            size: IconButtonSize.medium,
-            backgroundColor: colorScheme.surfaceContainerHigh,
-            foregroundColor: colorScheme.onSurface,
-            icon: const ImageIcon(AssetImage(ClockIcons.play)),
-            onPressed: onPlay,
-          ),
+        MechanixIconButton.filled(
+          key: Key('timer_preset_play_button_${preset.id}'),
+          type: ButtonType.rounded,
+          size: IconButtonSize.medium,
+          backgroundColor: colorScheme.surfaceContainerHigh,
+          foregroundColor: colorScheme.onSurface,
+          icon: const ImageIcon(AssetImage(ClockIcons.play)),
+          onPressed: onPlay,
+        ),
       ],
     );
   }

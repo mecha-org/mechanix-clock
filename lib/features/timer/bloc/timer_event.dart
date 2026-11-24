@@ -9,27 +9,6 @@ abstract class TimerEvent extends Equatable {
 
 class LoadTimerPresets extends TimerEvent {}
 
-class AddTimerPreset extends TimerEvent {
-  final Duration duration;
-  final String? name;
-
-  const AddTimerPreset(this.duration, {this.name});
-
-  @override
-  List<Object?> get props => [duration, name];
-}
-
-class UpdateTimerPreset extends TimerEvent {
-  final String id;
-  final String name;
-  final Duration? duration;
-
-  const UpdateTimerPreset({required this.id, required this.name, this.duration});
-
-  @override
-  List<Object?> get props => [id, name, duration];
-}
-
 class DeleteTimerPreset extends TimerEvent {
   final String id;
 
@@ -37,18 +16,6 @@ class DeleteTimerPreset extends TimerEvent {
 
   @override
   List<Object?> get props => [id];
-}
-
-class ToggleEditPresetsMode extends TimerEvent {}
-
-class ReorderTimerPresets extends TimerEvent {
-  final int oldIndex;
-  final int newIndex;
-
-  const ReorderTimerPresets(this.oldIndex, this.newIndex);
-
-  @override
-  List<Object?> get props => [oldIndex, newIndex];
 }
 
 class StartTimer extends TimerEvent {
@@ -97,13 +64,8 @@ class TimerTick extends TimerEvent {
   const TimerTick();
 }
 
-class SetTimerSound extends TimerEvent {
-  final String sound;
-
-  const SetTimerSound(this.sound);
-
-  @override
-  List<Object?> get props => [sound];
+/// Re-read the timers from mxclockd (it restarted: timers that ended while
+/// it was down are now missed).
+class RefreshTimers extends TimerEvent {
+  const RefreshTimers();
 }
-
-class ResetTimerToIdle extends TimerEvent {}

@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
+import 'package:mechanix_clock/core/services/clockd_client.dart';
 import '../data/models/alarm_model.dart';
 
 abstract class AlarmEvent extends Equatable {
@@ -8,11 +11,21 @@ abstract class AlarmEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class LoadAlarms extends AlarmEvent {}
+class LoadAlarms extends AlarmEvent {
+  const LoadAlarms();
+}
+
+/// How saving an alarm went: null when it worked, otherwise the error. The
+/// editor waits for it before saying "Alarm set for …".
+typedef AlarmSaveResult = Completer<ClockdException?>;
 
 class AddAlarm extends AlarmEvent {
   final Alarm alarm;
-  const AddAlarm(this.alarm);
+
+  /// Completed when the daemon has answered. Not part of equality.
+  final AlarmSaveResult? result;
+
+  const AddAlarm(this.alarm, {this.result});
 
   @override
   List<Object?> get props => [alarm];
@@ -20,7 +33,11 @@ class AddAlarm extends AlarmEvent {
 
 class UpdateAlarm extends AlarmEvent {
   final Alarm alarm;
-  const UpdateAlarm(this.alarm);
+
+  /// Completed when the daemon has answered. Not part of equality.
+  final AlarmSaveResult? result;
+
+  const UpdateAlarm(this.alarm, {this.result});
 
   @override
   List<Object?> get props => [alarm];
@@ -40,4 +57,10 @@ class ToggleAlarm extends AlarmEvent {
 
   @override
   List<Object?> get props => [alarmId];
+}
+
+/// Re-read the list from mxclockd, without the loading
+/// state.
+class RefreshAlarms extends AlarmEvent {
+  const RefreshAlarms();
 }

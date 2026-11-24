@@ -63,37 +63,79 @@ void main() {
     testWidgets('renders sound list with MechanixRadio and MechanixAppBar',
         (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: SoundSelectionScreen(initialSound: 'Dancing Flames'),
+        MaterialApp(
+          home: SoundSelectionScreen(
+            initialSound: 'digital_beeps',
+            onPreview: (_) {},
+          ),
         ),
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Dancing Flames'), findsOneWidget);
-      expect(find.text('Comet on the go'), findsOneWidget);
-      expect(find.text('Phoenix song'), findsOneWidget);
-      expect(find.text('Wake up and party'), findsOneWidget);
+      expect(find.text('Digital beeps'), findsOneWidget);
+      expect(find.text('Bedside alarm'), findsOneWidget);
+      expect(find.text('Music box'), findsOneWidget);
+      expect(find.text('Morning melody'), findsOneWidget);
       expect(find.byType(MechanixRadio<String>), findsWidgets);
       expect(find.byType(MechanixAppBar), findsOneWidget);
     });
 
-    testWidgets('selecting another sound updates selection', (tester) async {
+    testWidgets('selecting another sound updates selection and previews it',
+        (tester) async {
+      final previewed = <String>[];
       await tester.pumpWidget(
-        const MaterialApp(
-          home: SoundSelectionScreen(initialSound: 'Dancing Flames'),
+        MaterialApp(
+          home: SoundSelectionScreen(
+            initialSound: 'digital_beeps',
+            onPreview: previewed.add,
+          ),
         ),
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Phoenix song'));
+      await tester.tap(find.text('Music box'));
       await tester.pumpAndSettle();
 
       final radio = tester.widget<MechanixRadio<String>>(
         find.byWidgetPredicate(
-          (w) => w is MechanixRadio<String> && w.value == 'Phoenix song',
+          (w) => w is MechanixRadio<String> && w.value == 'music_box',
         ),
       );
-      expect(radio.groupValue, 'Phoenix song');
+      expect(radio.groupValue, 'music_box');
+      expect(previewed, ['music_box']);
+    });
+
+    testWidgets('going back stops the preview', (tester) async {
+      var stops = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute<String>(
+                  builder: (_) => SoundSelectionScreen(
+                    initialSound: 'digital_beeps',
+                    onPreview: (_) {},
+                    onStopPreview: () => stops++,
+                  ),
+                ),
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Music box'));
+      await tester.pumpAndSettle();
+      expect(stops, 0);
+
+      await tester.tap(find.byIcon(Icons.arrow_back_ios_new));
+      await tester.pumpAndSettle();
+
+      expect(stops, 1);
     });
   });
 }

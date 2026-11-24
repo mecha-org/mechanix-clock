@@ -53,7 +53,7 @@ class StopwatchScreen extends StatelessWidget {
 
           // ── Digital Timer Display ──────────────────────────────
           Padding(
-            padding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 0.0),
+            padding: const EdgeInsets.fromLTRB(20.0, 40.0, 20.0, 0.0),
             child: RepaintBoundary(
               child: BlocSelector<StopwatchBloc, StopwatchState, Duration>(
                 selector: (state) => state.elapsed,
@@ -89,7 +89,7 @@ class StopwatchScreen extends StatelessWidget {
                         backgroundColor: theme.colorScheme.primary,
                       )
                     else if (status == StopwatchStatus.stopped)
-                      MechanixIconButton.filled(
+                      MechanixIconButton.outline(
                         key: const Key('stopwatch_reset_button'),
                         onPressed: () {
                           context.read<StopwatchBloc>().add(ResetStopwatch());
@@ -100,7 +100,7 @@ class StopwatchScreen extends StatelessWidget {
                         ),
                         size: IconButtonSize.large,
                         type: ButtonType.rounded,
-                        backgroundColor: theme.colorScheme.surfaceContainerHigh,
+                        backgroundColor: theme.colorScheme.surfaceContainerLow,
                       )
                     else
                       MechanixIconButton.outline(
@@ -114,14 +114,13 @@ class StopwatchScreen extends StatelessWidget {
                         ),
                         size: IconButtonSize.large,
                         type: ButtonType.rounded,
-                        backgroundColor: theme.colorScheme.surfaceContainerHigh,
                       ),
 
                     const SizedBox(width: 32),
 
                     // Right button: Start / Stop
                     if (status == StopwatchStatus.running)
-                      MechanixIconButton.filled(
+                      MechanixIconButton.outline(
                         key: const Key('stopwatch_stop_button'),
                         onPressed: () {
                           context.read<StopwatchBloc>().add(StopStopwatch());
@@ -132,7 +131,7 @@ class StopwatchScreen extends StatelessWidget {
                         ),
                         size: IconButtonSize.large,
                         type: ButtonType.rounded,
-                        backgroundColor: theme.colorScheme.surfaceContainerHigh,
+                        backgroundColor: theme.colorScheme.surfaceContainerLow,
                       )
                     else
                       MechanixIconButton.filled(
@@ -201,7 +200,7 @@ class _LapListViewState extends State<_LapListView> {
                   lap: lap,
                   isLatest: isLatest,
                 ),
-                MechanixDivider(color: theme.colorScheme.outline),
+                MechanixDivider(color: theme.colorScheme.outline, space: 0),
               ],
             );
           },

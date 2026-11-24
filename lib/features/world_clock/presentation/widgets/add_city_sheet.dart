@@ -25,6 +25,29 @@ class _AddCitySheetState extends State<AddCitySheet> {
     super.dispose();
   }
 
+  /// All cities sorted alphabetically by name (then country), computed once.
+  static final List<City> _sortedCities = List<City>.of(worldCities)
+    ..sort((a, b) {
+      final byName = a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      if (byName != 0) return byName;
+      return a.country.toLowerCase().compareTo(b.country.toLowerCase());
+    });
+
+  /// Filters cities by name and country only; the timezone ID isn't searched
+  /// as many cities share one (e.g. `Asia/Kolkata`).
+  List<City> _filterCities(String rawQuery) {
+    final query = rawQuery.trim().toLowerCase();
+    if (query.isEmpty) return _sortedCities;
+
+    return _sortedCities
+        .where(
+          (city) =>
+              city.name.toLowerCase().contains(query) ||
+              city.country.toLowerCase().contains(query),
+        )
+        .toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -32,12 +55,7 @@ class _AddCitySheetState extends State<AddCitySheet> {
     final colorScheme = theme.colorScheme;
     final screenHeight = MediaQuery.of(context).size.height;
 
-    final filteredCities = worldCities.where((city) {
-      final query = _searchQuery.toLowerCase();
-      return city.name.toLowerCase().contains(query) ||
-          city.country.toLowerCase().contains(query) ||
-          city.timezoneId.toLowerCase().contains(query);
-    }).toList();
+    final filteredCities = _filterCities(_searchQuery);
 
     return SizedBox(
       height: screenHeight * 0.85,
@@ -113,7 +131,7 @@ class _AddCitySheetState extends State<AddCitySheet> {
                         final city = filteredCities[index];
                         return _CityListTile(
                           city: city,
-                          searchQuery: _searchQuery,
+                          searchQuery: _searchQuery.trim(),
                         );
                       },
                     ),

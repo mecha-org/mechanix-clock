@@ -26,7 +26,6 @@ class FlutterWindow {
   void Run();
 
  private:
-  void SetupAlarmChannel(flutter::BinaryMessenger* messenger);
   flutter::FlutterViewController::ViewProperties view_properties_;
   flutter::DartProject project_;
   std::unique_ptr<flutter::FlutterViewController> flutter_view_controller_;

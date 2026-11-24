@@ -3,8 +3,10 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mechanix_clock/core/utils/app_logger.dart';
+import 'package:mechanix_clock/core/utils/clockd_error_text.dart';
 import 'package:mechanix_clock/core/utils/icons.dart';
-import 'package:mechanix_clock/features/alarm/presentation/screens/sound_selection_screen.dart';
+import 'package:mechanix_clock/core/widgets/keyboard_list.dart';
 import 'package:mechanix_clock/features/timer/bloc/timer_bloc.dart';
 import 'package:mechanix_clock/features/timer/bloc/timer_event.dart';
 import 'package:mechanix_clock/features/timer/bloc/timer_state.dart';
@@ -12,7 +14,6 @@ import 'package:mechanix_clock/features/timer/data/models/timer_preset.dart';
 import 'package:mechanix_clock/features/timer/presentation/widgets/timer_active_item.dart';
 import 'package:mechanix_clock/features/timer/presentation/widgets/timer_custom_picker.dart';
 import 'package:mechanix_clock/features/timer/presentation/widgets/timer_preset_item.dart';
-import 'package:mechanix_clock/features/timer/presentation/widgets/timer_sound_row.dart';
 import 'package:mechanix_clock/l10n/app_localizations.dart';
 import 'package:widgets/widgets.dart';
 
@@ -54,147 +55,166 @@ class _TimerScreenState extends State<TimerScreen> with WidgetsBindingObserver {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return BlocSelector<TimerBloc, TimerState, bool>(
-      selector: (state) {
-        final isTimerActive =
-            state.activeTimers.values.any(
-              (t) =>
-                  t.status == TimerStatus.running ||
-                  t.status == TimerStatus.paused,
-            ) ||
-            state.status == TimerStatus.running ||
-            state.status == TimerStatus.paused;
-        return isTimerActive && !_isSettingMode;
+    // A timer change mxclockd couldn't make.
+    return BlocListener<TimerBloc, TimerState>(
+      listenWhen: (previous, current) =>
+          current.failure != null && previous.failure != current.failure,
+      listener: (context, state) {
+        final failure = state.failure!;
+        final reason = clockdErrorReason(l10n, failure.error);
+        final text = switch (failure.change) {
+          TimerChange.start => l10n.timer_start_failed(reason),
+          TimerChange.pause => l10n.timer_pause_failed(reason),
+          TimerChange.cancel => l10n.timer_cancel_failed(reason),
+        };
+        AppLogger.e('[Timer] $text');
+        MechanixSnackbar.text(
+          position: MechanixSnackbarPosition.top,
+          text: text,
+        ).show(context, duration: const Duration(seconds: 4));
       },
-      builder: (context, showPlayScreen) {
-        return Scaffold(
-          backgroundColor: colorScheme.surfaceContainerLowest,
-          appBar: MechanixAppBar.small(
-            primary: false,
-            backgroundColor: Colors.transparent,
-            title: Text(
-              l10n.timers.toUpperCase(),
-              style: theme.textTheme.headlineMedium!.copyWith(
-                color: theme.colorScheme.onSecondaryContainer,
-                letterSpacing: 1.0,
+      child: BlocSelector<TimerBloc, TimerState, bool>(
+        selector: (state) {
+          final isTimerActive =
+              state.activeTimers.values.any(
+                (t) =>
+                    t.status == TimerStatus.running ||
+                    t.status == TimerStatus.paused,
+              ) ||
+              state.status == TimerStatus.running ||
+              state.status == TimerStatus.paused;
+          return isTimerActive && !_isSettingMode;
+        },
+        builder: (context, showPlayScreen) {
+          return Scaffold(
+            backgroundColor: colorScheme.surfaceContainerLowest,
+            appBar: MechanixAppBar.small(
+              primary: false,
+              backgroundColor: Colors.transparent,
+              title: Text(
+                l10n.timers.toUpperCase(),
+                style: theme.textTheme.headlineMedium!.copyWith(
+                  color: theme.colorScheme.onSecondaryContainer,
+                  letterSpacing: 1.0,
+                ),
               ),
-            ),
-            actions: showPlayScreen
-                ? [
-                    MechanixIconButton.tonal(
-                      key: const Key('timer_goto_setting_button'),
-                      type: ButtonType.rounded,
-                      size: IconButtonSize.small,
-                      backgroundColor: colorScheme.surfaceContainerHigh,
-                      foregroundColor: colorScheme.primary,
-                      icon: ImageIcon(
-                        const AssetImage(ClockIcons.add),
-                        color: theme.colorScheme.primary,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _isSettingMode = true;
-                        });
-                      },
-                    ),
-                    const SizedBox(width: 8),
-                  ]
-                : null,
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(1),
-              child: MechanixDivider(
-                color: theme.colorScheme.outline,
-                space: 1,
-              ),
-            ),
-          ),
-          body: Column(
-            children: [
-              Expanded(
-                child: showPlayScreen
-                    ? _TimerPlayPauseListScreen(
-                        onSelectPreset: (preset) {
+              actions: showPlayScreen
+                  ? [
+                      MechanixIconButton.tonal(
+                        key: const Key('timer_goto_setting_button'),
+                        type: ButtonType.rounded,
+                        size: IconButtonSize.small,
+                        backgroundColor: colorScheme.surfaceContainerHigh,
+                        foregroundColor: colorScheme.primary,
+                        icon: ImageIcon(
+                          const AssetImage(ClockIcons.add),
+                          color: theme.colorScheme.primary,
+                        ),
+                        onPressed: () {
                           setState(() {
-                            _selectedHours = preset.duration.inHours;
-                            _selectedMinutes = preset.duration.inMinutes
-                                .remainder(60);
-                            _selectedSeconds = preset.duration.inSeconds
-                                .remainder(60);
                             _isSettingMode = true;
                           });
                         },
-                      )
-                    : _TimerSettingScreen(
-                        selectedHours: _selectedHours,
-                        selectedMinutes: _selectedMinutes,
-                        selectedSeconds: _selectedSeconds,
-                        onHoursChanged: (v) {
-                          if (_selectedHours != v && mounted) {
-                            setState(() => _selectedHours = v);
-                          }
-                        },
-                        onMinutesChanged: (v) {
-                          if (_selectedMinutes != v && mounted) {
-                            setState(() => _selectedMinutes = v);
-                          }
-                        },
-                        onSecondsChanged: (v) {
-                          if (_selectedSeconds != v && mounted) {
-                            setState(() => _selectedSeconds = v);
-                          }
-                        },
-                        onResetPicker: () {
-                          setState(() {
-                            _selectedHours = 0;
-                            _selectedMinutes = 0;
-                            _selectedSeconds = 0;
-                          });
-                        },
-                        onStartTimer: () {
-                          final duration = Duration(
-                            hours: _selectedHours,
-                            minutes: _selectedMinutes,
-                            seconds: _selectedSeconds,
-                          );
-                          context.read<TimerBloc>().add(
-                            StartTimer(duration, resetOldActiveTimers: true),
-                          );
-                          setState(() {
-                            _isSettingMode = false;
-                          });
-                        },
-                        onSelectPreset: (preset) {
-                          final hours = preset.duration.inHours;
-                          final minutes = preset.duration.inMinutes.remainder(
-                            60,
-                          );
-                          final seconds = preset.duration.inSeconds.remainder(
-                            60,
-                          );
-                          setState(() {
-                            _selectedHours = hours;
-                            _selectedMinutes = minutes;
-                            _selectedSeconds = seconds;
-                          });
-                        },
-                        onPlayPreset: (preset) {
-                          context.read<TimerBloc>().add(
-                            StartTimer(
-                              preset.duration,
-                              presetId: preset.id,
-                              resetOldActiveTimers: true,
-                            ),
-                          );
-                          setState(() {
-                            _isSettingMode = false;
-                          });
-                        },
                       ),
+                      const SizedBox(width: 8),
+                    ]
+                  : null,
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(1),
+                child: MechanixDivider(
+                  color: theme.colorScheme.outline,
+                  space: 1,
+                ),
               ),
-            ],
-          ),
-        );
-      },
+            ),
+            body: Column(
+              children: [
+                Expanded(
+                  child: showPlayScreen
+                      ? _TimerPlayPauseListScreen(
+                          onSelectPreset: (preset) {
+                            setState(() {
+                              _selectedHours = preset.duration.inHours;
+                              _selectedMinutes = preset.duration.inMinutes
+                                  .remainder(60);
+                              _selectedSeconds = preset.duration.inSeconds
+                                  .remainder(60);
+                              _isSettingMode = true;
+                            });
+                          },
+                        )
+                      : _TimerSettingScreen(
+                          selectedHours: _selectedHours,
+                          selectedMinutes: _selectedMinutes,
+                          selectedSeconds: _selectedSeconds,
+                          onHoursChanged: (v) {
+                            if (_selectedHours != v && mounted) {
+                              setState(() => _selectedHours = v);
+                            }
+                          },
+                          onMinutesChanged: (v) {
+                            if (_selectedMinutes != v && mounted) {
+                              setState(() => _selectedMinutes = v);
+                            }
+                          },
+                          onSecondsChanged: (v) {
+                            if (_selectedSeconds != v && mounted) {
+                              setState(() => _selectedSeconds = v);
+                            }
+                          },
+                          onResetPicker: () {
+                            setState(() {
+                              _selectedHours = 0;
+                              _selectedMinutes = 0;
+                              _selectedSeconds = 0;
+                            });
+                          },
+                          onStartTimer: () {
+                            final duration = Duration(
+                              hours: _selectedHours,
+                              minutes: _selectedMinutes,
+                              seconds: _selectedSeconds,
+                            );
+                            context.read<TimerBloc>().add(
+                              StartTimer(duration, resetOldActiveTimers: true),
+                            );
+                            setState(() {
+                              _isSettingMode = false;
+                            });
+                          },
+                          onSelectPreset: (preset) {
+                            final hours = preset.duration.inHours;
+                            final minutes = preset.duration.inMinutes.remainder(
+                              60,
+                            );
+                            final seconds = preset.duration.inSeconds.remainder(
+                              60,
+                            );
+                            setState(() {
+                              _selectedHours = hours;
+                              _selectedMinutes = minutes;
+                              _selectedSeconds = seconds;
+                            });
+                          },
+                          onPlayPreset: (preset) {
+                            context.read<TimerBloc>().add(
+                              StartTimer(
+                                preset.duration,
+                                presetId: preset.id,
+                                resetOldActiveTimers: true,
+                              ),
+                            );
+                            setState(() {
+                              _isSettingMode = false;
+                            });
+                          },
+                        ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -258,26 +278,30 @@ class _TimerPlayPauseListScreen extends StatelessWidget {
           behavior: ScrollConfiguration.of(context).copyWith(
             dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
           ),
-          child: ListView.builder(
-            itemCount: allItems.length,
-            itemBuilder: (context, index) {
-              final preset = allItems[index];
+          // ↑/↓ move between timers, Enter does what tapping does.
+          child: KeyboardList(
+            child: ListView.builder(
+              itemCount: allItems.length,
+              itemBuilder: (context, index) {
+                final preset = allItems[index];
 
-              return Column(
-                key: ValueKey(preset.id),
-                children: [
-                  _PlayPausePresetItem(
-                    preset: preset,
-                    onSelect: () => onSelectPreset(preset),
-                  ),
-                  if (index < allItems.length - 1)
-                    MechanixDivider(
-                      color: colorScheme.outline.withValues(alpha: 0.38),
-                      space: 1,
+                return Column(
+                  key: ValueKey(preset.id),
+                  children: [
+                    _PlayPausePresetItem(
+                      index: index,
+                      preset: preset,
+                      onSelect: () => onSelectPreset(preset),
                     ),
-                ],
-              );
-            },
+                    if (index < allItems.length - 1)
+                      MechanixDivider(
+                        color: colorScheme.outline.withValues(alpha: 0.38),
+                        space: 1,
+                      ),
+                  ],
+                );
+              },
+            ),
           ),
         );
       },
@@ -286,10 +310,15 @@ class _TimerPlayPauseListScreen extends StatelessWidget {
 }
 
 class _PlayPausePresetItem extends StatelessWidget {
+  final int index;
   final TimerPreset preset;
   final VoidCallback onSelect;
 
-  const _PlayPausePresetItem({required this.preset, required this.onSelect});
+  const _PlayPausePresetItem({
+    required this.index,
+    required this.preset,
+    required this.onSelect,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -322,37 +351,45 @@ class _PlayPausePresetItem extends StatelessWidget {
       builder: (context, itemData) {
         final isActive = itemData.isRunning || itemData.isPaused;
 
+        void pause() =>
+            context.read<TimerBloc>().add(PauseTimer(presetId: preset.id));
+        void resume() =>
+            context.read<TimerBloc>().add(ResumeTimer(presetId: preset.id));
+
         if (isActive) {
-          return TimerActiveItem(
-            duration: itemData.displayDuration,
-            isRunning: itemData.isRunning,
-            isPaused: itemData.isPaused,
-            onPause: () {
-              context.read<TimerBloc>().add(PauseTimer(presetId: preset.id));
-            },
-            onResume: () {
-              context.read<TimerBloc>().add(ResumeTimer(presetId: preset.id));
-            },
+          // Enter pauses or resumes a running timer.
+          return KeyboardListItem(
+            index: index,
+            onActivate: itemData.isRunning ? pause : resume,
+            child: TimerActiveItem(
+              duration: itemData.displayDuration,
+              isRunning: itemData.isRunning,
+              isPaused: itemData.isPaused,
+              onPause: pause,
+              onResume: resume,
+            ),
           );
         } else {
-          return TimerPresetItem(
-            preset: preset,
-            isEditing: false,
-            onSelect: onSelect,
-            onPlay: () {
-              context.read<TimerBloc>().add(
-                StartTimer(
-                  preset.duration,
-                  presetId: preset.id,
-                  resetOldActiveTimers: false,
-                ),
-              );
-            },
-            onDelete: () {
-              context.read<TimerBloc>().add(DeleteTimerPreset(preset.id));
-            },
-            onEdit: () {},
-            formatPresetDuration: _formatPresetDurationHelper,
+          return KeyboardListItem(
+            index: index,
+            onActivate: onSelect,
+            child: TimerPresetItem(
+              preset: preset,
+              onSelect: onSelect,
+              onPlay: () {
+                context.read<TimerBloc>().add(
+                  StartTimer(
+                    preset.duration,
+                    presetId: preset.id,
+                    resetOldActiveTimers: false,
+                  ),
+                );
+              },
+              onDelete: () {
+                context.read<TimerBloc>().add(DeleteTimerPreset(preset.id));
+              },
+              formatPresetDuration: _formatPresetDurationHelper,
+            ),
           );
         }
       },
@@ -387,71 +424,51 @@ class _TimerSettingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final hasTime =
+        selectedHours > 0 || selectedMinutes > 0 || selectedSeconds > 0;
 
-    return BlocSelector<TimerBloc, TimerState, bool>(
-      selector: (state) => state.isEditingPresets,
-      builder: (context, isEditingPresets) {
-        final hasTime =
-            selectedHours > 0 || selectedMinutes > 0 || selectedSeconds > 0;
-        final canStart = !isEditingPresets && hasTime;
-
-        return ScrollConfiguration(
-          behavior: ScrollConfiguration.of(context).copyWith(
-            dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                const SizedBox(height: 24),
-                if (!isEditingPresets)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: TimerCustomPicker(
-                      selectedHours: selectedHours,
-                      selectedMinutes: selectedMinutes,
-                      selectedSeconds: selectedSeconds,
-                      onHoursChanged: onHoursChanged,
-                      onMinutesChanged: onMinutesChanged,
-                      onSecondsChanged: onSecondsChanged,
-                    ),
-                  ),
-
-                const SizedBox(height: 24),
-
-                // Action Buttons Row
-                _TimerActionButtonsRow(
-                  canReset: hasTime,
-                  canStart: canStart,
-                  onReset: onResetPicker,
-                  onStart: onStartTimer,
-                ),
-
-                const SizedBox(height: 24),
-                MechanixDivider(
-                  color: colorScheme.outline.withValues(alpha: 0.38),
-                  space: 1,
-                ),
-
-                // Sound Selection Row
-                const _TimerSoundSection(),
-
-                MechanixDivider(
-                  color: colorScheme.outline.withValues(alpha: 0.38),
-                  space: 1,
-                ),
-
-                // Presets List
-                _TimerPresetsList(
-                  isEditingPresets: isEditingPresets,
-                  onSelectPreset: onSelectPreset,
-                  onPlayPreset: onPlayPreset,
-                ),
-              ],
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(
+        dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: TimerCustomPicker(
+                selectedHours: selectedHours,
+                selectedMinutes: selectedMinutes,
+                selectedSeconds: selectedSeconds,
+                onHoursChanged: onHoursChanged,
+                onMinutesChanged: onMinutesChanged,
+                onSecondsChanged: onSecondsChanged,
+              ),
             ),
-          ),
-        );
-      },
+
+            const SizedBox(height: 24),
+
+            // Action Buttons Row
+            _TimerActionButtonsRow(
+              canReset: hasTime,
+              canStart: hasTime,
+              onReset: onResetPicker,
+              onStart: onStartTimer,
+            ),
+
+            const SizedBox(height: 24),
+
+            const MechanixDivider(space: 1),
+
+            // Presets List
+            _TimerPresetsList(
+              onSelectPreset: onSelectPreset,
+              onPlayPreset: onPlayPreset,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -484,7 +501,7 @@ class _TimerActionButtonsRow extends StatelessWidget {
             key: const Key('timer_left_button'),
             type: ButtonType.rounded,
             size: IconButtonSize.large,
-            backgroundColor: colorScheme.surfaceContainerHigh,
+            backgroundColor: Colors.transparent,
             foregroundColor: colorScheme.onSurface,
             icon: ImageIcon(
               const AssetImage(ClockIcons.cancel),
@@ -516,86 +533,52 @@ class _TimerActionButtonsRow extends StatelessWidget {
   }
 }
 
-class _TimerSoundSection extends StatelessWidget {
-  const _TimerSoundSection();
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocSelector<TimerBloc, TimerState, String>(
-      selector: (state) => state.sound,
-      builder: (context, sound) {
-        return TimerSoundRow(
-          sound: sound,
-          isIdle: true,
-          onTap: () async {
-            final result = await Navigator.push<String>(
-              context,
-              MaterialPageRoute(
-                builder: (context) => SoundSelectionScreen(initialSound: sound),
-              ),
-            );
-            if (result != null && context.mounted) {
-              context.read<TimerBloc>().add(SetTimerSound(result));
-            }
-          },
-        );
-      },
-    );
-  }
-}
-
 class _TimerPresetsList extends StatelessWidget {
-  final bool isEditingPresets;
   final ValueChanged<TimerPreset> onSelectPreset;
   final ValueChanged<TimerPreset> onPlayPreset;
 
   const _TimerPresetsList({
-    required this.isEditingPresets,
     required this.onSelectPreset,
     required this.onPlayPreset,
   });
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return BlocSelector<TimerBloc, TimerState, List<TimerPreset>>(
       selector: (state) => state.presets,
       builder: (context, presets) {
-        return ReorderableListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: presets.length,
-          buildDefaultDragHandles: isEditingPresets,
-          onReorderItem: (oldIndex, newIndex) {
-            context.read<TimerBloc>().add(
-              ReorderTimerPresets(oldIndex, newIndex),
-            );
-          },
-          itemBuilder: (context, index) {
-            final preset = presets[index];
-            return Column(
-              key: ValueKey(preset.id),
-              children: [
-                TimerPresetItem(
-                  preset: preset,
-                  isEditing: isEditingPresets,
-                  onSelect: () => onSelectPreset(preset),
-                  onPlay: () => onPlayPreset(preset),
-                  onDelete: () {
-                    context.read<TimerBloc>().add(DeleteTimerPreset(preset.id));
-                  },
-                  onEdit: () {},
-                  formatPresetDuration: _formatPresetDurationHelper,
-                ),
-                if (index < presets.length - 1)
-                  MechanixDivider(
-                    color: colorScheme.outline.withValues(alpha: 0.38),
-                    space: 1,
+        // ↑/↓ move between presets, Enter picks one.
+        return KeyboardList(
+          child: ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: presets.length,
+            itemBuilder: (context, index) {
+              final preset = presets[index];
+              return Column(
+                key: ValueKey(preset.id),
+                children: [
+                  KeyboardListItem(
+                    index: index,
+                    onActivate: () => onSelectPreset(preset),
+                    child: TimerPresetItem(
+                      preset: preset,
+                      onSelect: () => onSelectPreset(preset),
+                      onPlay: () => onPlayPreset(preset),
+                      onDelete: () {
+                        context.read<TimerBloc>().add(
+                          DeleteTimerPreset(preset.id),
+                        );
+                      },
+                      formatPresetDuration: _formatPresetDurationHelper,
+                    ),
                   ),
-              ],
-            );
-          },
+                  if (index < presets.length - 1)
+                    const MechanixDivider(indent: 20, endIndent: 20, space: 1),
+                ],
+              );
+            },
+          ),
         );
       },
     );

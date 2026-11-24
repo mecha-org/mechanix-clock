@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mechanix_clock/core/widgets/keyboard_list.dart';
 import 'package:mechanix_clock/features/world_clock/bloc/world_clock_bloc.dart';
 import 'package:mechanix_clock/features/world_clock/bloc/world_clock_event.dart';
 import 'package:mechanix_clock/features/world_clock/bloc/world_clock_state.dart';
@@ -192,31 +193,38 @@ class _WorldClockListView extends StatelessWidget {
         dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
       ),
       child: MechanixSwipableList(
-        child: ListView.separated(
-          itemCount: clocks.length,
-          separatorBuilder: (context, index) =>
-              MechanixDivider(color: theme.colorScheme.outline, space: 1),
-          itemBuilder: (context, index) {
-            final clockId = clocks[index].id;
-            return BlocSelector<WorldClockBloc, WorldClockState, WorldClock?>(
-              selector: (state) {
-                if (state is WorldClockLoaded) {
-                  for (final c in state.clocks) {
-                    if (c.id == clockId) return c;
+        // ↑/↓ move between cities.
+        child: KeyboardList(
+          child: ListView.separated(
+            itemCount: clocks.length,
+            separatorBuilder: (context, index) =>
+                MechanixDivider(color: theme.colorScheme.outline, space: 1),
+            itemBuilder: (context, index) {
+              final clockId = clocks[index].id;
+              return BlocSelector<WorldClockBloc, WorldClockState, WorldClock?>(
+                selector: (state) {
+                  if (state is WorldClockLoaded) {
+                    for (final c in state.clocks) {
+                      if (c.id == clockId) return c;
+                    }
                   }
-                }
-                return null;
-              },
-              builder: (context, clock) {
-                if (clock == null) return const SizedBox.shrink();
-                return _WorldClockItemTile(
-                  key: ValueKey(clock.id),
-                  clock: clock,
-                  relativeInfo: relativeInfoBuilder(clock.timezoneId),
-                );
-              },
-            );
-          },
+                  return null;
+                },
+                builder: (context, clock) {
+                  if (clock == null) return const SizedBox.shrink();
+                  return KeyboardListItem(
+                    index: index,
+                    onActivate: null,
+                    child: _WorldClockItemTile(
+                      key: ValueKey(clock.id),
+                      clock: clock,
+                      relativeInfo: relativeInfoBuilder(clock.timezoneId),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
         ),
       ),
     );

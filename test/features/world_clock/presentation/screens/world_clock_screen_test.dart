@@ -106,4 +106,66 @@ void main() {
     expect(find.byType(AddCitySheet), findsOneWidget);
     expect(find.byKey(const Key('add_city_search_field')), findsOneWidget);
   });
+
+  testWidgets(
+    'searching a city matches name/country only, not shared timezone IDs',
+    (tester) async {
+      await tester.pumpWidget(
+        createWidgetUnderTest(state: const WorldClockLoaded(testClocks)),
+      );
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('world_clock_add_city_button')));
+      await tester.pumpAndSettle();
+
+      final searchField = find.descendant(
+        of: find.byKey(const Key('add_city_search_field')),
+        matching: find.byType(TextField),
+      );
+      await tester.enterText(searchField, 'kol');
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('add_city_tile_Kolkata')), findsOneWidget);
+      // These share the Asia/Kolkata timezone but must not match "kol".
+      expect(find.byKey(const Key('add_city_tile_Bengaluru')), findsNothing);
+      expect(find.byKey(const Key('add_city_tile_Mumbai')), findsNothing);
+      expect(find.byKey(const Key('add_city_tile_New_Delhi')), findsNothing);
+    },
+  );
+
+  testWidgets('city list in the search sheet is sorted alphabetically', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      createWidgetUnderTest(state: const WorldClockLoaded(testClocks)),
+    );
+    await tester.pump();
+
+    await tester.tap(find.byKey(const Key('world_clock_add_city_button')));
+    await tester.pumpAndSettle();
+
+    final searchField = find.descendant(
+      of: find.byKey(const Key('add_city_search_field')),
+      matching: find.byType(TextField),
+    );
+    await tester.enterText(searchField, 'india');
+    await tester.pumpAndSettle();
+
+    // Declared in city_model.dart as Kolkata, Bengaluru, Mumbai, New Delhi.
+    const expectedOrder = ['Bengaluru', 'Kolkata', 'Mumbai', 'New_Delhi'];
+    final positions = expectedOrder
+        .map(
+          (name) =>
+              tester.getTopLeft(find.byKey(Key('add_city_tile_$name'))).dy,
+        )
+        .toList();
+
+    for (var i = 1; i < positions.length; i++) {
+      expect(
+        positions[i],
+        greaterThan(positions[i - 1]),
+        reason: '${expectedOrder[i]} should appear after ${expectedOrder[i - 1]}',
+      );
+    }
+  });
 }
