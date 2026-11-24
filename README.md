@@ -33,10 +33,6 @@ See `lib/core/services/clockd_client.dart`. Alarms saved by older versions
 editor's Snooze on/off is passed to the daemon: an alarm with snooze off rings with
 Dismiss only.
 
-Needs mxclockd `b88c9d3` or later: per-alarm snooze (`AddAlarm`/`UpdateAlarm`
-take `syyysubu`) and timer status (`ListTimers` returns `a(ssxs)`). Older
-daemons are not supported.
-
 ## 🚀 Getting Started
 
 ### Prerequisites

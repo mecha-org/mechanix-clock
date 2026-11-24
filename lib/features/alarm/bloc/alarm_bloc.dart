@@ -1,9 +1,9 @@
 import 'dart:async';
 
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mechanix_clock/core/services/clockd_client.dart';
 import 'package:mechanix_clock/core/utils/app_logger.dart';
-import 'package:mechanix_clock/core/utils/in_order.dart';
 
 import '../data/models/alarm_model.dart';
 import '../data/repository/alarm_repository.dart';
@@ -17,7 +17,28 @@ class AlarmBloc extends Bloc<AlarmEvent, AlarmState> {
   final AlarmRepository repository;
   final _subscriptions = <StreamSubscription<void>>[];
   int _failureSeq = 0;
-  final _inOrder = InOrder();
+
+  /// The last event's run. Every event waits for it, so events of all types
+  /// run one at a time, in order (`sequential()` only orders one type).
+  Future<void> _last = Future.value();
+
+  EventTransformer<E> _inOrder<E>() =>
+      (events, mapper) => concurrent<E>()(events, (event) {
+        var cancelled = false; // The bloc closed: drop the queued event.
+        final run = _last.then((_) async {
+          if (!cancelled) await mapper(event).drain<void>();
+        });
+        // A failed handler doesn't hold up the events after it.
+        _last = run.catchError((Object _) {});
+        final done = StreamController<E>(onCancel: () => cancelled = true);
+        run.then(
+          (_) => done.close(),
+          onError: (Object e, StackTrace s) => done
+            ..addError(e, s)
+            ..close(),
+        );
+        return done.stream;
+      });
 
   AlarmBloc({required this.repository}) : super(AlarmInitial()) {
     // One at a time, in order: each handler reads the list the previous one

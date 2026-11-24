@@ -1,7 +1,7 @@
 import 'dart:async';
 
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mechanix_clock/core/utils/in_order.dart';
 
 import '../data/models/lap_time_model.dart';
 import '../data/repository/stopwatch_repository.dart';
@@ -28,7 +28,28 @@ class StopwatchBloc extends Bloc<StopwatchEvent, StopwatchState> {
   final DateTime Function() _now;
   SavedStopwatch _saved = const SavedStopwatch();
   Timer? _ticker;
-  final _inOrder = InOrder();
+
+  /// The last event's run. Every event waits for it, so events of all types
+  /// run one at a time, in order (`sequential()` only orders one type).
+  Future<void> _last = Future.value();
+
+  EventTransformer<E> _inOrder<E>() =>
+      (events, mapper) => concurrent<E>()(events, (event) {
+        var cancelled = false; // The bloc closed: drop the queued event.
+        final run = _last.then((_) async {
+          if (!cancelled) await mapper(event).drain<void>();
+        });
+        // A failed handler doesn't hold up the events after it.
+        _last = run.catchError((Object _) {});
+        final done = StreamController<E>(onCancel: () => cancelled = true);
+        run.then(
+          (_) => done.close(),
+          onError: (Object e, StackTrace s) => done
+            ..addError(e, s)
+            ..close(),
+        );
+        return done.stream;
+      });
 
   /// Picks up a stopwatch left running (or paused) last time.
   Future<void> _onLoad(Emitter<StopwatchState> emit) async {
